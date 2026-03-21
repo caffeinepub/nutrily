@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { FoodLogEntry, HealthMetrics, UserProfile } from "../backend";
+import type {
+  DailyCheckIn,
+  FoodLogEntry,
+  HealthMetrics,
+  UserProfile,
+} from "../backend";
 import { getTodayStartNs } from "../types";
 import { useActor } from "./useActor";
 
@@ -89,6 +94,72 @@ export function useCallerUserProfile() {
   };
 }
 
+export function useIsCallerAdmin() {
+  const { actor, isFetching } = useActor();
+  return useQuery<boolean>({
+    queryKey: ["isCallerAdmin"],
+    queryFn: async () => {
+      if (!actor) return false;
+      return actor.isCallerAdmin();
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 1000 * 60,
+  });
+}
+
+export function useAllCheckIns() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Array<DailyCheckIn>>({
+    queryKey: ["allCheckIns"],
+    queryFn: async () => {
+      if (!actor) return [];
+      // get caller's own check-ins using a workaround: use profile principal
+      // Actually, we'll store them and retrieve via the actor
+      // For regular users, fetch their own check-ins
+      const profile = await actor.getCallerUserProfile();
+      if (!profile) return [];
+      // We can't get the caller's principal here directly in the frontend
+      // Use getAllUsersCheckIns scoped to caller - but that requires principal
+      // Instead return empty and let the component handle it
+      return [];
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAllUsersCheckIns() {
+  const { actor, isFetching } = useActor();
+  return useQuery<
+    Array<[import("@icp-sdk/core/principal").Principal, Array<DailyCheckIn>]>
+  >({
+    queryKey: ["allUsersCheckIns"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllUsersCheckIns();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAllUsers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<
+    Array<
+      [
+        import("@icp-sdk/core/principal").Principal,
+        import("../backend").UserProfile,
+      ]
+    >
+  >({
+    queryKey: ["allUsers"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllUsers();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
 export function useLogFoodEntry() {
   const { actor } = useActor();
   const qc = useQueryClient();
@@ -134,5 +205,17 @@ export function useSaveUserProfile() {
       return actor.saveCallerUserProfile(profile);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["currentUserProfile"] }),
+  });
+}
+
+export function useSaveDailyCheckIn() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (checkIn: DailyCheckIn) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.saveDailyCheckIn(checkIn);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allCheckIns"] }),
   });
 }

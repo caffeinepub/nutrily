@@ -25,6 +25,13 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const DailyCheckIn = IDL.Record({
+  'waterGlasses' : IDL.Nat,
+  'date' : IDL.Text,
+  'exercisesDone' : IDL.Text,
+  'dietNotes' : IDL.Text,
+  'sleepHours' : IDL.Float64,
+});
 export const Time = IDL.Int;
 export const MealType = IDL.Variant({
   'breakfast' : IDL.Null,
@@ -48,6 +55,12 @@ export const HealthMetrics = IDL.Record({
   'heartRate' : IDL.Float64,
   'timestamp' : Time,
 });
+export const UserProfile = IDL.Record({
+  'heightCm' : IDL.Float64,
+  'name' : IDL.Text,
+  'weightKg' : IDL.Float64,
+  'phone' : IDL.Text,
+});
 export const WaterIntakeEntry = IDL.Record({
   'glasses' : IDL.Nat,
   'timestamp' : Time,
@@ -56,13 +69,18 @@ export const DailyWaterIntake = IDL.Record({
   'entries' : IDL.Vec(WaterIntakeEntry),
   'timestamp' : Time,
 });
-export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addFoodItem' : IDL.Func([FoodItem], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'deleteCallerUserProfile' : IDL.Func([], [], []),
   'deleteFoodItem' : IDL.Func([IDL.Text], [], []),
+  'getAllCheckIns' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Vec(DailyCheckIn)],
+      ['query'],
+    ),
   'getAllFoodItems' : IDL.Func([], [IDL.Vec(FoodItem)], ['query']),
   'getAllFoodLogs' : IDL.Func(
       [IDL.Principal],
@@ -74,6 +92,16 @@ export const idlService = IDL.Service({
       [IDL.Vec(HealthMetrics)],
       ['query'],
     ),
+  'getAllUsers' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile))],
+      ['query'],
+    ),
+  'getAllUsersCheckIns' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(DailyCheckIn)))],
+      ['query'],
+    ),
   'getAllWaterIntake' : IDL.Func(
       [IDL.Principal],
       [IDL.Vec(DailyWaterIntake)],
@@ -81,6 +109,11 @@ export const idlService = IDL.Service({
     ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getCheckInsForDate' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(DailyCheckIn)],
+      ['query'],
+    ),
   'getFoodByCategory' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
   'getFoodLogsForDate' : IDL.Func([Time], [IDL.Vec(DailyFoodLog)], ['query']),
   'getHealthMetricsForDate' : IDL.Func(
@@ -103,6 +136,7 @@ export const idlService = IDL.Service({
   'logHealthMetrics' : IDL.Func([HealthMetrics], [], []),
   'logWaterIntake' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'saveDailyCheckIn' : IDL.Func([DailyCheckIn], [], []),
   'searchFoodByName' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
 });
 
@@ -125,6 +159,13 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const DailyCheckIn = IDL.Record({
+    'waterGlasses' : IDL.Nat,
+    'date' : IDL.Text,
+    'exercisesDone' : IDL.Text,
+    'dietNotes' : IDL.Text,
+    'sleepHours' : IDL.Float64,
   });
   const Time = IDL.Int;
   const MealType = IDL.Variant({
@@ -149,6 +190,12 @@ export const idlFactory = ({ IDL }) => {
     'heartRate' : IDL.Float64,
     'timestamp' : Time,
   });
+  const UserProfile = IDL.Record({
+    'heightCm' : IDL.Float64,
+    'name' : IDL.Text,
+    'weightKg' : IDL.Float64,
+    'phone' : IDL.Text,
+  });
   const WaterIntakeEntry = IDL.Record({
     'glasses' : IDL.Nat,
     'timestamp' : Time,
@@ -157,13 +204,18 @@ export const idlFactory = ({ IDL }) => {
     'entries' : IDL.Vec(WaterIntakeEntry),
     'timestamp' : Time,
   });
-  const UserProfile = IDL.Record({ 'name' : IDL.Text });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addFoodItem' : IDL.Func([FoodItem], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'deleteCallerUserProfile' : IDL.Func([], [], []),
     'deleteFoodItem' : IDL.Func([IDL.Text], [], []),
+    'getAllCheckIns' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(DailyCheckIn)],
+        ['query'],
+      ),
     'getAllFoodItems' : IDL.Func([], [IDL.Vec(FoodItem)], ['query']),
     'getAllFoodLogs' : IDL.Func(
         [IDL.Principal],
@@ -175,6 +227,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(HealthMetrics)],
         ['query'],
       ),
+    'getAllUsers' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile))],
+        ['query'],
+      ),
+    'getAllUsersCheckIns' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(DailyCheckIn)))],
+        ['query'],
+      ),
     'getAllWaterIntake' : IDL.Func(
         [IDL.Principal],
         [IDL.Vec(DailyWaterIntake)],
@@ -182,6 +244,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCheckInsForDate' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(DailyCheckIn)],
+        ['query'],
+      ),
     'getFoodByCategory' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
     'getFoodLogsForDate' : IDL.Func([Time], [IDL.Vec(DailyFoodLog)], ['query']),
     'getHealthMetricsForDate' : IDL.Func(
@@ -204,6 +271,7 @@ export const idlFactory = ({ IDL }) => {
     'logHealthMetrics' : IDL.Func([HealthMetrics], [], []),
     'logWaterIntake' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'saveDailyCheckIn' : IDL.Func([DailyCheckIn], [], []),
     'searchFoodByName' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
   });
 };

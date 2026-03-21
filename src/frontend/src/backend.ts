@@ -98,6 +98,13 @@ export interface WaterIntakeEntry {
     timestamp: Time;
 }
 export type Time = bigint;
+export interface DailyCheckIn {
+    waterGlasses: bigint;
+    date: string;
+    exercisesDone: string;
+    dietNotes: string;
+    sleepHours: number;
+}
 export interface HealthMetrics {
     weight: number;
     steps: bigint;
@@ -127,7 +134,10 @@ export interface FoodLogEntry {
     foodName: string;
 }
 export interface UserProfile {
+    heightCm: number;
     name: string;
+    weightKg: number;
+    phone: string;
 }
 export enum MealType {
     breakfast = "breakfast",
@@ -144,13 +154,18 @@ export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     addFoodItem(food: FoodItem): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    deleteCallerUserProfile(): Promise<void>;
     deleteFoodItem(name: string): Promise<void>;
+    getAllCheckIns(user: Principal): Promise<Array<DailyCheckIn>>;
     getAllFoodItems(): Promise<Array<FoodItem>>;
     getAllFoodLogs(user: Principal): Promise<Array<DailyFoodLog>>;
     getAllHealthMetrics(user: Principal): Promise<Array<HealthMetrics>>;
+    getAllUsers(): Promise<Array<[Principal, UserProfile]>>;
+    getAllUsersCheckIns(): Promise<Array<[Principal, Array<DailyCheckIn>]>>;
     getAllWaterIntake(user: Principal): Promise<Array<DailyWaterIntake>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getCheckInsForDate(date: string): Promise<Array<DailyCheckIn>>;
     getFoodByCategory(category: string): Promise<Array<FoodItem>>;
     getFoodLogsForDate(date: Time): Promise<Array<DailyFoodLog>>;
     getHealthMetricsForDate(date: Time): Promise<Array<HealthMetrics>>;
@@ -161,6 +176,7 @@ export interface backendInterface {
     logHealthMetrics(metrics: HealthMetrics): Promise<void>;
     logWaterIntake(glasses: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveDailyCheckIn(checkIn: DailyCheckIn): Promise<void>;
     searchFoodByName(name: string): Promise<Array<FoodItem>>;
 }
 import type { DailyFoodLog as _DailyFoodLog, FoodLogEntry as _FoodLogEntry, MealType as _MealType, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
@@ -208,6 +224,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deleteCallerUserProfile(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteCallerUserProfile();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteCallerUserProfile();
+            return result;
+        }
+    }
     async deleteFoodItem(arg0: string): Promise<void> {
         if (this.processError) {
             try {
@@ -219,6 +249,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.deleteFoodItem(arg0);
+            return result;
+        }
+    }
+    async getAllCheckIns(arg0: Principal): Promise<Array<DailyCheckIn>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllCheckIns(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllCheckIns(arg0);
             return result;
         }
     }
@@ -264,6 +308,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getAllUsers(): Promise<Array<[Principal, UserProfile]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllUsers();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllUsers();
+            return result;
+        }
+    }
+    async getAllUsersCheckIns(): Promise<Array<[Principal, Array<DailyCheckIn>]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllUsersCheckIns();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllUsersCheckIns();
+            return result;
+        }
+    }
     async getAllWaterIntake(arg0: Principal): Promise<Array<DailyWaterIntake>> {
         if (this.processError) {
             try {
@@ -304,6 +376,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getCallerUserRole();
             return from_candid_UserRole_n12(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCheckInsForDate(arg0: string): Promise<Array<DailyCheckIn>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCheckInsForDate(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCheckInsForDate(arg0);
+            return result;
         }
     }
     async getFoodByCategory(arg0: string): Promise<Array<FoodItem>> {
@@ -443,6 +529,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.saveCallerUserProfile(arg0);
+            return result;
+        }
+    }
+    async saveDailyCheckIn(arg0: DailyCheckIn): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveDailyCheckIn(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveDailyCheckIn(arg0);
             return result;
         }
     }

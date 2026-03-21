@@ -9,13 +9,27 @@ import { useSaveUserProfile } from "../hooks/useQueries";
 
 export default function ProfileSetup() {
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [weightKg, setWeightKg] = useState("");
+  const [heightCm, setHeightCm] = useState("");
   const { mutateAsync, isPending } = useSaveUserProfile();
+
+  const isValid =
+    name.trim().length > 0 &&
+    phone.trim().length > 0 &&
+    weightKg.trim().length > 0 &&
+    heightCm.trim().length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!isValid) return;
     try {
-      await mutateAsync({ name: name.trim() });
+      await mutateAsync({
+        name: name.trim(),
+        phone: phone.trim(),
+        weightKg: Number.parseFloat(weightKg),
+        heightCm: Number.parseFloat(heightCm),
+      });
       toast.success("Profile saved! Welcome to Nutrily.");
     } catch {
       toast.error("Failed to save profile. Please try again.");
@@ -40,28 +54,86 @@ export default function ProfileSetup() {
           Set Up Your Profile
         </h2>
         <p className="text-sm text-muted-foreground mb-6 text-center">
-          Just one more step to get started
+          Fill in your details to get started
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="name" className="text-sm font-medium">
-              Your Name
+              Full Name
             </Label>
             <Input
               data-ocid="profile.input"
               id="name"
-              placeholder="e.g. Alex R."
+              placeholder="e.g. Arun Kumar"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="mt-1 h-10"
               autoFocus
+              autoComplete="name"
             />
           </div>
+
+          <div>
+            <Label htmlFor="phone" className="text-sm font-medium">
+              Phone Number
+            </Label>
+            <Input
+              data-ocid="profile.phone_input"
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              placeholder="e.g. +91 9876543210"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="mt-1 h-10"
+              autoComplete="tel"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="weight" className="text-sm font-medium">
+                Weight (kg)
+              </Label>
+              <Input
+                data-ocid="profile.weight_input"
+                id="weight"
+                type="number"
+                inputMode="decimal"
+                min="20"
+                max="300"
+                step="0.1"
+                placeholder="e.g. 65"
+                value={weightKg}
+                onChange={(e) => setWeightKg(e.target.value)}
+                className="mt-1 h-10"
+              />
+            </div>
+            <div>
+              <Label htmlFor="height" className="text-sm font-medium">
+                Height (cm)
+              </Label>
+              <Input
+                data-ocid="profile.height_input"
+                id="height"
+                type="number"
+                inputMode="decimal"
+                min="100"
+                max="250"
+                step="0.1"
+                placeholder="e.g. 170"
+                value={heightCm}
+                onChange={(e) => setHeightCm(e.target.value)}
+                className="mt-1 h-10"
+              />
+            </div>
+          </div>
+
           <Button
             data-ocid="profile.submit_button"
             type="submit"
-            disabled={!name.trim() || isPending}
+            disabled={!isValid || isPending}
             className="w-full h-11 rounded-full hero-gradient text-white font-semibold border-0 hover:opacity-90"
           >
             {isPending ? (

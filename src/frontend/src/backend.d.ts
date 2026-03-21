@@ -16,6 +16,13 @@ export interface WaterIntakeEntry {
     timestamp: Time;
 }
 export type Time = bigint;
+export interface DailyCheckIn {
+    waterGlasses: bigint;
+    date: string;
+    exercisesDone: string;
+    dietNotes: string;
+    sleepHours: number;
+}
 export interface HealthMetrics {
     weight: number;
     steps: bigint;
@@ -45,7 +52,10 @@ export interface FoodLogEntry {
     foodName: string;
 }
 export interface UserProfile {
+    heightCm: number;
     name: string;
+    weightKg: number;
+    phone: string;
 }
 export enum MealType {
     breakfast = "breakfast",
@@ -61,13 +71,18 @@ export enum UserRole {
 export interface backendInterface {
     addFoodItem(food: FoodItem): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    deleteCallerUserProfile(): Promise<void>;
     deleteFoodItem(name: string): Promise<void>;
+    getAllCheckIns(user: Principal): Promise<Array<DailyCheckIn>>;
     getAllFoodItems(): Promise<Array<FoodItem>>;
     getAllFoodLogs(user: Principal): Promise<Array<DailyFoodLog>>;
     getAllHealthMetrics(user: Principal): Promise<Array<HealthMetrics>>;
+    getAllUsers(): Promise<Array<[Principal, UserProfile]>>;
+    getAllUsersCheckIns(): Promise<Array<[Principal, Array<DailyCheckIn>]>>;
     getAllWaterIntake(user: Principal): Promise<Array<DailyWaterIntake>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getCheckInsForDate(date: string): Promise<Array<DailyCheckIn>>;
     getFoodByCategory(category: string): Promise<Array<FoodItem>>;
     getFoodLogsForDate(date: Time): Promise<Array<DailyFoodLog>>;
     getHealthMetricsForDate(date: Time): Promise<Array<HealthMetrics>>;
@@ -78,5 +93,6 @@ export interface backendInterface {
     logHealthMetrics(metrics: HealthMetrics): Promise<void>;
     logWaterIntake(glasses: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveDailyCheckIn(checkIn: DailyCheckIn): Promise<void>;
     searchFoodByName(name: string): Promise<Array<FoodItem>>;
 }

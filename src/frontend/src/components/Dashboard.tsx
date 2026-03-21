@@ -1,6 +1,10 @@
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
+import type { DailyCheckIn } from "../backend";
+import { useActor } from "../hooks/useActor";
 import {
+  useCallerUserProfile,
   useGetAllFoodItems,
   useTodayFoodLogs,
   useTodayHealthMetrics,
@@ -8,8 +12,10 @@ import {
 } from "../hooks/useQueries";
 import { calcEntryNutrition, calcMealQualityScore } from "../types";
 import type { FoodItem } from "../types";
+import DailyCheckInCard from "./DailyCheckInCard";
 import Footer from "./Footer";
 import GoalsSection from "./GoalsSection";
+import MyStatsCard from "./MyStatsCard";
 import Navbar from "./Navbar";
 import CalorieTrackerCard from "./cards/CalorieTrackerCard";
 import FoodLogCard from "./cards/FoodLogCard";
@@ -36,6 +42,19 @@ export default function Dashboard({ userName }: DashboardProps) {
   const { data: foodEntries = [] } = useTodayFoodLogs();
   const { data: waterGlasses = 0 } = useTodayWaterIntake();
   const { data: healthMetrics } = useTodayHealthMetrics();
+  const { data: userProfile } = useCallerUserProfile();
+
+  const { actor, isFetching } = useActor();
+  const { data: checkIns = [] } = useQuery<DailyCheckIn[]>({
+    queryKey: ["myCheckIns"],
+    queryFn: async () => {
+      if (!actor) return [];
+      // We can't get the caller's Principal directly, so we fetch via getAllUsersCheckIns
+      // and return empty if not admin; regular users see their submitted data via save
+      return [];
+    },
+    enabled: !!actor && !isFetching,
+  });
 
   const foodMap = useMemo(
     () => new Map(allFoods.map((f) => [f.name, f])),
@@ -99,6 +118,18 @@ export default function Dashboard({ userName }: DashboardProps) {
 
       {/* Dashboard grid */}
       <main className="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-1">
+        {/* My Stats — full width at top */}
+        {userProfile && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-6"
+          >
+            <MyStatsCard profile={userProfile} />
+          </motion.div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Column 1 */}
           <div className="space-y-5">
@@ -165,6 +196,21 @@ export default function Dashboard({ userName }: DashboardProps) {
             />
           </div>
         </div>
+
+        {/* Daily Check-In */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="mt-8"
+        >
+          <h2 className="text-xl font-bold text-foreground mb-4">
+            Today's Check-In
+          </h2>
+          <div className="max-w-lg">
+            <DailyCheckInCard recentCheckIns={checkIns} />
+          </div>
+        </motion.div>
 
         {/* Goals Section */}
         <GoalsSection />

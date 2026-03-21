@@ -10,6 +10,13 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface DailyCheckIn {
+  'waterGlasses' : bigint,
+  'date' : string,
+  'exercisesDone' : string,
+  'dietNotes' : string,
+  'sleepHours' : number,
+}
 export interface DailyFoodLog {
   'entries' : Array<FoodLogEntry>,
   'timestamp' : Time,
@@ -47,7 +54,12 @@ export type MealType = { 'breakfast' : null } |
   { 'snack' : null } |
   { 'dinner' : null };
 export type Time = bigint;
-export interface UserProfile { 'name' : string }
+export interface UserProfile {
+  'heightCm' : number,
+  'name' : string,
+  'weightKg' : number,
+  'phone' : string,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -56,13 +68,21 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addFoodItem' : ActorMethod<[FoodItem], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'deleteCallerUserProfile' : ActorMethod<[], undefined>,
   'deleteFoodItem' : ActorMethod<[string], undefined>,
+  'getAllCheckIns' : ActorMethod<[Principal], Array<DailyCheckIn>>,
   'getAllFoodItems' : ActorMethod<[], Array<FoodItem>>,
   'getAllFoodLogs' : ActorMethod<[Principal], Array<DailyFoodLog>>,
   'getAllHealthMetrics' : ActorMethod<[Principal], Array<HealthMetrics>>,
+  'getAllUsers' : ActorMethod<[], Array<[Principal, UserProfile]>>,
+  'getAllUsersCheckIns' : ActorMethod<
+    [],
+    Array<[Principal, Array<DailyCheckIn>]>
+  >,
   'getAllWaterIntake' : ActorMethod<[Principal], Array<DailyWaterIntake>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCheckInsForDate' : ActorMethod<[string], Array<DailyCheckIn>>,
   'getFoodByCategory' : ActorMethod<[string], Array<FoodItem>>,
   'getFoodLogsForDate' : ActorMethod<[Time], Array<DailyFoodLog>>,
   'getHealthMetricsForDate' : ActorMethod<[Time], Array<HealthMetrics>>,
@@ -73,6 +93,7 @@ export interface _SERVICE {
   'logHealthMetrics' : ActorMethod<[HealthMetrics], undefined>,
   'logWaterIntake' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'saveDailyCheckIn' : ActorMethod<[DailyCheckIn], undefined>,
   'searchFoodByName' : ActorMethod<[string], Array<FoodItem>>,
 }
 export declare const idlService: IDL.ServiceClass;
