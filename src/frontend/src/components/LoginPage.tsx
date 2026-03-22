@@ -19,22 +19,22 @@ const GOALS = [
 
 export default function LoginPage({ onAdminAccess }: LoginPageProps) {
   const { login } = useLocalAuth();
-  const [isNewUser, setIsNewUser] = useState(false);
 
-  // Login form state
-  const [loginName, setLoginName] = useState("");
-  const [loginPhone, setLoginPhone] = useState("");
-  const [loginError, setLoginError] = useState("");
+  // Step 1 fields
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [step1Error, setStep1Error] = useState("");
 
-  // Registration form state
-  const [regName, setRegName] = useState("");
-  const [regPhone, setRegPhone] = useState("");
-  const [regAge, setRegAge] = useState("");
-  const [regWeight, setRegWeight] = useState("");
-  const [regHeight, setRegHeight] = useState("");
-  const [regGender, setRegGender] = useState("");
-  const [regGoal, setRegGoal] = useState<ProfileGoal | "">("");
-  const [regError, setRegError] = useState("");
+  // Whether to show Step 2 (new user profile setup)
+  const [showStep2, setShowStep2] = useState(false);
+
+  // Step 2 fields
+  const [age, setAge] = useState("");
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
+  const [gender, setGender] = useState("");
+  const [goal, setGoal] = useState<ProfileGoal | "">("");
+  const [step2Error, setStep2Error] = useState("");
 
   // Admin modal state
   const [logoClickCount, setLogoClickCount] = useState(0);
@@ -68,72 +68,82 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError("");
-    const stored = localStorage.getItem("doitepic_user");
-    if (!stored) {
-      setLoginError("No account found. Please register below.");
-      setIsNewUser(true);
+    setStep1Error("");
+
+    if (!name.trim()) {
+      setStep1Error("Please enter your name.");
       return;
     }
+    if (!phone.trim()) {
+      setStep1Error("Please enter your phone number.");
+      return;
+    }
+
+    const stored = localStorage.getItem("doitepic_user");
+    if (!stored) {
+      // No user yet — expand Step 2 for profile setup
+      setShowStep2(true);
+      return;
+    }
+
     const profile: LocalUser = JSON.parse(stored);
     const nameMatch =
-      profile.name.trim().toLowerCase() === loginName.trim().toLowerCase();
-    const phoneMatch = profile.phone.trim() === loginPhone.trim();
+      profile.name.trim().toLowerCase() === name.trim().toLowerCase();
+    const phoneMatch = profile.phone.trim() === phone.trim();
+
     if (nameMatch && phoneMatch) {
       login(profile);
     } else {
-      setLoginError(
-        "Name or phone number doesn't match. Try again or register.",
-      );
+      setStep1Error("Name or phone doesn't match your saved profile.");
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleGetStarted = (e: React.FormEvent) => {
     e.preventDefault();
-    setRegError("");
+    setStep2Error("");
 
-    if (!regName.trim()) {
-      setRegError("Please enter your name.");
+    if (!name.trim()) {
+      setStep2Error("Please enter your name.");
       return;
     }
-    if (!/^[6-9]\d{9}$/.test(regPhone.trim())) {
-      setRegError("Enter a valid 10-digit Indian mobile number.");
+    if (!/^[6-9]\d{9}$/.test(phone.trim())) {
+      setStep2Error("Enter a valid 10-digit Indian mobile number.");
       return;
     }
-    const age = Number.parseInt(regAge, 10);
-    if (Number.isNaN(age) || age < 10 || age > 100) {
-      setRegError("Enter a valid age (10–100 years).");
+    const ageNum = Number.parseInt(age, 10);
+    if (Number.isNaN(ageNum) || ageNum < 10 || ageNum > 100) {
+      setStep2Error("Enter a valid age (10–100 years).");
       return;
     }
-    const wt = Number.parseFloat(regWeight);
+    const wt = Number.parseFloat(weight);
     if (Number.isNaN(wt) || wt < 20 || wt > 300) {
-      setRegError("Enter a valid weight (20–300 kg).");
+      setStep2Error("Enter a valid weight (20–300 kg).");
       return;
     }
-    const ht = Number.parseFloat(regHeight);
+    const ht = Number.parseFloat(height);
     if (Number.isNaN(ht) || ht < 100 || ht > 250) {
-      setRegError("Enter a valid height (100–250 cm).");
+      setStep2Error("Enter a valid height (100–250 cm).");
       return;
     }
-    if (!regGender) {
-      setRegError("Please select your gender.");
+    if (!gender) {
+      setStep2Error("Please select your gender.");
       return;
     }
-    if (!regGoal) {
-      setRegError("Please select your health goal.");
+    if (!goal) {
+      setStep2Error("Please select your health goal.");
       return;
     }
 
     const profile: LocalUser = {
-      name: regName.trim(),
-      phone: regPhone.trim(),
-      age,
+      name: name.trim(),
+      phone: phone.trim(),
+      age: ageNum,
       weightKg: wt,
       heightCm: ht,
-      gender: regGender,
-      goal: regGoal as ProfileGoal,
+      gender,
+      goal: goal as ProfileGoal,
       joinedAt: new Date().toISOString(),
     };
     login(profile);
@@ -178,321 +188,285 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
           <span className="text-2xl font-bold text-foreground">DOITEPIC</span>
         </button>
 
-        <h1 className="text-2xl font-bold text-foreground mb-1">
-          {isNewUser ? "Create your account" : "Welcome back!"}
-        </h1>
-        <p className="text-muted-foreground mb-6 text-sm">
-          {isNewUser
-            ? "Set up your health profile to get started"
-            : "Your personal health and nutrition dashboard"}
-        </p>
-
         <AnimatePresence mode="wait">
-          {!isNewUser ? (
-            <motion.form
-              key="login"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.25 }}
-              onSubmit={handleLogin}
-              className="space-y-4 text-left"
+          {!showStep2 ? (
+            <motion.div
+              key="step1-header"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
-              <div>
-                <label
-                  htmlFor="login-name"
-                  className="text-xs font-medium text-foreground block mb-1"
-                >
-                  Your Name
-                </label>
-                <Input
-                  id="login-name"
-                  data-ocid="login.input"
-                  value={loginName}
-                  onChange={(e) => {
-                    setLoginName(e.target.value);
-                    setLoginError("");
-                  }}
-                  placeholder="Enter your name"
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="login-phone"
-                  className="text-xs font-medium text-foreground block mb-1"
-                >
-                  Phone Number
-                </label>
-                <Input
-                  id="login-phone"
-                  data-ocid="login.input"
-                  value={loginPhone}
-                  onChange={(e) => {
-                    setLoginPhone(e.target.value);
-                    setLoginError("");
-                  }}
-                  placeholder="10-digit mobile number"
-                  type="tel"
-                  inputMode="numeric"
-                />
-              </div>
-              {loginError && (
-                <p
-                  data-ocid="login.error_state"
-                  className="text-red-500 text-xs"
-                >
-                  {loginError}
-                </p>
-              )}
-              <Button
-                data-ocid="login.primary_button"
-                type="submit"
-                className="w-full h-11 rounded-full hero-gradient text-white font-semibold text-base border-0 hover:opacity-90 transition-opacity"
-              >
-                Enter DOITEPIC
-              </Button>
-              <p className="text-center text-sm text-muted-foreground pt-1">
-                New here?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsNewUser(true);
-                    setLoginError("");
-                  }}
-                  className="text-primary font-semibold hover:underline"
-                >
-                  Register
-                </button>
+              <h1 className="text-2xl font-bold text-foreground mb-1">
+                Welcome back!
+              </h1>
+              <p className="text-muted-foreground mb-6 text-sm">
+                Your personal health and nutrition dashboard
               </p>
-            </motion.form>
+            </motion.div>
           ) : (
-            <motion.form
-              key="register"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+            <motion.div
+              key="step2-header"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
-              onSubmit={handleRegister}
-              className="space-y-4 text-left"
             >
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label
-                    htmlFor="reg-name"
-                    className="text-xs font-medium text-foreground block mb-1"
-                  >
-                    Full Name
-                  </label>
-                  <Input
-                    id="reg-name"
-                    data-ocid="register.input"
-                    value={regName}
-                    onChange={(e) => {
-                      setRegName(e.target.value);
-                      setRegError("");
-                    }}
-                    placeholder="Your full name"
-                    autoFocus
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label
-                    htmlFor="reg-phone"
-                    className="text-xs font-medium text-foreground block mb-1"
-                  >
-                    Phone Number
-                  </label>
-                  <Input
-                    id="reg-phone"
-                    data-ocid="register.input"
-                    value={regPhone}
-                    onChange={(e) => {
-                      setRegPhone(e.target.value);
-                      setRegError("");
-                    }}
-                    placeholder="10-digit mobile number"
-                    type="tel"
-                    inputMode="numeric"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="reg-age"
-                    className="text-xs font-medium text-foreground block mb-1"
-                  >
-                    Age (years)
-                  </label>
-                  <Input
-                    id="reg-age"
-                    data-ocid="register.input"
-                    value={regAge}
-                    onChange={(e) => {
-                      setRegAge(e.target.value);
-                      setRegError("");
-                    }}
-                    placeholder="e.g. 25"
-                    type="number"
-                    min={10}
-                    max={100}
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="reg-weight"
-                    className="text-xs font-medium text-foreground block mb-1"
-                  >
-                    Weight (kg)
-                  </label>
-                  <Input
-                    id="reg-weight"
-                    data-ocid="register.input"
-                    value={regWeight}
-                    onChange={(e) => {
-                      setRegWeight(e.target.value);
-                      setRegError("");
-                    }}
-                    placeholder="e.g. 70"
-                    type="number"
-                    min={20}
-                    max={300}
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label
-                    htmlFor="reg-height"
-                    className="text-xs font-medium text-foreground block mb-1"
-                  >
-                    Height (cm)
-                  </label>
-                  <Input
-                    id="reg-height"
-                    data-ocid="register.input"
-                    value={regHeight}
-                    onChange={(e) => {
-                      setRegHeight(e.target.value);
-                      setRegError("");
-                    }}
-                    placeholder="e.g. 170"
-                    type="number"
-                    min={100}
-                    max={250}
-                  />
-                </div>
-              </div>
-
-              {/* Gender */}
-              <div>
-                <p className="text-xs font-medium text-foreground block mb-2">
-                  Gender
-                </p>
-                <div className="flex gap-3">
-                  {["male", "female"].map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      data-ocid="register.toggle"
-                      onClick={() => {
-                        setRegGender(g);
-                        setRegError("");
-                      }}
-                      className={`flex-1 py-2 rounded-xl border-2 text-sm font-semibold transition-all ${
-                        regGender === g
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/50"
-                      }`}
-                    >
-                      {g === "male" ? "👨 Male" : "👩 Female"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Goal */}
-              <div>
-                <p className="text-xs font-medium text-foreground block mb-2">
-                  Health Goal
-                </p>
-                <div className="space-y-2">
-                  {GOALS.map((g) => (
-                    <button
-                      key={g.value}
-                      type="button"
-                      data-ocid="register.radio"
-                      onClick={() => {
-                        setRegGoal(g.value);
-                        setRegError("");
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all ${
-                        regGoal === g.value
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/50"
-                      }`}
-                    >
-                      <span className="text-lg">{g.emoji}</span>
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {regError && (
-                <p
-                  data-ocid="register.error_state"
-                  className="text-red-500 text-xs"
-                >
-                  {regError}
-                </p>
-              )}
-
-              <Button
-                data-ocid="register.submit_button"
-                type="submit"
-                className="w-full h-11 rounded-full hero-gradient text-white font-semibold text-base border-0 hover:opacity-90 transition-opacity"
-              >
-                Get Started
-              </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                🔒 Your data is stored securely on your device
+              <h1 className="text-2xl font-bold text-foreground mb-1">
+                Let's set up your profile!
+              </h1>
+              <p className="text-muted-foreground mb-6 text-sm">
+                Just a few details to personalise your experience
               </p>
-              <p className="text-center text-sm text-muted-foreground">
-                Already registered?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsNewUser(false);
-                    setRegError("");
-                  }}
-                  className="text-primary font-semibold hover:underline"
-                >
-                  Login
-                </button>
-              </p>
-            </motion.form>
+            </motion.div>
           )}
         </AnimatePresence>
 
-        {!isNewUser && (
-          <div className="mt-6 space-y-2">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="flex items-center gap-3 text-left p-3 rounded-xl bg-accent"
-              >
-                <div className="w-8 h-8 rounded-lg hero-gradient flex items-center justify-center flex-shrink-0">
-                  <f.icon className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {f.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{f.desc}</p>
-                </div>
-              </div>
-            ))}
+        <form
+          onSubmit={showStep2 ? handleGetStarted : handleContinue}
+          className="space-y-4 text-left"
+        >
+          {/* Step 1 fields — always visible */}
+          <div>
+            <label
+              htmlFor="login-name"
+              className="text-xs font-medium text-foreground block mb-1"
+            >
+              Your Name
+            </label>
+            <Input
+              id="login-name"
+              data-ocid="login.input"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setStep1Error("");
+              }}
+              placeholder="Enter your name"
+              autoFocus
+              disabled={showStep2}
+              className={showStep2 ? "opacity-60" : ""}
+            />
           </div>
-        )}
+          <div>
+            <label
+              htmlFor="login-phone"
+              className="text-xs font-medium text-foreground block mb-1"
+            >
+              Phone Number
+            </label>
+            <Input
+              id="login-phone"
+              data-ocid="login.input"
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setStep1Error("");
+              }}
+              placeholder="10-digit mobile number"
+              type="tel"
+              inputMode="numeric"
+              disabled={showStep2}
+              className={showStep2 ? "opacity-60" : ""}
+            />
+          </div>
+
+          {step1Error && !showStep2 && (
+            <p data-ocid="login.error_state" className="text-red-500 text-xs">
+              {step1Error}
+            </p>
+          )}
+
+          {/* Step 2 — animated expansion for new users */}
+          <AnimatePresence>
+            {showStep2 && (
+              <motion.div
+                key="step2-fields"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label
+                        htmlFor="reg-age"
+                        className="text-xs font-medium text-foreground block mb-1"
+                      >
+                        Age (yrs)
+                      </label>
+                      <Input
+                        id="reg-age"
+                        data-ocid="register.input"
+                        value={age}
+                        onChange={(e) => {
+                          setAge(e.target.value);
+                          setStep2Error("");
+                        }}
+                        placeholder="25"
+                        type="number"
+                        min={10}
+                        max={100}
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="reg-weight"
+                        className="text-xs font-medium text-foreground block mb-1"
+                      >
+                        Weight (kg)
+                      </label>
+                      <Input
+                        id="reg-weight"
+                        data-ocid="register.input"
+                        value={weight}
+                        onChange={(e) => {
+                          setWeight(e.target.value);
+                          setStep2Error("");
+                        }}
+                        placeholder="70"
+                        type="number"
+                        min={20}
+                        max={300}
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="reg-height"
+                        className="text-xs font-medium text-foreground block mb-1"
+                      >
+                        Height (cm)
+                      </label>
+                      <Input
+                        id="reg-height"
+                        data-ocid="register.input"
+                        value={height}
+                        onChange={(e) => {
+                          setHeight(e.target.value);
+                          setStep2Error("");
+                        }}
+                        placeholder="170"
+                        type="number"
+                        min={100}
+                        max={250}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Gender */}
+                  <div>
+                    <p className="text-xs font-medium text-foreground block mb-2">
+                      Gender
+                    </p>
+                    <div className="flex gap-3">
+                      {["male", "female"].map((g) => (
+                        <button
+                          key={g}
+                          type="button"
+                          data-ocid="register.toggle"
+                          onClick={() => {
+                            setGender(g);
+                            setStep2Error("");
+                          }}
+                          className={`flex-1 py-2 rounded-xl border-2 text-sm font-semibold transition-all ${
+                            gender === g
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {g === "male" ? "👨 Male" : "👩 Female"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Health Goal */}
+                  <div>
+                    <p className="text-xs font-medium text-foreground block mb-2">
+                      Health Goal
+                    </p>
+                    <div className="space-y-2">
+                      {GOALS.map((g) => (
+                        <button
+                          key={g.value}
+                          type="button"
+                          data-ocid="register.radio"
+                          onClick={() => {
+                            setGoal(g.value);
+                            setStep2Error("");
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all ${
+                            goal === g.value
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          <span className="text-lg">{g.emoji}</span>
+                          {g.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {step2Error && (
+                    <p
+                      data-ocid="register.error_state"
+                      className="text-red-500 text-xs"
+                    >
+                      {step2Error}
+                    </p>
+                  )}
+
+                  <p className="text-center text-xs text-muted-foreground">
+                    🔒 Your data is stored securely on your device
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <Button
+            data-ocid="login.primary_button"
+            type="submit"
+            className="w-full h-11 rounded-full hero-gradient text-white font-semibold text-base border-0 hover:opacity-90 transition-opacity"
+          >
+            {showStep2 ? "Get Started" : "Continue"}
+          </Button>
+        </form>
+
+        {/* Features section — only shown in Step 1 */}
+        <AnimatePresence>
+          {!showStep2 && (
+            <motion.div
+              key="features"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25 }}
+              className="mt-6 space-y-2 overflow-hidden"
+            >
+              {features.map((f) => (
+                <div
+                  key={f.title}
+                  className="flex items-center gap-3 text-left p-3 rounded-xl bg-accent"
+                >
+                  <div className="w-8 h-8 rounded-lg hero-gradient flex items-center justify-center flex-shrink-0">
+                    <f.icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {f.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* Hidden Admin Access Modal */}
