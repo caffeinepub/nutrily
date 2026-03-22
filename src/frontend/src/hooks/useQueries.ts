@@ -5,9 +5,11 @@ import type {
   FoodLogEntry,
   FoodSuggestion,
   HealthMetrics,
+  ProfileGoal,
   Review,
   UserProfile,
 } from "../backend";
+import type { Announcement, Article, DietPlan, UserReport } from "../types";
 import { getTodayStartNs } from "../types";
 import { useActor } from "./useActor";
 
@@ -24,7 +26,6 @@ export function useGetAllFoodItems() {
   });
 }
 
-// Alias for clarity in admin components
 export function useAllFoodItems() {
   return useGetAllFoodItems();
 }
@@ -137,7 +138,7 @@ export function useAllUsersCheckIns() {
     queryKey: ["allUsersCheckIns"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllUsersCheckIns();
+      return (actor as any).getAllUsersCheckIns();
     },
     enabled: !!actor && !isFetching,
   });
@@ -160,6 +161,20 @@ export function useAllUsers() {
     },
     enabled: !!actor && !isFetching,
   });
+}
+
+export function useUserJoinTimes() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Array<[import("@icp-sdk/core/principal").Principal, bigint]>>(
+    {
+      queryKey: ["userJoinTimes"],
+      queryFn: async () => {
+        if (!actor) return [];
+        return (actor as any).getUserJoinTimes();
+      },
+      enabled: !!actor && !isFetching,
+    },
+  );
 }
 
 export function useLogFoodEntry() {
@@ -354,5 +369,378 @@ export function useSubmitFoodSuggestion() {
     },
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["pendingFoodSuggestions"] }),
+  });
+}
+
+// ─── Diet Plans Hooks ─────────────────────────────────────────────────────────
+
+export function useAllDietPlans() {
+  const { actor, isFetching } = useActor();
+  return useQuery<DietPlan[]>({
+    queryKey: ["allDietPlans"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getAllDietPlans();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useDietPlansByGoal(goal: ProfileGoal) {
+  const { actor, isFetching } = useActor();
+  return useQuery<DietPlan[]>({
+    queryKey: ["dietPlansByGoal", goal],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getDietPlansByGoal(goal);
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateDietPlan() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (plan: DietPlan) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).createDietPlan(plan);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allDietPlans"] }),
+  });
+}
+
+export function useUpdateDietPlan() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (plan: DietPlan) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).updateDietPlan(plan);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allDietPlans"] }),
+  });
+}
+
+export function useDeleteDietPlan() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).deleteDietPlan(id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allDietPlans"] }),
+  });
+}
+
+// ─── Articles Hooks ───────────────────────────────────────────────────────────
+
+export function useAllArticles() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Article[]>({
+    queryKey: ["allArticles"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getAllArticles();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateArticle() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (article: Article) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).createArticle(article);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allArticles"] }),
+  });
+}
+
+export function useUpdateArticle() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (article: Article) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).updateArticle(article);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allArticles"] }),
+  });
+}
+
+export function useDeleteArticle() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).deleteArticle(id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allArticles"] }),
+  });
+}
+
+// ─── Announcements Hooks ──────────────────────────────────────────────────────
+
+export function useAllAnnouncements() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Announcement[]>({
+    queryKey: ["allAnnouncements"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getAllAnnouncements();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useActiveAnnouncements(goal: ProfileGoal | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<Announcement[]>({
+    queryKey: ["activeAnnouncements", goal],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getActiveAnnouncementsForGoal(goal);
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateAnnouncement() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (announcement: Announcement) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).createAnnouncement(announcement);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allAnnouncements"] }),
+  });
+}
+
+export function useUpdateAnnouncement() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (announcement: Announcement) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).updateAnnouncement(announcement);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allAnnouncements"] }),
+  });
+}
+
+export function useDeleteAnnouncement() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).deleteAnnouncement(id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allAnnouncements"] }),
+  });
+}
+
+export function useToggleAnnouncement() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).toggleAnnouncement(id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allAnnouncements"] }),
+  });
+}
+
+// ─── Reports & Moderation Hooks ───────────────────────────────────────────────
+
+export function useAllReports() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserReport[]>({
+    queryKey: ["allReports"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getAllReports();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useResolveReport() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).resolveReport(id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allReports"] }),
+  });
+}
+
+export function useDismissReport() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).dismissReport(id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allReports"] }),
+  });
+}
+
+export function useSubmitUserReport() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({
+      reportType,
+      description,
+      targetFoodName,
+    }: {
+      reportType: string;
+      description: string;
+      targetFoodName: string | null;
+    }) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).submitUserReport(
+        reportType,
+        description,
+        targetFoodName,
+      );
+    },
+  });
+}
+
+export function useFlaggedUsers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Array<[import("@icp-sdk/core/principal").Principal, string]>>(
+    {
+      queryKey: ["flaggedUsers"],
+      queryFn: async () => {
+        if (!actor) return [];
+        return (actor as any).getFlaggedUsers();
+      },
+      enabled: !!actor && !isFetching,
+    },
+  );
+}
+
+export function useFlagUser() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      user,
+      reason,
+    }: {
+      user: import("@icp-sdk/core/principal").Principal;
+      reason: string;
+    }) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).flagUser(user, reason);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["flaggedUsers"] });
+      qc.invalidateQueries({ queryKey: ["allUsers"] });
+    },
+  });
+}
+
+export function useUnflagUser() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (user: import("@icp-sdk/core/principal").Principal) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).unflagUser(user);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["flaggedUsers"] }),
+  });
+}
+
+export function useDeleteUserAccount() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (user: import("@icp-sdk/core/principal").Principal) => {
+      if (!actor) throw new Error("Not authenticated");
+      return (actor as any).deleteUserAccount(user);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["allUsers"] });
+      qc.invalidateQueries({ queryKey: ["flaggedUsers"] });
+    },
+  });
+}
+
+// ─── Streak Hooks ─────────────────────────────────────────────────────────────
+
+export interface UserStreak {
+  currentStreak: bigint;
+  longestStreak: bigint;
+  totalPoints: bigint;
+  lastActiveDate: string;
+}
+
+export function useCallerStreak() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserStreak | null>({
+    queryKey: ["callerStreak"],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        const result = await (actor as any).getCallerStreak();
+        if (Array.isArray(result) && result.length > 0) return result[0];
+        return null;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useUpdateStreak() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      dateStr,
+      points,
+    }: { dateStr: string; points: bigint }) => {
+      if (!actor) return;
+      try {
+        await (actor as any).updateStreak(dateStr, points);
+      } catch {
+        // Silently ignore streak errors — not critical
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["callerStreak"] }),
+  });
+}
+
+export function useAllUserStreaks() {
+  const { actor, isFetching } = useActor();
+  return useQuery<
+    Array<[import("@icp-sdk/core/principal").Principal, UserStreak]>
+  >({
+    queryKey: ["allUserStreaks"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await (actor as any).getAllUserStreaks();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
   });
 }

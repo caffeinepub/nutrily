@@ -1,45 +1,39 @@
 # DOITEPIC
 
 ## Current State
-The app is a full-stack PWA nutrition tracker with:
-- User login/registration (name, phone, weight, height)
-- Dashboard with food log, Smart Coach, health goals (Weight Gain, Weight Loss)
-- 500+ food database stored in frontend
-- Admin panel showing user list and check-ins
-- Backend has basic addFoodItem/deleteFoodItem/getAllFoodItems endpoints
-- No food editing, no user-submitted food approval, no CSV upload, no regional management
-- Only two user goals: Weight Gain, Weight Loss (no Maintenance)
+- UserProfile stores: name, phone, weightKg, heightCm, goal — but NO gender field (despite the UI collecting it)
+- Smart Coach uses BMR but without gender-differentiated equations
+- No streak or points system exists
+- Admin can see join times but no streak data
 
 ## Requested Changes (Diff)
 
 ### Add
-- Admin: Food Database Management tab in admin panel
-  - View all food items in a searchable table
-  - Add new food item form (name, category, region, calories, protein, carbs, fat, fiber, sugar, serving size, veg/non-veg type, health warning)
-  - Edit existing food item inline
-  - Delete food item with confirmation
-  - CSV bulk upload: parse CSV rows and batch-add food items
-  - Regional filter: filter by region (Kerala, South India, North India, Chinese, Arabian, Global)
-- Admin: User-submitted food approval queue
-  - Users can submit a food suggestion from the food log
-  - Admin sees pending submissions and can approve (adds to DB) or reject
-- User: "Maintenance" goal added alongside Weight Gain and Weight Loss
-  - Maintenance goal card with calorie maintenance tips, balanced diet advice, and activity guidance
-- User: Profile setup and dashboard show goal selection (Weight Loss, Muscle Gain, Maintenance)
-- Product scope page/section accessible from dashboard showing target audience and goal descriptions
+- `gender` field (`#male | #female`) to UserProfile backend type
+- Streak tracking: `UserStreak` record per user — currentStreak (days), longestStreak, totalPoints, lastActiveDate
+- `getCallerStreak` and `updateStreak` backend calls
+- Admin can query all user streaks
+- Frontend: Gender-aware BMR (Mifflin-St Jeor: male uses +5, female uses -161 constant)
+- Frontend: Gender-specific macro targets (male: protein 1.8g/kg, fat 25-30%; female: protein 1.6g/kg, fat 28-35%, slightly higher fat for hormonal health)
+- Frontend: Gender-specific food and exercise recommendations in Smart Coach
+- Frontend: Streak widget on dashboard showing flame icon, current streak days, total points
+- Frontend: Points awarded for: logging food (+5 pts), completing daily check-in (+10 pts), hitting calorie goal (+15 pts), 7-day streak bonus (+50 pts)
+- Frontend: Streak milestone badges (3-day, 7-day, 30-day)
+- Admin panel: Show streak and points data per user in the Users tab
 
 ### Modify
-- AdminDashboard: Add tabbed navigation (Users tab + Food Database tab + Approvals tab)
-- Backend: Add updateFoodItem, submitFoodSuggestion, getFoodSuggestions, approveFoodSuggestion, rejectFoodSuggestion endpoints
-- UserProfile type: add optional `goal` field (weightLoss | muscleGain | maintenance)
-- ProfileSetup: add goal selection step
+- UserProfile type: add `gender: ?Text` field (optional to preserve existing users)
+- ProfileSetup: gender selector already in UI, ensure it saves to backend
+- Smart Coach: use gender in BMR + macro calculations
+- Dashboard My Stats: show gender-adjusted BMR and calorie targets
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. Update backend: add updateFoodItem, user food suggestion submit/approve/reject, update UserProfile to include goal field
-2. AdminDashboard: add tabs, Food DB tab with full CRUD + CSV upload + regional filter, Approvals tab
-3. Dashboard: add Maintenance goal card, update Smart Coach to handle maintenance goal
-4. ProfileSetup: add goal selection (Weight Loss, Muscle Gain, Maintenance)
-5. FoodLog: add "Suggest a Food" button that opens a lightweight submission form
+1. Regenerate backend to add gender to UserProfile and add UserStreak type + CRUD
+2. Update frontend ProfileSetup to save gender field
+3. Update Smart Coach logic with gender-differentiated BMR and macro ranges
+4. Add streak widget to dashboard
+5. Wire points: food log save, check-in save, calorie goal hit
+6. Admin Users tab: show streak/points column

@@ -7,20 +7,34 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface UserProfile {
-    heightCm: number;
-    goal?: ProfileGoal;
-    name: string;
-    weightKg: number;
-    phone: string;
-}
 export interface Review {
     text: string;
     authorName: string;
     reviewType: string;
     timestamp: Time;
 }
+export interface UserReport {
+    id: bigint;
+    status: ReportStatus;
+    targetFoodName?: string;
+    createdAt: Time;
+    description: string;
+    reportType: string;
+    reportedBy: Principal;
+}
+export interface DailyWaterIntake {
+    entries: Array<WaterIntakeEntry>;
+    timestamp: Time;
+}
 export type Time = bigint;
+export interface Article {
+    id: bigint;
+    title: string;
+    body: string;
+    createdAt: Time;
+    imageUrl: string;
+    category: string;
+}
 export interface HealthMetrics {
     weight: number;
     steps: bigint;
@@ -37,13 +51,6 @@ export interface FoodSuggestion {
     timestamp: Time;
     foodItem: FoodItem;
 }
-export interface DailyCheckIn {
-    waterGlasses: bigint;
-    date: string;
-    exercisesDone: string;
-    dietNotes: string;
-    sleepHours: number;
-}
 export interface FoodItem {
     fat: number;
     region: string;
@@ -57,9 +64,44 @@ export interface FoodItem {
     category: string;
     protein: number;
 }
+export interface DietPlan {
+    id: bigint;
+    proteinTarget: number;
+    goalType: ProfileGoal;
+    name: string;
+    fatTarget: number;
+    description: string;
+    mealTimingSuggestions: Array<string>;
+    recommendedFoods: Array<string>;
+    dailyCalorieTarget: number;
+    carbsTarget: number;
+}
 export interface DailyFoodLog {
     entries: Array<FoodLogEntry>;
     timestamp: Time;
+}
+export interface DailyCheckIn {
+    waterGlasses: bigint;
+    date: string;
+    exercisesDone: string;
+    dietNotes: string;
+    sleepHours: number;
+}
+export interface Announcement {
+    id: bigint;
+    title: string;
+    createdAt: Time;
+    isActive: boolean;
+    message: string;
+    targetGoal: AnnouncementTarget;
+}
+export interface UserProfile {
+    heightCm: number;
+    goal?: ProfileGoal;
+    name: string;
+    weightKg: number;
+    gender?: string;
+    phone: string;
 }
 export interface FoodLogEntry {
     date: Time;
@@ -67,9 +109,11 @@ export interface FoodLogEntry {
     mealType: MealType;
     foodName: string;
 }
-export interface DailyWaterIntake {
-    entries: Array<WaterIntakeEntry>;
-    timestamp: Time;
+export enum AnnouncementTarget {
+    all = "all",
+    weightLoss = "weightLoss",
+    muscleGain = "muscleGain",
+    maintenance = "maintenance"
 }
 export enum FoodSuggestionStatus {
     pending = "pending",
@@ -87,6 +131,11 @@ export enum ProfileGoal {
     muscleGain = "muscleGain",
     maintenance = "maintenance"
 }
+export enum ReportStatus {
+    resolved = "resolved",
+    pending = "pending",
+    dismissed = "dismissed"
+}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -96,18 +145,35 @@ export interface backendInterface {
     addFoodItem(food: FoodItem): Promise<void>;
     approveFoodSuggestion(suggestionId: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    createAnnouncement(announcement: Announcement): Promise<bigint>;
+    createArticle(article: Article): Promise<bigint>;
+    createDietPlan(plan: DietPlan): Promise<bigint>;
+    deleteAnnouncement(id: bigint): Promise<void>;
+    deleteArticle(id: bigint): Promise<void>;
     deleteCallerUserProfile(): Promise<void>;
+    deleteDietPlan(id: bigint): Promise<void>;
     deleteFoodItem(name: string): Promise<void>;
+    deleteUserAccount(user: Principal): Promise<void>;
+    dismissReport(id: bigint): Promise<void>;
+    flagUser(user: Principal, reason: string): Promise<void>;
+    getActiveAnnouncementsForGoal(goal: ProfileGoal | null): Promise<Array<Announcement>>;
+    getAllAnnouncements(): Promise<Array<Announcement>>;
+    getAllArticles(): Promise<Array<Article>>;
     getAllCheckIns(user: Principal): Promise<Array<DailyCheckIn>>;
+    getAllDietPlans(): Promise<Array<DietPlan>>;
     getAllFoodItems(): Promise<Array<FoodItem>>;
     getAllFoodLogs(user: Principal): Promise<Array<DailyFoodLog>>;
     getAllHealthMetrics(user: Principal): Promise<Array<HealthMetrics>>;
+    getAllReports(): Promise<Array<UserReport>>;
     getAllUsers(): Promise<Array<[Principal, UserProfile]>>;
     getAllUsersCheckIns(): Promise<Array<[Principal, Array<DailyCheckIn>]>>;
     getAllWaterIntake(user: Principal): Promise<Array<DailyWaterIntake>>;
+    getArticlesByCategory(category: string): Promise<Array<Article>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCheckInsForDate(date: string): Promise<Array<DailyCheckIn>>;
+    getDietPlansByGoal(goalType: ProfileGoal): Promise<Array<DietPlan>>;
+    getFlaggedUsers(): Promise<Array<[Principal, string]>>;
     getFoodByCategory(category: string): Promise<Array<FoodItem>>;
     getFoodByMacronutrients(minProtein: number, maxCarbs: number, maxFat: number): Promise<Array<FoodItem>>;
     getFoodByName(name: string): Promise<FoodItem | null>;
@@ -116,6 +182,7 @@ export interface backendInterface {
     getHealthMetricsForDate(date: Time): Promise<Array<HealthMetrics>>;
     getPendingFoodSuggestions(): Promise<Array<FoodSuggestion>>;
     getPublicReviews(): Promise<Array<Review>>;
+    getUserJoinTimes(): Promise<Array<[Principal, Time]>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWaterIntakeForDate(date: Time): Promise<Array<DailyWaterIntake>>;
     isCallerAdmin(): Promise<boolean>;
@@ -124,10 +191,17 @@ export interface backendInterface {
     logWaterIntake(glasses: bigint): Promise<void>;
     rejectFoodSuggestion(suggestionId: bigint): Promise<void>;
     removeFoodLogEntry(entryTimestamp: Time): Promise<void>;
+    resolveReport(id: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveDailyCheckIn(checkIn: DailyCheckIn): Promise<void>;
     searchFoodByName(name: string): Promise<Array<FoodItem>>;
     submitFoodSuggestion(food: FoodItem): Promise<bigint>;
     submitReview(authorName: string, text: string, reviewType: string): Promise<void>;
+    submitUserReport(reportType: string, description: string, targetFoodName: string | null): Promise<bigint>;
+    toggleAnnouncement(id: bigint): Promise<void>;
+    unflagUser(user: Principal): Promise<void>;
+    updateAnnouncement(announcement: Announcement): Promise<void>;
+    updateArticle(article: Article): Promise<void>;
+    updateDietPlan(plan: DietPlan): Promise<void>;
     updateFoodItem(food: FoodItem): Promise<void>;
 }

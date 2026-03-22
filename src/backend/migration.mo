@@ -1,99 +1,46 @@
 import Map "mo:core/Map";
-import Time "mo:core/Time";
 import Set "mo:core/Set";
-import Nat "mo:core/Nat";
+import Text "mo:core/Text";
 import Principal "mo:core/Principal";
 
 module {
-  // Old types
-  type OldUserProfile = {
-    name : Text;
-    phone : Text;
-    weightKg : Float;
-    heightCm : Float;
-  };
-
-  type OldFoodItem = {
-    name : Text;
-    category : Text;
-    caloriesPer100g : Float;
-    protein : Float;
-    carbs : Float;
-    fat : Float;
-    fiber : Float;
-    sugar : Float;
-    servingSize : Float;
-    servingUnit : Text;
-  };
-
-  type OldActor = {
-    userProfiles : Map.Map<Principal.Principal, OldUserProfile>;
-    foodDatabase : Map.Map<Text, OldFoodItem>;
-  };
-
-  // New types
-  type ProfileGoal = {
+  type OldProfileGoal = {
     #weightLoss;
     #muscleGain;
     #maintenance;
   };
 
-  type NewUserProfile = {
-    name : Text;
-    phone : Text;
+  type OldUserProfile = {
+    name : Text.Text;
+    phone : Text.Text;
     weightKg : Float;
     heightCm : Float;
-    goal : ?ProfileGoal;
+    goal : ?OldProfileGoal;
   };
 
-  type NewFoodItem = {
-    name : Text;
-    category : Text;
-    caloriesPer100g : Float;
-    protein : Float;
-    carbs : Float;
-    fat : Float;
-    fiber : Float;
-    sugar : Float;
-    servingSize : Float;
-    servingUnit : Text;
-    region : Text;
+  type OldPersistent = {
+    userProfiles : Map.Map<Principal, OldUserProfile>;
   };
 
-  type FoodSuggestionStatus = { #pending; #approved; #rejected };
-
-  type FoodSuggestion = {
-    foodItem : NewFoodItem;
-    status : FoodSuggestionStatus;
-    submittedBy : Principal.Principal;
-    timestamp : Time.Time;
+  type NewUserProfile = {
+    name : Text.Text;
+    phone : Text.Text;
+    weightKg : Float;
+    heightCm : Float;
+    goal : ?OldProfileGoal;
+    gender : ?Text.Text;
   };
 
-  type NewActor = {
-    userProfiles : Map.Map<Principal.Principal, NewUserProfile>;
-    foodDatabase : Map.Map<Text, NewFoodItem>;
-    foodSuggestions : Map.Map<Nat, FoodSuggestion>;
-    nextSuggestionId : Nat;
+  type NewPersistent = {
+    userProfiles : Map.Map<Principal, NewUserProfile>;
   };
 
-  public func run(old : OldActor) : NewActor {
-    let newUserProfiles = old.userProfiles.map<Principal.Principal, OldUserProfile, NewUserProfile>(
-      func(_p, oldProfile) {
-        { oldProfile with goal = null };
+  public func run(old : OldPersistent) : NewPersistent {
+    let newUserProfiles = old.userProfiles.map<Principal, OldUserProfile, NewUserProfile>(
+      func(_principal, oldProfile) {
+        { oldProfile with gender = null };
       }
     );
-
-    let newFoodDatabase = old.foodDatabase.map<Text, OldFoodItem, NewFoodItem>(
-      func(_name, oldItem) {
-        { oldItem with region = "Unknown" };
-      }
-    );
-
-    {
-      userProfiles = newUserProfiles;
-      foodDatabase = newFoodDatabase;
-      foodSuggestions = Map.empty<Nat, FoodSuggestion>();
-      nextSuggestionId = 1;
-    };
+    { userProfiles = newUserProfiles };
   };
 };

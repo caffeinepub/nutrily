@@ -1,15 +1,20 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, LogOut, Zap } from "lucide-react";
+import { Bell, Clock, LogOut, Zap } from "lucide-react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 
 interface NavbarProps {
   userName: string;
   onLogFood: () => void;
+  onHistory?: () => void;
 }
 
-export default function Navbar({ userName, onLogFood }: NavbarProps) {
+export default function Navbar({
+  userName,
+  onLogFood,
+  onHistory,
+}: NavbarProps) {
   const { clear } = useInternetIdentity();
   const qc = useQueryClient();
 
@@ -46,6 +51,18 @@ export default function Navbar({ userName, onLogFood }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          {onHistory && (
+            <button
+              type="button"
+              data-ocid="nav.history_button"
+              onClick={onHistory}
+              title="Meal History"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+            >
+              <Clock size={18} />
+            </button>
+          )}
+
           <button
             type="button"
             data-ocid="nav.bell_button"

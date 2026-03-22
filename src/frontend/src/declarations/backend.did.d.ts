@@ -10,6 +10,26 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface Announcement {
+  'id' : bigint,
+  'title' : string,
+  'createdAt' : Time,
+  'isActive' : boolean,
+  'message' : string,
+  'targetGoal' : AnnouncementTarget,
+}
+export type AnnouncementTarget = { 'all' : null } |
+  { 'weightLoss' : null } |
+  { 'muscleGain' : null } |
+  { 'maintenance' : null };
+export interface Article {
+  'id' : bigint,
+  'title' : string,
+  'body' : string,
+  'createdAt' : Time,
+  'imageUrl' : string,
+  'category' : string,
+}
 export interface DailyCheckIn {
   'waterGlasses' : bigint,
   'date' : string,
@@ -24,6 +44,18 @@ export interface DailyFoodLog {
 export interface DailyWaterIntake {
   'entries' : Array<WaterIntakeEntry>,
   'timestamp' : Time,
+}
+export interface DietPlan {
+  'id' : bigint,
+  'proteinTarget' : number,
+  'goalType' : ProfileGoal,
+  'name' : string,
+  'fatTarget' : number,
+  'description' : string,
+  'mealTimingSuggestions' : Array<string>,
+  'recommendedFoods' : Array<string>,
+  'dailyCalorieTarget' : number,
+  'carbsTarget' : number,
 }
 export interface FoodItem {
   'fat' : number,
@@ -66,6 +98,9 @@ export type MealType = { 'breakfast' : null } |
 export type ProfileGoal = { 'weightLoss' : null } |
   { 'muscleGain' : null } |
   { 'maintenance' : null };
+export type ReportStatus = { 'resolved' : null } |
+  { 'pending' : null } |
+  { 'dismissed' : null };
 export interface Review {
   'text' : string,
   'authorName' : string,
@@ -78,7 +113,17 @@ export interface UserProfile {
   'goal' : [] | [ProfileGoal],
   'name' : string,
   'weightKg' : number,
+  'gender' : [] | [string],
   'phone' : string,
+}
+export interface UserReport {
+  'id' : bigint,
+  'status' : ReportStatus,
+  'targetFoodName' : [] | [string],
+  'createdAt' : Time,
+  'description' : string,
+  'reportType' : string,
+  'reportedBy' : Principal,
 }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -89,21 +134,41 @@ export interface _SERVICE {
   'addFoodItem' : ActorMethod<[FoodItem], undefined>,
   'approveFoodSuggestion' : ActorMethod<[bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'createAnnouncement' : ActorMethod<[Announcement], bigint>,
+  'createArticle' : ActorMethod<[Article], bigint>,
+  'createDietPlan' : ActorMethod<[DietPlan], bigint>,
+  'deleteAnnouncement' : ActorMethod<[bigint], undefined>,
+  'deleteArticle' : ActorMethod<[bigint], undefined>,
   'deleteCallerUserProfile' : ActorMethod<[], undefined>,
+  'deleteDietPlan' : ActorMethod<[bigint], undefined>,
   'deleteFoodItem' : ActorMethod<[string], undefined>,
+  'deleteUserAccount' : ActorMethod<[Principal], undefined>,
+  'dismissReport' : ActorMethod<[bigint], undefined>,
+  'flagUser' : ActorMethod<[Principal, string], undefined>,
+  'getActiveAnnouncementsForGoal' : ActorMethod<
+    [[] | [ProfileGoal]],
+    Array<Announcement>
+  >,
+  'getAllAnnouncements' : ActorMethod<[], Array<Announcement>>,
+  'getAllArticles' : ActorMethod<[], Array<Article>>,
   'getAllCheckIns' : ActorMethod<[Principal], Array<DailyCheckIn>>,
+  'getAllDietPlans' : ActorMethod<[], Array<DietPlan>>,
   'getAllFoodItems' : ActorMethod<[], Array<FoodItem>>,
   'getAllFoodLogs' : ActorMethod<[Principal], Array<DailyFoodLog>>,
   'getAllHealthMetrics' : ActorMethod<[Principal], Array<HealthMetrics>>,
+  'getAllReports' : ActorMethod<[], Array<UserReport>>,
   'getAllUsers' : ActorMethod<[], Array<[Principal, UserProfile]>>,
   'getAllUsersCheckIns' : ActorMethod<
     [],
     Array<[Principal, Array<DailyCheckIn>]>
   >,
   'getAllWaterIntake' : ActorMethod<[Principal], Array<DailyWaterIntake>>,
+  'getArticlesByCategory' : ActorMethod<[string], Array<Article>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCheckInsForDate' : ActorMethod<[string], Array<DailyCheckIn>>,
+  'getDietPlansByGoal' : ActorMethod<[ProfileGoal], Array<DietPlan>>,
+  'getFlaggedUsers' : ActorMethod<[], Array<[Principal, string]>>,
   'getFoodByCategory' : ActorMethod<[string], Array<FoodItem>>,
   'getFoodByMacronutrients' : ActorMethod<
     [number, number, number],
@@ -115,6 +180,7 @@ export interface _SERVICE {
   'getHealthMetricsForDate' : ActorMethod<[Time], Array<HealthMetrics>>,
   'getPendingFoodSuggestions' : ActorMethod<[], Array<FoodSuggestion>>,
   'getPublicReviews' : ActorMethod<[], Array<Review>>,
+  'getUserJoinTimes' : ActorMethod<[], Array<[Principal, Time]>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getWaterIntakeForDate' : ActorMethod<[Time], Array<DailyWaterIntake>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
@@ -123,11 +189,18 @@ export interface _SERVICE {
   'logWaterIntake' : ActorMethod<[bigint], undefined>,
   'rejectFoodSuggestion' : ActorMethod<[bigint], undefined>,
   'removeFoodLogEntry' : ActorMethod<[Time], undefined>,
+  'resolveReport' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveDailyCheckIn' : ActorMethod<[DailyCheckIn], undefined>,
   'searchFoodByName' : ActorMethod<[string], Array<FoodItem>>,
   'submitFoodSuggestion' : ActorMethod<[FoodItem], bigint>,
   'submitReview' : ActorMethod<[string, string, string], undefined>,
+  'submitUserReport' : ActorMethod<[string, string, [] | [string]], bigint>,
+  'toggleAnnouncement' : ActorMethod<[bigint], undefined>,
+  'unflagUser' : ActorMethod<[Principal], undefined>,
+  'updateAnnouncement' : ActorMethod<[Announcement], undefined>,
+  'updateArticle' : ActorMethod<[Article], undefined>,
+  'updateDietPlan' : ActorMethod<[DietPlan], undefined>,
   'updateFoodItem' : ActorMethod<[FoodItem], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

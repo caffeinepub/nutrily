@@ -6,21 +6,26 @@ import { FOOD_DATABASE } from "../data/foodDatabase";
 import { useActor } from "../hooks/useActor";
 import { useDrinksLog } from "../hooks/useDrinksLog";
 import { useFoodLog } from "../hooks/useFoodLog";
+import type { FoodLogEntryLocal } from "../hooks/useFoodLog";
 import {
   useCallerUserProfile,
   useGetAllFoodItems,
   useTodayHealthMetrics,
   useTodayWaterIntake,
+  useUpdateStreak,
 } from "../hooks/useQueries";
 import { calcEntryNutrition, calcMealQualityScore } from "../types";
-import type { ExtendedFoodItem, FoodItem } from "../types";
+import type { ExtendedFoodItem } from "../types";
 import DailyCheckInCard from "./DailyCheckInCard";
+import FoodLogHistory from "./FoodLogHistory";
 import Footer from "./Footer";
 import GoalsSection from "./GoalsSection";
 import MyStatsCard from "./MyStatsCard";
 import Navbar from "./Navbar";
 import NutritionSummaryPage from "./NutritionSummaryPage";
+import OfflineBanner from "./OfflineBanner";
 import ReviewSection from "./ReviewSection";
+import StreakWidget from "./StreakWidget";
 import WeightGainStatusPage from "./WeightGainStatusPage";
 import WeightLossStatusPage from "./WeightLossStatusPage";
 import CalorieTrackerCard from "./cards/CalorieTrackerCard";
@@ -56,11 +61,13 @@ export default function Dashboard({ userName }: DashboardProps) {
   const [preselectedMeal, setPreselectedMeal] = useState<string | undefined>();
   const [goalPage, setGoalPage] = useState<"gain" | "loss" | null>(null);
   const [nutritionPage, setNutritionPage] = useState(false);
+  const [historyPage, setHistoryPage] = useState(false);
 
   const { data: backendFoods = [] } = useGetAllFoodItems();
   const { data: waterGlasses = 0 } = useTodayWaterIntake();
   const { data: healthMetrics } = useTodayHealthMetrics();
   const { data: userProfile } = useCallerUserProfile();
+  const { mutate: updateStreak } = useUpdateStreak();
   const { drinks, addDrink, removeDrink, totalDrinkCalories } = useDrinksLog();
   const {
     entries: rawFoodEntries,
@@ -127,11 +134,26 @@ export default function Dashboard({ userName }: DashboardProps) {
     setLogFoodOpen(true);
   };
 
+  // Wrap addFood to award streak points on each log
+  const handleLogFood = (
+    entry: Omit<FoodLogEntryLocal, "id" | "timestamp">,
+  ) => {
+    addFood(entry);
+    const today = new Date().toISOString().split("T")[0];
+    updateStreak({ dateStr: today, points: 5n });
+  };
+
+  const gender =
+    (userProfile as any)?.gender ??
+    localStorage.getItem("doitepic_gender") ??
+    "male";
+
   const userProfileForStatus = userProfile
     ? {
         weightKg: Number(userProfile.weightKg),
         heightCm: Number(userProfile.heightCm),
         name: userProfile.name,
+        gender,
       }
     : undefined;
 
@@ -151,7 +173,6 @@ export default function Dashboard({ userName }: DashboardProps) {
       />
     );
   }
-
   if (nutritionPage) {
     return (
       <NutritionSummaryPage
@@ -162,12 +183,20 @@ export default function Dashboard({ userName }: DashboardProps) {
       />
     );
   }
+  if (historyPage) {
+    return <FoodLogHistory onBack={() => setHistoryPage(false)} />;
+  }
 
   const greeting = getGreeting();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Navbar userName={userName} onLogFood={() => openLogFood()} />
+      <Navbar
+        userName={userName}
+        onLogFood={() => openLogFood()}
+        onHistory={() => setHistoryPage(true)}
+      />
+      <OfflineBanner />
 
       {/* Hero */}
       <section className="hero-gradient py-12 px-6">
@@ -193,6 +222,16 @@ export default function Dashboard({ userName }: DashboardProps) {
 
       {/* Dashboard grid */}
       <main className="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-1">
+        {/* Streak Widget — prominently below hero */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-6"
+        >
+          <StreakWidget />
+        </motion.div>
+
         {userProfile && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -315,7 +354,8 @@ export default function Dashboard({ userName }: DashboardProps) {
         allFoods={allFoods}
         preselectedFoodName={preselectedMeal}
         onLogDrink={addDrink}
-        onLogFood={addFood}
+        onLogFood={handleLogFood}
+        existingEntries={rawFoodEntries}
       />
       <FoodDetailModal
         food={selectedFood}

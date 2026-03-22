@@ -11,17 +11,19 @@ import Int "mo:core/Int";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
-import MixinAuthorization "authorization/MixinAuthorization";
 import Migration "migration";
+import MixinAuthorization "authorization/MixinAuthorization";
 
 (with migration = Migration.run)
 actor {
-  let accessControlState = AccessControl.initState();
   type Permissions = {
     #admin;
     #user;
     #anon;
   };
+
+  // ======================== Authorization ========================
+  let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
   // ======================== User Profile ========================
@@ -38,9 +40,11 @@ actor {
     weightKg : Float;
     heightCm : Float;
     goal : ?ProfileGoal;
+    gender : ?Text;
   };
 
   let userProfiles = Map.empty<Principal, UserProfile>();
+  let userJoinTimes = Map.empty<Principal, Time.Time>();
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -59,6 +63,9 @@ actor {
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+    if (not userJoinTimes.containsKey(caller)) {
+      userJoinTimes.add(caller, Time.now());
     };
     userProfiles.add(caller, profile);
   };
@@ -316,8 +323,6 @@ actor {
     switch (userFoodLogs.get(caller)) {
       case (null) {};
       case (?logsList) {
-        // Iterate through existing set and remove the matching entry directly.
-        // Using the exact log object ensures structural equality matches.
         let arr = logsList.toArray();
         for (log in arr.vals()) {
           if (log.timestamp == entryTimestamp) {
@@ -489,6 +494,308 @@ actor {
     reviews.toArray().sort();
   };
 
+  // ======================== Diet Plans ========================
+
+  public type DietPlan = {
+    id : Nat;
+    name : Text;
+    goalType : ProfileGoal;
+    description : Text;
+    dailyCalorieTarget : Float;
+    proteinTarget : Float;
+    carbsTarget : Float;
+    fatTarget : Float;
+    recommendedFoods : [Text];
+    mealTimingSuggestions : [Text];
+  };
+
+  module DietPlan {
+    public func compare(p1 : DietPlan, p2 : DietPlan) : Order.Order {
+      Nat.compare(p1.id, p2.id);
+    };
+  };
+
+  let dietPlans = Map.empty<Nat, DietPlan>();
+  var nextDietPlanId = 1;
+
+  public shared ({ caller }) func createDietPlan(plan : DietPlan) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can create diet plans");
+    };
+    let id = nextDietPlanId;
+    let newPlan = { plan with id };
+    dietPlans.add(id, newPlan);
+    nextDietPlanId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateDietPlan(plan : DietPlan) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update diet plans");
+    };
+    if (not dietPlans.containsKey(plan.id)) {
+      Runtime.trap("Diet plan not found");
+    };
+    dietPlans.add(plan.id, plan);
+  };
+
+  public shared ({ caller }) func deleteDietPlan(id : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete diet plans");
+    };
+    dietPlans.remove(id);
+  };
+
+  public query func getAllDietPlans() : async [DietPlan] {
+    dietPlans.values().toArray().sort();
+  };
+
+  public query func getDietPlansByGoal(goalType : ProfileGoal) : async [DietPlan] {
+    dietPlans.values().toArray().filter(func(p) { p.goalType == goalType }).sort();
+  };
+
+  // ======================== Articles ========================
+
+  public type Article = {
+    id : Nat;
+    title : Text;
+    category : Text;
+    body : Text;
+    imageUrl : Text;
+    createdAt : Time.Time;
+  };
+
+  module Article {
+    public func compare(a1 : Article, a2 : Article) : Order.Order {
+      Int.compare(a2.createdAt, a1.createdAt);
+    };
+  };
+
+  let articles = Map.empty<Nat, Article>();
+  var nextArticleId = 1;
+
+  public shared ({ caller }) func createArticle(article : Article) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can create articles");
+    };
+    let id = nextArticleId;
+    let newArticle = { article with id; createdAt = Time.now() };
+    articles.add(id, newArticle);
+    nextArticleId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateArticle(article : Article) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update articles");
+    };
+    if (not articles.containsKey(article.id)) {
+      Runtime.trap("Article not found");
+    };
+    articles.add(article.id, article);
+  };
+
+  public shared ({ caller }) func deleteArticle(id : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete articles");
+    };
+    articles.remove(id);
+  };
+
+  public query func getAllArticles() : async [Article] {
+    articles.values().toArray().sort();
+  };
+
+  public query func getArticlesByCategory(category : Text) : async [Article] {
+    articles.values().toArray().filter(func(a) { a.category == category }).sort();
+  };
+
+  // ======================== Announcements ========================
+
+  public type AnnouncementTarget = { #all; #weightLoss; #muscleGain; #maintenance };
+
+  public type Announcement = {
+    id : Nat;
+    title : Text;
+    message : Text;
+    targetGoal : AnnouncementTarget;
+    createdAt : Time.Time;
+    isActive : Bool;
+  };
+
+  module Announcement {
+    public func compare(a1 : Announcement, a2 : Announcement) : Order.Order {
+      Int.compare(a2.createdAt, a1.createdAt);
+    };
+  };
+
+  let announcements = Map.empty<Nat, Announcement>();
+  var nextAnnouncementId = 1;
+
+  public shared ({ caller }) func createAnnouncement(announcement : Announcement) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can create announcements");
+    };
+    let id = nextAnnouncementId;
+    let newAnnouncement = { announcement with id; createdAt = Time.now(); isActive = true };
+    announcements.add(id, newAnnouncement);
+    nextAnnouncementId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func updateAnnouncement(announcement : Announcement) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update announcements");
+    };
+    if (not announcements.containsKey(announcement.id)) {
+      Runtime.trap("Announcement not found");
+    };
+    announcements.add(announcement.id, announcement);
+  };
+
+  public shared ({ caller }) func deleteAnnouncement(id : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete announcements");
+    };
+    announcements.remove(id);
+  };
+
+  public shared ({ caller }) func toggleAnnouncement(id : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can toggle announcements");
+    };
+    switch (announcements.get(id)) {
+      case (null) { Runtime.trap("Announcement not found") };
+      case (?a) {
+        announcements.add(id, { a with isActive = not a.isActive });
+      };
+    };
+  };
+
+  public query func getAllAnnouncements() : async [Announcement] {
+    announcements.values().toArray().sort();
+  };
+
+  public query func getActiveAnnouncementsForGoal(goal : ?ProfileGoal) : async [Announcement] {
+    announcements.values().toArray().filter(
+      func(a) {
+        if (not a.isActive) { return false };
+        switch (a.targetGoal) {
+          case (#all) { true };
+          case (#weightLoss) { goal == ?(#weightLoss) };
+          case (#muscleGain) { goal == ?(#muscleGain) };
+          case (#maintenance) { goal == ?(#maintenance) };
+        };
+      }
+    ).sort();
+  };
+
+  // ======================== User Reports ========================
+
+  public type ReportStatus = { #pending; #resolved; #dismissed };
+
+  public type UserReport = {
+    id : Nat;
+    reportedBy : Principal;
+    reportType : Text;
+    description : Text;
+    targetFoodName : ?Text;
+    status : ReportStatus;
+    createdAt : Time.Time;
+  };
+
+  module UserReport {
+    public func compare(r1 : UserReport, r2 : UserReport) : Order.Order {
+      Int.compare(r2.createdAt, r1.createdAt);
+    };
+  };
+
+  let userReports = Map.empty<Nat, UserReport>();
+  var nextReportId = 1;
+
+  public shared ({ caller }) func submitUserReport(reportType : Text, description : Text, targetFoodName : ?Text) : async Nat {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can submit reports");
+    };
+    let id = nextReportId;
+    let report : UserReport = {
+      id;
+      reportedBy = caller;
+      reportType;
+      description;
+      targetFoodName;
+      status = #pending;
+      createdAt = Time.now();
+    };
+    userReports.add(id, report);
+    nextReportId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func resolveReport(id : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can resolve reports");
+    };
+    switch (userReports.get(id)) {
+      case (null) { Runtime.trap("Report not found") };
+      case (?r) { userReports.add(id, { r with status = #resolved }) };
+    };
+  };
+
+  public shared ({ caller }) func dismissReport(id : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can dismiss reports");
+    };
+    switch (userReports.get(id)) {
+      case (null) { Runtime.trap("Report not found") };
+      case (?r) { userReports.add(id, { r with status = #dismissed }) };
+    };
+  };
+
+  public query ({ caller }) func getAllReports() : async [UserReport] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view reports");
+    };
+    userReports.values().toArray().sort();
+  };
+
+  // ======================== User Flagging ========================
+
+  let flaggedUsers = Map.empty<Principal, Text>();
+
+  public shared ({ caller }) func flagUser(user : Principal, reason : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can flag users");
+    };
+    flaggedUsers.add(user, reason);
+  };
+
+  public shared ({ caller }) func unflagUser(user : Principal) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can unflag users");
+    };
+    flaggedUsers.remove(user);
+  };
+
+  public query ({ caller }) func getFlaggedUsers() : async [(Principal, Text)] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view flagged users");
+    };
+    flaggedUsers.toArray();
+  };
+
+  public shared ({ caller }) func deleteUserAccount(user : Principal) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete user accounts");
+    };
+    userProfiles.remove(user);
+    userCheckIns.remove(user);
+    userFoodLogs.remove(user);
+    userWaterIntake.remove(user);
+    userHealthMetrics.remove(user);
+    flaggedUsers.remove(user);
+  };
+
   // ======================== Helper Functions ========================
 
   func getFoodByNameInternal(name : Text) : FoodItem {
@@ -518,8 +825,14 @@ actor {
     );
   };
 
-  // ======================== Get Summaries ========================
+  public query ({ caller }) func getUserJoinTimes() : async [(Principal, Time.Time)] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view join times");
+    };
+    userJoinTimes.toArray();
+  };
 
+  // ======================== Get Summaries ========================
   public query ({ caller }) func getAllFoodItems() : async [FoodItem] {
     foodDatabase.values().toArray().sort();
   };

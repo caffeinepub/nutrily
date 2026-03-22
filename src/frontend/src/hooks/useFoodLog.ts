@@ -18,6 +18,28 @@ function getTodayKey(): string {
   return `doitepic_foodlog_${d.toISOString().slice(0, 10)}`;
 }
 
+export function getAllLogs(): { date: string; entries: FoodLogEntryLocal[] }[] {
+  const results: { date: string; entries: FoodLogEntryLocal[] }[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("doitepic_foodlog_")) {
+        const date = key.replace("doitepic_foodlog_", "");
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const entries = JSON.parse(raw) as FoodLogEntryLocal[];
+          if (entries.length > 0) {
+            results.push({ date, entries });
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return results.sort((a, b) => b.date.localeCompare(a.date));
+}
+
 export function useFoodLog() {
   const [entries, setEntries] = useState<FoodLogEntryLocal[]>(() => {
     try {

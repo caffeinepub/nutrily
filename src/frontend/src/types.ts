@@ -96,3 +96,61 @@ export const MEAL_TYPES: { value: LocalMealType; label: string }[] = [
   { value: "snack" as MealType, label: "Snack" },
   { value: "drinks", label: "Drinks" },
 ];
+
+// ─── Extended Types (backend.d.ts declarations not yet in generated backend.ts) ──
+
+export type Time = bigint;
+
+export enum AnnouncementTarget {
+  all = "all",
+  weightLoss = "weightLoss",
+  muscleGain = "muscleGain",
+  maintenance = "maintenance",
+}
+
+export enum ReportStatus {
+  pending = "pending",
+  resolved = "resolved",
+  dismissed = "dismissed",
+}
+
+export interface DietPlan {
+  id: bigint;
+  name: string;
+  goalType: import("./backend").ProfileGoal;
+  description: string;
+  dailyCalorieTarget: number;
+  proteinTarget: number;
+  carbsTarget: number;
+  fatTarget: number;
+  recommendedFoods: Array<string>;
+  mealTimingSuggestions: Array<string>;
+}
+
+export interface Article {
+  id: bigint;
+  title: string;
+  category: string;
+  body: string;
+  imageUrl: string;
+  createdAt: Time;
+}
+
+export interface Announcement {
+  id: bigint;
+  title: string;
+  message: string;
+  targetGoal: AnnouncementTarget;
+  createdAt: Time;
+  isActive: boolean;
+}
+
+export interface UserReport {
+  id: bigint;
+  reportedBy: import("@icp-sdk/core/principal").Principal;
+  reportType: string;
+  description: string;
+  targetFoodName: string | null;
+  status: ReportStatus;
+  createdAt: Time;
+}

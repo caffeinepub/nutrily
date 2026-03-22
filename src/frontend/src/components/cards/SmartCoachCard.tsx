@@ -7,7 +7,12 @@ interface SmartCoachCardProps {
   protein: number;
   carbs: number;
   fat: number;
-  userProfile?: { weightKg: number; heightCm: number; name: string } | null;
+  userProfile?: {
+    weightKg: number;
+    heightCm: number;
+    name: string;
+    gender?: string;
+  } | null;
   allFoods: Array<{
     name: string;
     caloriesPer100g: number;
@@ -26,8 +31,29 @@ const DAILY_TIPS = [
   "🌾 Swap refined carbs for whole grains to stay full longer.",
 ];
 
-function calcBMR(weight: number, height: number): number {
-  return Math.round(10 * weight + 6.25 * height - 5 * 25 + 5);
+function calcBMR(weight: number, height: number, gender: string): number {
+  const age = 30;
+  if (gender === "female") {
+    return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
+  }
+  // male (default)
+  return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
+}
+
+function calcProteinTarget(weight: number, gender: string): number {
+  return Math.round(weight * (gender === "female" ? 1.6 : 1.8));
+}
+
+function calcFatRange(
+  calories: number,
+  gender: string,
+): { min: number; max: number } {
+  const minPct = gender === "female" ? 0.28 : 0.25;
+  const maxPct = gender === "female" ? 0.35 : 0.3;
+  return {
+    min: Math.round((calories * minPct) / 9),
+    max: Math.round((calories * maxPct) / 9),
+  };
 }
 
 function calcBMI(weight: number, height: number): number {
@@ -102,7 +128,9 @@ export default function SmartCoachCard({
     );
   }
 
-  const bmr = calcBMR(userProfile.weightKg, userProfile.heightCm);
+  const gender =
+    userProfile.gender ?? localStorage.getItem("doitepic_gender") ?? "male";
+  const bmr = calcBMR(userProfile.weightKg, userProfile.heightCm, gender);
   const bmi = calcBMI(userProfile.weightKg, userProfile.heightCm);
   const bmiInfo = getBMICategory(bmi);
 
@@ -115,6 +143,9 @@ export default function SmartCoachCard({
     calorieTarget = Math.max(1200, bmr - 500);
     goalLabel = "Weight Loss";
   }
+
+  const proteinTarget = calcProteinTarget(userProfile.weightKg, gender);
+  const fatRange = calcFatRange(calorieTarget, gender);
 
   const calorieGap = calorieTarget - caloriesConsumed;
   const goalReached = calorieGap <= 0;
@@ -130,16 +161,64 @@ export default function SmartCoachCard({
   // Macro insight
   let macroInsight = "Great macro balance today! Keep it up. 🎯";
   let macroColor = "bg-emerald-50 border-emerald-100 text-emerald-700";
-  if (protein < 50) {
-    macroInsight = "Protein is low today — add eggs, chicken or dal. 🥚";
+  if (protein < proteinTarget * 0.5) {
+    macroInsight = `Protein is low — target ${proteinTarget}g/day. Add eggs, chicken or dal. 🥚`;
     macroColor = "bg-orange-50 border-orange-100 text-orange-700";
   } else if (carbs < 100) {
     macroInsight = "Carbs are low — have rice, oats or whole wheat. 🌾";
     macroColor = "bg-yellow-50 border-yellow-100 text-yellow-700";
-  } else if (fat < 20) {
-    macroInsight = "Healthy fats needed — try nuts, avocado or ghee. 🥜";
+  } else if (fat < fatRange.min) {
+    macroInsight = `Healthy fats needed — target ${fatRange.min}–${fatRange.max}g/day. Try nuts, avocado or ghee. 🥜`;
     macroColor = "bg-blue-50 border-blue-100 text-blue-700";
   }
+
+  // Gender-specific insights
+  const genderInsights =
+    gender === "female"
+      ? [
+          {
+            icon: "🩸",
+            text: "Include iron-rich foods: spinach, lentils, fish — vital for hormonal health.",
+          },
+          {
+            icon: "🥑",
+            text: "Healthy fats (avocado, flaxseed, olive oil) support estrogen balance.",
+          },
+          {
+            icon: "🥦",
+            text: "Cruciferous veggies (broccoli, cauliflower) help metabolise excess estrogen.",
+          },
+          {
+            icon: "💪",
+            text: "HIIT + strength training 3×/week is optimal for female metabolism.",
+          },
+          {
+            icon: "💧",
+            text: "Hydration needs increase during certain phases — aim for 2.5L/day.",
+          },
+        ]
+      : [
+          {
+            icon: "🥩",
+            text: `Aim for ${proteinTarget}g protein/day — higher targets support testosterone production.`,
+          },
+          {
+            icon: "🥜",
+            text: "Zinc-rich foods (eggs, meat, pumpkin seeds) support testosterone levels.",
+          },
+          {
+            icon: "🏋️",
+            text: "Compound lifts (squats, deadlifts, bench press) maximise hormonal response.",
+          },
+          {
+            icon: "🧠",
+            text: "Healthy fats from nuts and fish support hormone synthesis.",
+          },
+          {
+            icon: "😴",
+            text: "7–9 hrs sleep boosts testosterone by up to 15% — prioritise rest.",
+          },
+        ];
 
   return (
     <motion.div
@@ -180,6 +259,19 @@ export default function SmartCoachCard({
               {calorieTarget} kcal target
             </span>
           </div>
+        </div>
+
+        {/* Gender-specific macro targets */}
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="bg-violet-50 border border-violet-100 text-violet-700 rounded-full px-2.5 py-0.5 font-medium">
+            🥩 Protein: {proteinTarget}g
+          </span>
+          <span className="bg-amber-50 border border-amber-100 text-amber-700 rounded-full px-2.5 py-0.5 font-medium">
+            🧈 Fat: {fatRange.min}–{fatRange.max}g
+          </span>
+          <span className="bg-sky-50 border border-sky-100 text-sky-700 rounded-full px-2.5 py-0.5 font-medium capitalize">
+            {gender === "female" ? "👩" : "👨"} {gender}
+          </span>
         </div>
 
         {/* Calorie gap */}
@@ -236,6 +328,31 @@ export default function SmartCoachCard({
         >
           <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           <span>{macroInsight}</span>
+        </div>
+
+        {/* Gender Insights */}
+        <div
+          className="border border-border rounded-xl overflow-hidden"
+          data-ocid="smart_coach.gender_insights"
+        >
+          <div className="bg-gradient-to-r from-pink-500 to-violet-500 px-3 py-2 flex items-center gap-1.5">
+            <span className="text-sm">{gender === "female" ? "👩" : "👨"}</span>
+            <p className="text-xs font-bold text-white">
+              {gender === "female" ? "Female" : "Male"} Health Insights
+            </p>
+          </div>
+          <div className="p-2.5 space-y-1.5 bg-card">
+            {genderInsights.slice(0, 3).map((insight) => (
+              <div key={insight.text} className="flex items-start gap-1.5">
+                <span className="text-sm leading-none mt-0.5">
+                  {insight.icon}
+                </span>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {insight.text}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Daily tip */}
