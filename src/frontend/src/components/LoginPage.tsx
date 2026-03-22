@@ -4,11 +4,12 @@ import { Brain, Flame, ShieldAlert, Sparkles, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { ProfileGoal } from "../backend";
-import { useLocalAuth } from "../hooks/useLocalAuth";
 import type { LocalUser } from "../hooks/useLocalAuth";
+import { useLocalAuth } from "../hooks/useLocalAuth";
 
 interface LoginPageProps {
   onAdminAccess?: () => void;
+  onLogin?: (profile: LocalUser) => void;
 }
 
 const GOALS = [
@@ -17,8 +18,9 @@ const GOALS = [
   { value: ProfileGoal.maintenance, label: "Maintenance", emoji: "⚖️" },
 ];
 
-export default function LoginPage({ onAdminAccess }: LoginPageProps) {
-  const { login } = useLocalAuth();
+export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
+  const { login: localLogin } = useLocalAuth();
+  const login = onLogin ?? localLogin;
 
   // Step 1 fields
   const [name, setName] = useState("");
@@ -455,16 +457,16 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
               {features.map((f) => (
                 <div
                   key={f.title}
-                  className="flex items-center gap-3 text-left p-3 rounded-xl bg-accent"
+                  className="flex items-center gap-3 text-left p-3 rounded-xl bg-[#1E3A8A]"
                 >
                   <div className="w-8 h-8 rounded-lg hero-gradient flex items-center justify-center flex-shrink-0">
                     <f.icon className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-sm font-semibold text-white">
                       {f.title}
                     </p>
-                    <p className="text-xs text-muted-foreground">{f.desc}</p>
+                    <p className="text-xs text-blue-200">{f.desc}</p>
                   </div>
                 </div>
               ))}

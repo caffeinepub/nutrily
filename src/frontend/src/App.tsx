@@ -6,13 +6,16 @@ import LoginPage from "./components/LoginPage";
 import { useLocalAuth } from "./hooks/useLocalAuth";
 
 export default function App() {
-  const { user, isLoggedIn } = useLocalAuth();
+  const { user, isLoggedIn, login } = useLocalAuth();
   const [adminAccessGranted, setAdminAccessGranted] = useState(false);
 
   if (!isLoggedIn) {
     return (
       <>
-        <LoginPage onAdminAccess={() => setAdminAccessGranted(true)} />
+        <LoginPage
+          onAdminAccess={() => setAdminAccessGranted(true)}
+          onLogin={login}
+        />
         <Toaster />
       </>
     );
