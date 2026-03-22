@@ -2,6 +2,16 @@ import type { FoodItem, FoodLogEntry, MealType } from "./backend";
 
 export type { FoodItem, FoodLogEntry, MealType };
 
+// LocalMealType extends the backend MealType with frontend-only "drinks"
+export type LocalMealType = MealType | "drinks";
+
+// Local entry type for localStorage-based food log (no backend `date` field needed)
+export interface LocalFoodEntry {
+  foodName: string;
+  quantity: number;
+  mealType: string;
+}
+
 export interface ExtendedFoodItem extends FoodItem {
   addedSugar?: number;
   saturatedFat?: number;
@@ -24,13 +34,17 @@ export const DAILY_GOALS = {
 };
 
 export function getTodayStartNs(): bigint {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return BigInt(today.getTime()) * 1_000_000n;
+  const now = new Date();
+  const utcMidnight = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+  );
+  return BigInt(utcMidnight) * 1_000_000n;
 }
 
 export function calcEntryNutrition(
-  entry: FoodLogEntry,
+  entry: LocalFoodEntry,
   foodMap: Map<string, ExtendedFoodItem>,
 ) {
   const food = foodMap.get(entry.foodName);
@@ -71,9 +85,11 @@ export function calcMealQualityScore(
   return { score, grade };
 }
 
-export const MEAL_TYPES: { value: MealType; label: string }[] = [
+// MEAL_TYPES includes all backend types + frontend-only "drinks"
+export const MEAL_TYPES: { value: LocalMealType; label: string }[] = [
   { value: "breakfast" as MealType, label: "Breakfast" },
   { value: "lunch" as MealType, label: "Lunch" },
   { value: "dinner" as MealType, label: "Dinner" },
   { value: "snack" as MealType, label: "Snack" },
+  { value: "drinks", label: "Drinks" },
 ];

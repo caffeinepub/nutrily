@@ -64,6 +64,12 @@ export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
 export interface WaterIntakeEntry { 'glasses' : bigint, 'timestamp' : Time }
+export interface Review {
+  'authorName' : string,
+  'text' : string,
+  'reviewType' : string,
+  'timestamp' : Time,
+}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addFoodItem' : ActorMethod<[FoodItem], undefined>,
@@ -86,15 +92,18 @@ export interface _SERVICE {
   'getFoodByCategory' : ActorMethod<[string], Array<FoodItem>>,
   'getFoodLogsForDate' : ActorMethod<[Time], Array<DailyFoodLog>>,
   'getHealthMetricsForDate' : ActorMethod<[Time], Array<HealthMetrics>>,
+  'getPublicReviews' : ActorMethod<[], Array<Review>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getWaterIntakeForDate' : ActorMethod<[Time], Array<DailyWaterIntake>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'logFoodEntry' : ActorMethod<[FoodLogEntry], undefined>,
   'logHealthMetrics' : ActorMethod<[HealthMetrics], undefined>,
   'logWaterIntake' : ActorMethod<[bigint], undefined>,
+  'removeFoodLogEntry' : ActorMethod<[Time], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveDailyCheckIn' : ActorMethod<[DailyCheckIn], undefined>,
   'searchFoodByName' : ActorMethod<[string], Array<FoodItem>>,
+  'submitReview' : ActorMethod<[string, string, string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

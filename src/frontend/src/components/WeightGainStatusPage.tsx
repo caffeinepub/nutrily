@@ -74,6 +74,153 @@ function saveLogs(logs: GainLog[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
 }
 
+const GAIN_SHAKES = [
+  {
+    name: "Mass Builder",
+    emoji: "💪",
+    kcal: 750,
+    protein: 45,
+    ingredients: [
+      "1 Banana",
+      "Oats 50g",
+      "Peanut Butter 2 tbsp",
+      "Whole Milk 400ml",
+      "Whey Protein 1 scoop",
+      "Honey 1 tbsp",
+    ],
+  },
+  {
+    name: "Calorie Bomb",
+    emoji: "🔥",
+    kcal: 680,
+    protein: 22,
+    ingredients: [
+      "4 Dates",
+      "Almonds 30g",
+      "Full-Fat Yogurt 200g",
+      "Oats 40g",
+      "Cocoa Powder 1 tbsp",
+      "Milk 300ml",
+    ],
+  },
+  {
+    name: "Night Gainer",
+    emoji: "🌙",
+    kcal: 580,
+    protein: 40,
+    ingredients: [
+      "Casein Protein 1 scoop",
+      "Peanut Butter 2 tbsp",
+      "1 Banana",
+      "Milk 350ml",
+      "Chia Seeds 1 tbsp",
+    ],
+  },
+];
+
+const BODY_TYPE_ADVICE_GAIN: Record<string, Record<string, string>> = {
+  skinny: {
+    gym: "Focus on compound lifts (Squats, Deadlifts, Bench Press). Eat at 500+ calorie surplus. Aim for 1.6g protein/kg body weight.",
+    home: "Bodyweight progressions: Push-ups, Pull-ups, Dips. Add resistance bands. Eat 5–6 meals/day with calorie-dense foods.",
+    nongym:
+      "Daily walks + calorie-dense foods. Nuts, avocado, whole milk. Gradually increase activity level.",
+  },
+  moderate: {
+    gym: "Progressive overload with compound exercises. Track weekly progress. Eat in slight surplus (250–300 kcal).",
+    home: "Home resistance training with dumbbells or bands. Focus on progressive tension. 5 meals a day.",
+    nongym:
+      "Increase caloric intake slowly. Focus on nutrient-dense whole foods. Yoga or stretching to stay active.",
+  },
+  overweight: {
+    gym: "Body recomposition approach. Lift weights to build muscle while reducing fat. High protein diet, moderate deficit.",
+    home: "Bodyweight HIIT + resistance exercises. Prioritize protein. Avoid excess processed carbs.",
+    nongym:
+      "Start with daily 30-min walks. Increase protein intake. Reduce sugar and junk food gradually.",
+  },
+  healthy: {
+    gym: "Maintain with strength training 3–4x/week. Slight calorie surplus on training days.",
+    home: "Full-body home workouts. Progressive calisthenics. Balanced macro intake.",
+    nongym:
+      "Stay active with daily movement. Focus on nutritious, balanced meals. Avoid sedentary lifestyle.",
+  },
+};
+
+function BodyTypeWorkoutAdvisor() {
+  const [bodyType, setBodyType] = useState<string | null>(null);
+  const [workoutType, setWorkoutType] = useState<string | null>(null);
+
+  const adviceMap = BODY_TYPE_ADVICE_GAIN;
+  const advice =
+    bodyType && workoutType ? adviceMap[bodyType]?.[workoutType] : null;
+
+  return (
+    <div className="mt-8 bg-card rounded-xl border border-border shadow-card p-5">
+      <h2 className="text-lg font-bold text-foreground mb-1">Find Your Goal</h2>
+      <p className="text-sm text-muted-foreground mb-4">
+        Select your body type and workout style for personalised advice
+      </p>
+      <div className="space-y-4">
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            Body Type
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { v: "skinny", l: "Skinny", e: "🦴" },
+              { v: "moderate", l: "Moderate", e: "⚖️" },
+              { v: "healthy", l: "Healthy", e: "💚" },
+              { v: "overweight", l: "Overweight / Fat", e: "🎯" },
+            ].map(({ v, l, e }) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setBodyType(v)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${bodyType === v ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border hover:border-primary"}`}
+              >
+                {e} {l}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            Workout Type
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { v: "gym", l: "Gym Goer", e: "🏋️" },
+              { v: "home", l: "Home Workout", e: "🏠" },
+              { v: "nongym", l: "Non-Gym", e: "🚶" },
+            ].map(({ v, l, e }) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setWorkoutType(v)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${workoutType === v ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border hover:border-primary"}`}
+              >
+                {e} {l}
+              </button>
+            ))}
+          </div>
+        </div>
+        {advice && (
+          <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
+            <p className="text-sm text-foreground leading-relaxed">
+              💡 {advice}
+            </p>
+          </div>
+        )}
+        {(bodyType || workoutType) && !advice && (
+          <p className="text-xs text-muted-foreground">
+            Select both body type and workout type to see your personalised
+            advice.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
   const [logs, setLogs] = useState<GainLog[]>(loadLogs);
   const [currentWeight, setCurrentWeight] = useState(
@@ -469,6 +616,51 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
                     >
                       <span className="text-emerald-400">•</span>
                       {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Body Type & Workout Finder */}
+        <BodyTypeWorkoutAdvisor />
+
+        {/* Weight Gain Shake Recipes */}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-foreground mb-1">
+            Weight Gain Shake Recipes
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            High-calorie shakes to fuel muscle growth
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {GAIN_SHAKES.map((shake) => (
+              <div
+                key={shake.name}
+                className="bg-card rounded-xl border border-border shadow-card p-4"
+              >
+                <div className="text-2xl mb-2">{shake.emoji}</div>
+                <h3 className="font-semibold text-foreground mb-1">
+                  {shake.name}
+                </h3>
+                <div className="flex gap-2 mb-3">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">
+                    {shake.kcal} kcal
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                    {shake.protein}g protein
+                  </span>
+                </div>
+                <ul className="space-y-1">
+                  {shake.ingredients.map((ing) => (
+                    <li
+                      key={ing}
+                      className="text-xs text-muted-foreground flex items-center gap-1.5"
+                    >
+                      <span className="text-emerald-400">•</span>
+                      {ing}
                     </li>
                   ))}
                 </ul>

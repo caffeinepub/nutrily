@@ -139,11 +139,17 @@ export interface UserProfile {
     weightKg: number;
     phone: string;
 }
+export interface Review {
+    authorName: string;
+    text: string;
+    reviewType: string;
+    timestamp: Time;
+}
 export enum MealType {
     breakfast = "breakfast",
     lunch = "lunch",
     snack = "snack",
-    dinner = "dinner"
+    dinner = "dinner",
 }
 export enum UserRole {
     admin = "admin",
@@ -178,6 +184,9 @@ export interface backendInterface {
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveDailyCheckIn(checkIn: DailyCheckIn): Promise<void>;
     searchFoodByName(name: string): Promise<Array<FoodItem>>;
+    getPublicReviews(): Promise<Array<Review>>;
+    removeFoodLogEntry(entryTimestamp: Time): Promise<void>;
+    submitReview(authorName: string, text: string, reviewType: string): Promise<void>;
 }
 import type { DailyFoodLog as _DailyFoodLog, FoodLogEntry as _FoodLogEntry, MealType as _MealType, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -544,6 +553,44 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.saveDailyCheckIn(arg0);
             return result;
+        }
+    }
+    async getPublicReviews(): Promise<Array<Review>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPublicReviews();
+                return result.map((r: any) => ({ authorName: r.authorName, text: r.text, reviewType: r.reviewType, timestamp: r.timestamp }));
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPublicReviews();
+            return result.map((r: any) => ({ authorName: r.authorName, text: r.text, reviewType: r.reviewType, timestamp: r.timestamp }));
+        }
+    }
+    async removeFoodLogEntry(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                return await this.actor.removeFoodLogEntry(arg0);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.removeFoodLogEntry(arg0);
+        }
+    }
+    async submitReview(arg0: string, arg1: string, arg2: string): Promise<void> {
+        if (this.processError) {
+            try {
+                return await this.actor.submitReview(arg0, arg1, arg2);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            return await this.actor.submitReview(arg0, arg1, arg2);
         }
     }
     async searchFoodByName(arg0: string): Promise<Array<FoodItem>> {

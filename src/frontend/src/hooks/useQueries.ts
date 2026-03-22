@@ -3,6 +3,7 @@ import type {
   DailyCheckIn,
   FoodLogEntry,
   HealthMetrics,
+  Review,
   UserProfile,
 } from "../backend";
 import { getTodayStartNs } from "../types";
@@ -41,7 +42,9 @@ export function useTodayFoodLogs() {
     queryFn: async () => {
       if (!actor) return [];
       const logs = await actor.getFoodLogsForDate(getTodayStartNs());
-      return logs.flatMap((log) => log.entries);
+      return logs.flatMap((log) =>
+        log.entries.map((entry) => ({ entry, logTimestamp: log.timestamp })),
+      );
     },
     enabled: !!actor && !isFetching,
   });
@@ -113,14 +116,6 @@ export function useAllCheckIns() {
     queryKey: ["allCheckIns"],
     queryFn: async () => {
       if (!actor) return [];
-      // get caller's own check-ins using a workaround: use profile principal
-      // Actually, we'll store them and retrieve via the actor
-      // For regular users, fetch their own check-ins
-      const profile = await actor.getCallerUserProfile();
-      if (!profile) return [];
-      // We can't get the caller's principal here directly in the frontend
-      // Use getAllUsersCheckIns scoped to caller - but that requires principal
-      // Instead return empty and let the component handle it
       return [];
     },
     enabled: !!actor && !isFetching,
@@ -172,6 +167,18 @@ export function useLogFoodEntry() {
   });
 }
 
+export function useRemoveFoodLogEntry() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (entryTimestamp: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.removeFoodLogEntry(entryTimestamp);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["todayFoodLogs"] }),
+  });
+}
+
 export function useLogWaterIntake() {
   const { actor } = useActor();
   const qc = useQueryClient();
@@ -217,5 +224,37 @@ export function useSaveDailyCheckIn() {
       return actor.saveDailyCheckIn(checkIn);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["allCheckIns"] }),
+  });
+}
+
+export function useGetPublicReviews() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Review[]>({
+    queryKey: ["publicReviews"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getPublicReviews();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSubmitReview() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      authorName,
+      text,
+      reviewType,
+    }: {
+      authorName: string;
+      text: string;
+      reviewType: string;
+    }) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.submitReview(authorName, text, reviewType);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["publicReviews"] }),
   });
 }

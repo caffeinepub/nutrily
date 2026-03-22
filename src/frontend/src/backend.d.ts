@@ -57,6 +57,12 @@ export interface UserProfile {
     weightKg: number;
     phone: string;
 }
+export interface Review {
+    authorName: string;
+    text: string;
+    reviewType: string;
+    timestamp: Time;
+}
 export enum MealType {
     breakfast = "breakfast",
     lunch = "lunch",
@@ -86,13 +92,16 @@ export interface backendInterface {
     getFoodByCategory(category: string): Promise<Array<FoodItem>>;
     getFoodLogsForDate(date: Time): Promise<Array<DailyFoodLog>>;
     getHealthMetricsForDate(date: Time): Promise<Array<HealthMetrics>>;
+    getPublicReviews(): Promise<Array<Review>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWaterIntakeForDate(date: Time): Promise<Array<DailyWaterIntake>>;
     isCallerAdmin(): Promise<boolean>;
     logFoodEntry(entry: FoodLogEntry): Promise<void>;
     logHealthMetrics(metrics: HealthMetrics): Promise<void>;
     logWaterIntake(glasses: bigint): Promise<void>;
+    removeFoodLogEntry(entryTimestamp: Time): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveDailyCheckIn(checkIn: DailyCheckIn): Promise<void>;
     searchFoodByName(name: string): Promise<Array<FoodItem>>;
+    submitReview(authorName: string, text: string, reviewType: string): Promise<void>;
 }

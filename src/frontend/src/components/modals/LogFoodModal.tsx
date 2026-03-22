@@ -15,18 +15,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useLogFoodEntry } from "../../hooks/useQueries";
+import type { DrinkEntry } from "../../hooks/useDrinksLog";
+import type { FoodLogEntryLocal } from "../../hooks/useFoodLog";
 import { MEAL_TYPES } from "../../types";
-import type { FoodItem, MealType } from "../../types";
+import type { FoodItem, LocalMealType, MealType } from "../../types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   allFoods: FoodItem[];
   preselectedFoodName?: string;
+  onLogDrink: (entry: Omit<DrinkEntry, "id" | "timestamp">) => void;
+  onLogFood: (entry: Omit<FoodLogEntryLocal, "id" | "timestamp">) => void;
 }
 
 function getCurrentTime() {
@@ -39,13 +41,20 @@ export default function LogFoodModal({
   onClose,
   allFoods,
   preselectedFoodName,
+  onLogDrink,
+  onLogFood,
 }: Props) {
   const [foodName, setFoodName] = useState("");
   const [quantity, setQuantity] = useState("100");
-  const [mealType, setMealType] = useState<MealType>("breakfast" as MealType);
+  const [pieces, setPieces] = useState("1");
+  const [unit, setUnit] = useState<"grams" | "pieces">("grams");
+  const [mealType, setMealType] = useState<LocalMealType>(
+    "breakfast" as MealType,
+  );
   const [search, setSearch] = useState("");
   const [mealTime, setMealTime] = useState(getCurrentTime);
-  const { mutateAsync, isPending } = useLogFoodEntry();
+
+  const isDrinks = mealType === "drinks";
 
   useEffect(() => {
     if (open && preselectedFoodName) {
@@ -53,7 +62,7 @@ export default function LogFoodModal({
         (m) => m.value === preselectedFoodName,
       );
       if (isMealType) {
-        setMealType(preselectedFoodName as MealType);
+        setMealType(preselectedFoodName as LocalMealType);
         setFoodName("");
       } else {
         setFoodName(preselectedFoodName);
@@ -65,6 +74,8 @@ export default function LogFoodModal({
     if (!open) {
       setFoodName("");
       setQuantity("100");
+      setPieces("1");
+      setUnit("grams");
       setSearch("");
     }
   }, [open, preselectedFoodName]);
@@ -77,30 +88,57 @@ export default function LogFoodModal({
     : [];
 
   const selectedFood = allFoods.find((f) => f.name === foodName);
+
+  const gramsFromPieces =
+    selectedFood && unit === "pieces"
+      ? Number(pieces) *
+        (selectedFood.servingSize > 0 ? selectedFood.servingSize : 100)
+      : null;
+
+  const actualGrams =
+    unit === "pieces"
+      ? (gramsFromPieces ?? Number(pieces) * 100)
+      : Number(quantity);
+
   const estimatedCals = selectedFood
-    ? Math.round((selectedFood.caloriesPer100g / 100) * Number(quantity))
+    ? Math.round((selectedFood.caloriesPer100g / 100) * actualGrams)
     : 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!foodName || !quantity) return;
-    try {
-      const [hours, mins] = mealTime.split(":").map(Number);
-      const d = new Date();
-      d.setHours(hours, mins, 0, 0);
-      const timestamp = BigInt(d.getTime()) * 1_000_000n;
+  const perPieceCals =
+    selectedFood && unit === "pieces"
+      ? Math.round(
+          (selectedFood.caloriesPer100g / 100) *
+            (selectedFood.servingSize > 0 ? selectedFood.servingSize : 100),
+        )
+      : 0;
 
-      await mutateAsync({
-        date: timestamp,
-        quantity: Number(quantity),
-        mealType,
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!foodName) return;
+
+    if (isDrinks) {
+      onLogDrink({
         foodName,
+        quantity: actualGrams,
+        calories: estimatedCals,
       });
-      toast.success(`${foodName} logged to ${mealType}!`);
+      toast.success(`${foodName} logged to drinks!`);
       onClose();
-    } catch {
-      toast.error("Failed to log food. Please try again.");
+      return;
     }
+
+    const factor = actualGrams / 100;
+    onLogFood({
+      foodName,
+      quantity: actualGrams,
+      mealType: mealType as string,
+      calories: estimatedCals,
+      protein: selectedFood ? selectedFood.protein * factor : 0,
+      carbs: selectedFood ? selectedFood.carbs * factor : 0,
+      fat: selectedFood ? selectedFood.fat * factor : 0,
+    });
+    toast.success(`${foodName} logged to ${mealType}!`);
+    onClose();
   };
 
   return (
@@ -115,7 +153,7 @@ export default function LogFoodModal({
             <Label className="text-sm">Meal</Label>
             <Select
               value={mealType}
-              onValueChange={(v) => setMealType(v as MealType)}
+              onValueChange={(v) => setMealType(v as LocalMealType)}
             >
               <SelectTrigger data-ocid="log_food.select" className="mt-1">
                 <SelectValue />
@@ -130,28 +168,34 @@ export default function LogFoodModal({
             </Select>
           </div>
 
-          <div>
-            <Label className="text-sm">Time of meal</Label>
-            <Input
-              data-ocid="log_food.time_input"
-              type="time"
-              value={mealTime}
-              onChange={(e) => setMealTime(e.target.value)}
-              className="mt-1"
-            />
-          </div>
+          {!isDrinks && (
+            <div>
+              <Label className="text-sm">Time of meal</Label>
+              <Input
+                data-ocid="log_food.time_input"
+                type="time"
+                value={mealTime}
+                onChange={(e) => setMealTime(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          )}
 
           <div>
-            <Label className="text-sm">Search Food</Label>
+            <Label className="text-sm">
+              {isDrinks ? "Search Drink" : "Search Food"}
+            </Label>
             <Input
               data-ocid="log_food.search_input"
-              placeholder="Type to search 500+ foods..."
+              placeholder={
+                isDrinks
+                  ? "e.g. Coca-Cola, Orange Juice..."
+                  : "Type to search 500+ foods..."
+              }
               value={search || (foodName && !search ? foodName : "")}
               onChange={(e) => {
                 setSearch(e.target.value);
-                if (e.target.value === "") {
-                  // keep foodName so user can clear and reselect
-                } else {
+                if (e.target.value !== "") {
                   setFoodName("");
                 }
               }}
@@ -196,17 +240,75 @@ export default function LogFoodModal({
           </div>
 
           <div>
-            <Label className="text-sm">Quantity (grams)</Label>
-            <Input
-              data-ocid="log_food.quantity_input"
-              type="number"
-              min="1"
-              max="2000"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              className="mt-1"
-            />
+            <Label className="text-sm mb-1 block">Unit</Label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setUnit("grams")}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                  unit === "grams"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted text-muted-foreground border-border hover:border-primary"
+                }`}
+              >
+                {isDrinks ? "ml" : "Grams"}
+              </button>
+              {!isDrinks && (
+                <button
+                  type="button"
+                  onClick={() => setUnit("pieces")}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    unit === "pieces"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted text-muted-foreground border-border hover:border-primary"
+                  }`}
+                >
+                  Pieces
+                </button>
+              )}
+            </div>
           </div>
+
+          {unit === "grams" || isDrinks ? (
+            <div>
+              <Label className="text-sm">
+                {isDrinks ? "Volume (ml)" : "Quantity (grams)"}
+              </Label>
+              <Input
+                data-ocid="log_food.quantity_input"
+                type="number"
+                min="1"
+                max="2000"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          ) : (
+            <div>
+              <Label className="text-sm">Number of Pieces</Label>
+              <Input
+                type="number"
+                min="1"
+                max="100"
+                value={pieces}
+                onChange={(e) => setPieces(e.target.value)}
+                className="mt-1"
+              />
+              {selectedFood && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  1 piece ≈{" "}
+                  {selectedFood.servingSize > 0
+                    ? selectedFood.servingSize
+                    : 100}
+                  g{perPieceCals > 0 && ` · ${perPieceCals} kcal`}
+                  {selectedFood.servingUnit
+                    ? ` (${selectedFood.servingUnit})`
+                    : ""}
+                </p>
+              )}
+            </div>
+          )}
 
           {estimatedCals > 0 && (
             <div className="bg-accent rounded-lg p-3 flex items-center justify-between">
@@ -231,17 +333,10 @@ export default function LogFoodModal({
             <Button
               data-ocid="log_food.submit_button"
               type="submit"
-              disabled={!foodName || !quantity || isPending}
+              disabled={!foodName}
               className="hero-gradient text-white border-0 hover:opacity-90"
             >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging...
-                </>
-              ) : (
-                "Log Food"
-              )}
+              {isDrinks ? "Log Drink" : "Log Food"}
             </Button>
           </DialogFooter>
         </form>

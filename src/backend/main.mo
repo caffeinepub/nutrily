@@ -169,7 +169,6 @@ actor {
   // ======================== Data Seeding ========================
 
   system func preupgrade() {};
-  // Migration is handled by the migration module
   system func postupgrade() {};
 
   // ======================== Food Logging ========================
@@ -212,6 +211,25 @@ actor {
     userFoodLogs.add(caller, currentLogs);
   };
 
+  public shared ({ caller }) func removeFoodLogEntry(entryTimestamp : Time.Time) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can remove food entries");
+    };
+    switch (userFoodLogs.get(caller)) {
+      case (null) {};
+      case (?logsList) {
+        // Iterate through existing set and remove the matching entry directly.
+        // Using the exact log object ensures structural equality matches.
+        let arr = logsList.toArray();
+        for (log in arr.vals()) {
+          if (log.timestamp == entryTimestamp) {
+            logsList.remove(log);
+          };
+        };
+      };
+    };
+  };
+
   public query ({ caller }) func getFoodLogsForDate(date : Time.Time) : async [DailyFoodLog] {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can fetch food logs");
@@ -221,7 +239,7 @@ actor {
       case (?logsList) {
         logsList.toArray().sort().filter(
           func(log) {
-            let logDay = log.timestamp / (24 * 60 * 60 * 1000000000); // Convert to days
+            let logDay = log.timestamp / (24 * 60 * 60 * 1000000000);
             let targetDay = date / (24 * 60 * 60 * 1000000000);
             logDay == targetDay;
           }
@@ -330,13 +348,47 @@ actor {
       case (?metricsList) {
         metricsList.toArray().sort().filter(
           func(metrics) {
-            let metricsDay = metrics.timestamp / (24 * 60 * 60 * 1000000000); // Convert to days
+            let metricsDay = metrics.timestamp / (24 * 60 * 60 * 1000000000);
             let targetDay = date / (24 * 60 * 60 * 1000000000);
             metricsDay == targetDay;
           }
         );
       };
     };
+  };
+
+  // ======================== Reviews & Q&A ========================
+
+  public type Review = {
+    authorName : Text;
+    text : Text;
+    reviewType : Text;
+    timestamp : Time.Time;
+  };
+
+  module Review {
+    public func compare(r1 : Review, r2 : Review) : Order.Order {
+      Int.compare(r1.timestamp, r2.timestamp);
+    };
+  };
+
+  let reviews = Set.empty<Review>();
+
+  public shared ({ caller }) func submitReview(authorName : Text, text : Text, reviewType : Text) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can submit reviews");
+    };
+    let review = {
+      authorName;
+      text;
+      reviewType;
+      timestamp = Time.now();
+    };
+    reviews.add(review);
+  };
+
+  public query func getPublicReviews() : async [Review] {
+    reviews.toArray().sort();
   };
 
   // ======================== Helper Functions ========================

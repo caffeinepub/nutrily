@@ -81,6 +81,151 @@ function saveLogs(logs: LossLog[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
 }
 
+const LOSS_SHAKES = [
+  {
+    name: "Fat Burner",
+    emoji: "🥬",
+    kcal: 45,
+    protein: 2,
+    ingredients: [
+      "Spinach handful",
+      "Half Green Apple",
+      "Half Cucumber",
+      "Lemon juice",
+      "Small piece Ginger",
+      "Water 300ml",
+    ],
+  },
+  {
+    name: "Protein Slim",
+    emoji: "🍓",
+    kcal: 200,
+    protein: 28,
+    ingredients: [
+      "Whey Protein 1 scoop",
+      "Skimmed Milk 300ml",
+      "Strawberries 100g",
+      "Ice cubes",
+    ],
+  },
+  {
+    name: "Metabolism Boost",
+    emoji: "🍵",
+    kcal: 30,
+    protein: 1,
+    ingredients: [
+      "Brewed Green Tea 200ml",
+      "Half Lemon juice",
+      "Chia Seeds 1 tsp",
+      "Honey ½ tsp",
+      "Ginger powder pinch",
+    ],
+  },
+];
+
+const BODY_TYPE_ADVICE_LOSS: Record<string, Record<string, string>> = {
+  skinny: {
+    gym: "Body recomposition: lift weights + mild calorie deficit. 2g protein/kg bodyweight. Avoid over-restricting.",
+    home: "Resistance band + bodyweight workouts. Light cardio. Prioritize sleep and protein intake.",
+    nongym:
+      "Daily 20–30 min walks. Reduce sugar. Eat whole foods. Avoid fad diets.",
+  },
+  moderate: {
+    gym: "Maintain with balanced diet. 150 min cardio/week. Track macros. Strength train to preserve muscle.",
+    home: "Home HIIT 3x/week. Yoga for recovery. Balanced nutrition with slight deficit.",
+    nongym:
+      "Increase daily movement. Reduce processed foods. Drink plenty of water.",
+  },
+  overweight: {
+    gym: "HIIT + strength training combo. Calorie deficit of 300–500 kcal. High protein to preserve muscle.",
+    home: "Jump rope, bodyweight circuits, yoga. Walk 10k steps daily. Cut sugar and processed foods.",
+    nongym:
+      "Start with 30 min daily walks. Reduce portion sizes. Drink water before meals.",
+  },
+  healthy: {
+    gym: "Maintain with regular training. No aggressive cutting needed. Mindful eating.",
+    home: "Active lifestyle with home workouts. Focus on whole foods. Avoid excess snacking.",
+    nongym:
+      "Prioritize natural movement. Balanced eating. Adequate sleep for metabolism.",
+  },
+};
+
+function BodyTypeWorkoutAdvisor() {
+  const [bodyType, setBodyType] = useState<string | null>(null);
+  const [workoutType, setWorkoutType] = useState<string | null>(null);
+
+  const adviceMap = BODY_TYPE_ADVICE_LOSS;
+  const advice =
+    bodyType && workoutType ? adviceMap[bodyType]?.[workoutType] : null;
+
+  return (
+    <div className="mt-8 bg-card rounded-xl border border-border shadow-card p-5">
+      <h2 className="text-lg font-bold text-foreground mb-1">Find Your Goal</h2>
+      <p className="text-sm text-muted-foreground mb-4">
+        Select your body type and workout style for personalised advice
+      </p>
+      <div className="space-y-4">
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            Body Type
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { v: "skinny", l: "Skinny", e: "🦴" },
+              { v: "moderate", l: "Moderate", e: "⚖️" },
+              { v: "healthy", l: "Healthy", e: "💚" },
+              { v: "overweight", l: "Overweight / Fat", e: "🎯" },
+            ].map(({ v, l, e }) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setBodyType(v)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${bodyType === v ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border hover:border-primary"}`}
+              >
+                {e} {l}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            Workout Type
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { v: "gym", l: "Gym Goer", e: "🏋️" },
+              { v: "home", l: "Home Workout", e: "🏠" },
+              { v: "nongym", l: "Non-Gym", e: "🚶" },
+            ].map(({ v, l, e }) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setWorkoutType(v)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${workoutType === v ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border hover:border-primary"}`}
+              >
+                {e} {l}
+              </button>
+            ))}
+          </div>
+        </div>
+        {advice && (
+          <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
+            <p className="text-sm text-foreground leading-relaxed">
+              💡 {advice}
+            </p>
+          </div>
+        )}
+        {(bodyType || workoutType) && !advice && (
+          <p className="text-xs text-muted-foreground">
+            Select both body type and workout type to see your personalised
+            advice.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
   const [logs, setLogs] = useState<LossLog[]>(loadLogs);
   const [currentWeight, setCurrentWeight] = useState(
@@ -431,6 +576,51 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
                 <p className="text-xs font-bold text-red-700 mt-0.5">
                   {f.kcal} kcal
                 </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Body Type & Workout Finder */}
+        <BodyTypeWorkoutAdvisor />
+
+        {/* Weight Loss Shake Recipes */}
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-foreground mb-1">
+            Weight Loss Shake Recipes
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Low-calorie, metabolism-boosting shakes
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {LOSS_SHAKES.map((shake) => (
+              <div
+                key={shake.name}
+                className="bg-card rounded-xl border border-border shadow-card p-4"
+              >
+                <div className="text-2xl mb-2">{shake.emoji}</div>
+                <h3 className="font-semibold text-foreground mb-1">
+                  {shake.name}
+                </h3>
+                <div className="flex gap-2 mb-3">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+                    {shake.kcal} kcal
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                    {shake.protein}g protein
+                  </span>
+                </div>
+                <ul className="space-y-1">
+                  {shake.ingredients.map((ing) => (
+                    <li
+                      key={ing}
+                      className="text-xs text-muted-foreground flex items-center gap-1.5"
+                    >
+                      <span className="text-green-500">•</span>
+                      {ing}
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>

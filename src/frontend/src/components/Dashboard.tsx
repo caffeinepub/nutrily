@@ -4,10 +4,11 @@ import { useMemo, useState } from "react";
 import type { DailyCheckIn } from "../backend";
 import { FOOD_DATABASE } from "../data/foodDatabase";
 import { useActor } from "../hooks/useActor";
+import { useDrinksLog } from "../hooks/useDrinksLog";
+import { useFoodLog } from "../hooks/useFoodLog";
 import {
   useCallerUserProfile,
   useGetAllFoodItems,
-  useTodayFoodLogs,
   useTodayHealthMetrics,
   useTodayWaterIntake,
 } from "../hooks/useQueries";
@@ -18,6 +19,8 @@ import Footer from "./Footer";
 import GoalsSection from "./GoalsSection";
 import MyStatsCard from "./MyStatsCard";
 import Navbar from "./Navbar";
+import NutritionSummaryPage from "./NutritionSummaryPage";
+import ReviewSection from "./ReviewSection";
 import WeightGainStatusPage from "./WeightGainStatusPage";
 import WeightLossStatusPage from "./WeightLossStatusPage";
 import CalorieTrackerCard from "./cards/CalorieTrackerCard";
@@ -50,12 +53,19 @@ export default function Dashboard({ userName }: DashboardProps) {
   const [metricsOpen, setMetricsOpen] = useState(false);
   const [preselectedMeal, setPreselectedMeal] = useState<string | undefined>();
   const [goalPage, setGoalPage] = useState<"gain" | "loss" | null>(null);
+  const [nutritionPage, setNutritionPage] = useState(false);
 
   const { data: backendFoods = [] } = useGetAllFoodItems();
-  const { data: foodEntries = [] } = useTodayFoodLogs();
   const { data: waterGlasses = 0 } = useTodayWaterIntake();
   const { data: healthMetrics } = useTodayHealthMetrics();
   const { data: userProfile } = useCallerUserProfile();
+  const { drinks, addDrink, removeDrink, totalDrinkCalories } = useDrinksLog();
+  const {
+    entries: rawFoodEntries,
+    foodLogItems,
+    addFood,
+    removeFood,
+  } = useFoodLog();
 
   const { actor, isFetching } = useActor();
   const { data: checkIns = [] } = useQuery<DailyCheckIn[]>({
@@ -83,19 +93,20 @@ export default function Dashboard({ userName }: DashboardProps) {
   );
 
   const totals = useMemo(() => {
-    return foodEntries.reduce(
-      (acc, entry) => {
-        const n = calcEntryNutrition(entry, foodMap);
-        return {
-          calories: acc.calories + n.calories,
-          protein: acc.protein + n.protein,
-          carbs: acc.carbs + n.carbs,
-          fat: acc.fat + n.fat,
-        };
-      },
+    const foodTotals = rawFoodEntries.reduce(
+      (acc, e) => ({
+        calories: acc.calories + e.calories,
+        protein: acc.protein + e.protein,
+        carbs: acc.carbs + e.carbs,
+        fat: acc.fat + e.fat,
+      }),
       { calories: 0, protein: 0, carbs: 0, fat: 0 },
     );
-  }, [foodEntries, foodMap]);
+    return {
+      ...foodTotals,
+      calories: foodTotals.calories + totalDrinkCalories,
+    };
+  }, [rawFoodEntries, totalDrinkCalories]);
 
   const { score, grade } = calcMealQualityScore(
     totals.calories,
@@ -104,7 +115,10 @@ export default function Dashboard({ userName }: DashboardProps) {
     totals.fat,
   );
 
-  const recentEntry = foodEntries[foodEntries.length - 1];
+  const recentEntry =
+    foodLogItems.length > 0
+      ? foodLogItems[foodLogItems.length - 1].entry
+      : undefined;
 
   const openLogFood = (mealType?: string) => {
     setPreselectedMeal(mealType);
@@ -119,7 +133,6 @@ export default function Dashboard({ userName }: DashboardProps) {
       }
     : undefined;
 
-  // Render goal-specific status pages
   if (goalPage === "gain") {
     return (
       <WeightGainStatusPage
@@ -133,6 +146,16 @@ export default function Dashboard({ userName }: DashboardProps) {
       <WeightLossStatusPage
         onBack={() => setGoalPage(null)}
         userProfile={userProfileForStatus}
+      />
+    );
+  }
+
+  if (nutritionPage) {
+    return (
+      <NutritionSummaryPage
+        entries={foodLogItems}
+        foodMap={foodMap}
+        onBack={() => setNutritionPage(false)}
       />
     );
   }
@@ -167,7 +190,6 @@ export default function Dashboard({ userName }: DashboardProps) {
 
       {/* Dashboard grid */}
       <main className="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-1">
-        {/* My Stats — full width at top */}
         {userProfile && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -202,7 +224,7 @@ export default function Dashboard({ userName }: DashboardProps) {
                       {recentEntry.foodName}
                     </p>
                     <p className="text-xs text-muted-foreground capitalize">
-                      {recentEntry.mealType} · {recentEntry.quantity}g
+                      {recentEntry.mealType} &middot; {recentEntry.quantity}g
                     </p>
                   </div>
                   <span className="text-sm font-semibold text-primary">
@@ -219,10 +241,20 @@ export default function Dashboard({ userName }: DashboardProps) {
           {/* Column 2 */}
           <div className="space-y-5">
             <FoodLogCard
-              entries={foodEntries}
+              entries={foodLogItems}
               foodMap={foodMap}
               onAddFood={openLogFood}
+              onRemoveEntry={removeFood}
+              drinkEntries={drinks}
+              onRemoveDrink={removeDrink}
             />
+            <button
+              type="button"
+              onClick={() => setNutritionPage(true)}
+              className="w-full text-xs text-primary font-medium hover:opacity-80 transition-opacity text-center py-1"
+            >
+              📊 View Full Nutrition Report
+            </button>
             <WaterIntakeCard glasses={waterGlasses} />
           </div>
 
@@ -253,7 +285,6 @@ export default function Dashboard({ userName }: DashboardProps) {
           </div>
         </div>
 
-        {/* Daily Check-In */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -268,8 +299,8 @@ export default function Dashboard({ userName }: DashboardProps) {
           </div>
         </motion.div>
 
-        {/* Goals Section */}
         <GoalsSection onNavigateToStatus={setGoalPage} />
+        <ReviewSection />
       </main>
 
       <Footer />
@@ -279,6 +310,8 @@ export default function Dashboard({ userName }: DashboardProps) {
         onClose={() => setLogFoodOpen(false)}
         allFoods={allFoods}
         preselectedFoodName={preselectedMeal}
+        onLogDrink={addDrink}
+        onLogFood={addFood}
       />
       <FoodDetailModal
         food={selectedFood}
