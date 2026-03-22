@@ -1,6 +1,21 @@
 import { Badge } from "@/components/ui/badge";
-import { Brain, Flame, Info, Lightbulb, Sparkles, Target } from "lucide-react";
+import {
+  Brain,
+  Flame,
+  Info,
+  Lightbulb,
+  Sparkles,
+  Target,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import { motion } from "motion/react";
+import { useMemo } from "react";
+import {
+  getAgeGroup,
+  getAgeGroupLabel,
+  getUserAge,
+} from "../../utils/ageUtils";
 
 interface SmartCoachCardProps {
   caloriesConsumed: number;
@@ -36,7 +51,6 @@ function calcBMR(weight: number, height: number, gender: string): number {
   if (gender === "female") {
     return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
   }
-  // male (default)
   return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
 }
 
@@ -91,6 +105,114 @@ function getBMICategory(bmi: number): {
   };
 }
 
+interface FoodLog {
+  date: string;
+  calories: number;
+  items: unknown[];
+}
+
+const AGE_GROUP_ADVICE = {
+  teen: {
+    emoji: "🧒",
+    badge: "bg-pink-100 text-pink-700 border-pink-200",
+    title: "Teen Nutrition",
+    tips: [
+      {
+        icon: "🦴",
+        text: "Focus on calcium, iron & protein for growth — milk, eggs, leafy greens daily.",
+      },
+      {
+        icon: "🚫",
+        text: "Avoid crash diets — your body needs all nutrients for healthy development.",
+      },
+      {
+        icon: "⚡",
+        text: "Exercise: 60 min/day of mixed cardio + light strength training + sports.",
+      },
+      {
+        icon: "🍌",
+        text: "Best foods: milk, eggs, leafy greens, whole grains, banana, fish.",
+      },
+    ],
+  },
+  youngAdult: {
+    emoji: "💪",
+    badge: "bg-violet-100 text-violet-700 border-violet-200",
+    title: "Young Adult Plan",
+    tips: [
+      {
+        icon: "🥩",
+        text: "Build muscle with high protein (1.8g/kg) — chicken breast, eggs, paneer.",
+      },
+      {
+        icon: "🌾",
+        text: "Complex carbs fuel energy: brown rice, oats, whole wheat rotis.",
+      },
+      {
+        icon: "🏋️",
+        text: "Exercise: 45–60 min strength training + HIIT 4–5 times/week.",
+      },
+      {
+        icon: "🥦",
+        text: "Best foods: chicken breast, brown rice, oats, broccoli, nuts.",
+      },
+    ],
+  },
+  middleAge: {
+    emoji: "🧘",
+    badge: "bg-amber-100 text-amber-700 border-amber-200",
+    title: "Middle Age Focus",
+    tips: [
+      {
+        icon: "🔥",
+        text: "Manage metabolism slowdown with more fiber, lean protein & antioxidants.",
+      },
+      {
+        icon: "🐟",
+        text: "Anti-inflammatory foods: salmon, berries, olive oil, spinach, turmeric.",
+      },
+      {
+        icon: "🧘",
+        text: "Exercise: 30–45 min moderate cardio + yoga + resistance bands.",
+      },
+      {
+        icon: "🫐",
+        text: "Best foods: salmon, quinoa, berries, olive oil, spinach, seeds.",
+      },
+    ],
+  },
+  senior: {
+    emoji: "🌟",
+    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    title: "Senior Wellness",
+    tips: [
+      {
+        icon: "🦷",
+        text: "Bone health: calcium + vitamin D from curd, milk, sunlight, soft fish.",
+      },
+      {
+        icon: "🍲",
+        text: "Choose soft, easily digestible foods: dal, soft rice, steamed veggies, soups.",
+      },
+      {
+        icon: "🚶",
+        text: "Exercise: 30 min light walking + gentle yoga + stretching daily.",
+      },
+      {
+        icon: "💧",
+        text: "Stay hydrated — thirst sensation decreases with age. Drink regularly.",
+      },
+    ],
+  },
+};
+
+const AGE_FOOD_SUGGESTIONS: Record<string, string[]> = {
+  teen: ["Milk", "Eggs", "Spinach", "Whole Grain Bread", "Banana"],
+  youngAdult: ["Chicken Breast", "Brown Rice", "Oats", "Broccoli", "Almonds"],
+  middleAge: ["Salmon", "Quinoa", "Blueberries", "Olive Oil", "Spinach"],
+  senior: ["Rice (Soft)", "Dal", "Curd", "Steamed Vegetables", "Warm Soup"],
+};
+
 export default function SmartCoachCard({
   caloriesConsumed,
   protein,
@@ -104,6 +226,73 @@ export default function SmartCoachCard({
     | "loss"
     | null;
   const todayTip = DAILY_TIPS[new Date().getDay() % DAILY_TIPS.length];
+
+  const userAge = getUserAge();
+  const ageGroup = getAgeGroup(userAge);
+  const ageGroupLabel = getAgeGroupLabel(ageGroup);
+  const ageAdvice = AGE_GROUP_ADVICE[ageGroup];
+  const ageFoodNames = AGE_FOOD_SUGGESTIONS[ageGroup];
+
+  // Compute calorie target for goal adjustment (always at top level)
+  const gender =
+    userProfile?.gender ?? localStorage.getItem("doitepic_gender") ?? "male";
+  const bmrBase = userProfile
+    ? calcBMR(userProfile.weightKg, userProfile.heightCm, gender)
+    : 2000;
+  let calorieTargetBase = bmrBase;
+  if (activeGoal === "gain") calorieTargetBase = bmrBase + 500;
+  else if (activeGoal === "loss")
+    calorieTargetBase = Math.max(1200, bmrBase - 500);
+
+  // Goal Adjustment Engine — hook always at top level
+  const goalAdjustment = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("doitepic_food_logs");
+      if (!raw) return null;
+      const logs: FoodLog[] = JSON.parse(raw);
+      if (logs.length < 5) return null;
+
+      const last7 = logs.slice(-7);
+      const avg = last7.reduce((s, l) => s + l.calories, 0) / last7.length;
+
+      const withinTarget = last7.filter(
+        (l) => Math.abs(l.calories - avg) / Math.max(avg, 1) < 0.05,
+      );
+      if (withinTarget.length >= 5) {
+        return {
+          type: "plateau" as const,
+          avg: Math.round(avg),
+          message:
+            "Plateau Detected! Your calorie intake has been stable for 5+ days. Try increasing protein by 10g/day and adding 200 kcal from complex carbs.",
+        };
+      }
+
+      const under300 = last7.filter(
+        (l) => calorieTargetBase - l.calories > 300,
+      );
+      if (under300.length >= 5) {
+        return {
+          type: "under" as const,
+          avg: Math.round(avg),
+          message:
+            "You're eating well below target. Increase by 150–200 kcal with healthy fats like nuts or avocado.",
+        };
+      }
+
+      const over300 = last7.filter((l) => l.calories - calorieTargetBase > 300);
+      if (over300.length >= 5) {
+        return {
+          type: "over" as const,
+          avg: Math.round(avg),
+          message:
+            "Reduce portion sizes. Cut 150–200 kcal from refined carbs to get back on track.",
+        };
+      }
+    } catch (_) {
+      // ignore
+    }
+    return null;
+  }, [calorieTargetBase]);
 
   if (!userProfile) {
     return (
@@ -128,8 +317,6 @@ export default function SmartCoachCard({
     );
   }
 
-  const gender =
-    userProfile.gender ?? localStorage.getItem("doitepic_gender") ?? "male";
   const bmr = calcBMR(userProfile.weightKg, userProfile.heightCm, gender);
   const bmi = calcBMI(userProfile.weightKg, userProfile.heightCm);
   const bmiInfo = getBMICategory(bmi);
@@ -146,19 +333,27 @@ export default function SmartCoachCard({
 
   const proteinTarget = calcProteinTarget(userProfile.weightKg, gender);
   const fatRange = calcFatRange(calorieTarget, gender);
-
   const calorieGap = calorieTarget - caloriesConsumed;
   const goalReached = calorieGap <= 0;
 
-  // Smart food suggestions
-  const suggestions =
+  // Blend goal-based suggestions with age-specific foods
+  const goalSuggestions =
     activeGoal === "gain"
       ? allFoods.filter((f) => f.caloriesPer100g > 250).slice(0, 3)
       : allFoods
           .filter((f) => f.caloriesPer100g < 150 && (f.protein ?? 0) > 5)
           .slice(0, 3);
 
-  // Macro insight
+  const ageSuggestions = ageFoodNames
+    .map((name) =>
+      allFoods.find((f) => f.name.toLowerCase().includes(name.toLowerCase())),
+    )
+    .filter(Boolean)
+    .slice(0, 3) as typeof allFoods;
+
+  const suggestions =
+    goalSuggestions.length > 0 ? goalSuggestions : ageSuggestions;
+
   let macroInsight = "Great macro balance today! Keep it up. 🎯";
   let macroColor = "bg-emerald-50 border-emerald-100 text-emerald-700";
   if (protein < proteinTarget * 0.5) {
@@ -172,7 +367,6 @@ export default function SmartCoachCard({
     macroColor = "bg-blue-50 border-blue-100 text-blue-700";
   }
 
-  // Gender-specific insights
   const genderInsights =
     gender === "female"
       ? [
@@ -220,6 +414,17 @@ export default function SmartCoachCard({
           },
         ];
 
+  const adjustmentStyles = {
+    plateau: "bg-amber-50 border-amber-200 text-amber-800",
+    under: "bg-blue-50 border-blue-200 text-blue-800",
+    over: "bg-red-50 border-red-200 text-red-800",
+  };
+  const adjustmentIcons = {
+    plateau: <TrendingDown className="w-4 h-4 shrink-0" />,
+    under: <TrendingDown className="w-4 h-4 shrink-0" />,
+    over: <TrendingUp className="w-4 h-4 shrink-0" />,
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -228,20 +433,28 @@ export default function SmartCoachCard({
       className="bg-card rounded-2xl border border-border shadow-card overflow-hidden"
       data-ocid="smart_coach.card"
     >
-      {/* Header */}
       <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-white" />
         <h3 className="font-bold text-white text-sm">Smart Coach</h3>
         {activeGoal && (
           <span className="text-xs text-white/70 ml-1">· {goalLabel}</span>
         )}
-        <Badge className="ml-auto text-xs bg-white/20 text-white border-white/30">
-          AI
-        </Badge>
+        <div className="ml-auto flex items-center gap-1.5">
+          {goalAdjustment && (
+            <Badge className="text-xs bg-amber-400/90 text-amber-900 border-amber-300">
+              Smart Goal
+            </Badge>
+          )}
+          <Badge className={`text-xs border ${ageAdvice.badge}`}>
+            {ageAdvice.emoji} {ageGroupLabel}
+          </Badge>
+          <Badge className="text-xs bg-white/20 text-white border-white/30">
+            AI
+          </Badge>
+        </div>
       </div>
 
       <div className="p-4 space-y-3">
-        {/* BMI + Calorie row */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground">BMI</span>
@@ -261,7 +474,6 @@ export default function SmartCoachCard({
           </div>
         </div>
 
-        {/* Gender-specific macro targets */}
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="bg-violet-50 border border-violet-100 text-violet-700 rounded-full px-2.5 py-0.5 font-medium">
             🥩 Protein: {proteinTarget}g
@@ -272,9 +484,11 @@ export default function SmartCoachCard({
           <span className="bg-sky-50 border border-sky-100 text-sky-700 rounded-full px-2.5 py-0.5 font-medium capitalize">
             {gender === "female" ? "👩" : "👨"} {gender}
           </span>
+          <span className="bg-rose-50 border border-rose-100 text-rose-700 rounded-full px-2.5 py-0.5 font-medium">
+            🎂 Age {userAge}
+          </span>
         </div>
 
-        {/* Calorie gap */}
         <div
           className={[
             "flex items-center gap-2 rounded-xl px-3 py-2.5 border text-sm font-semibold",
@@ -290,7 +504,6 @@ export default function SmartCoachCard({
             : `You need ${Math.round(calorieGap)} more kcal today`}
         </div>
 
-        {/* No goal selected */}
         {!activeGoal && (
           <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
             💡 Select a goal (Weight Gain / Weight Loss) below for personalised
@@ -298,11 +511,10 @@ export default function SmartCoachCard({
           </p>
         )}
 
-        {/* Food suggestions */}
         {suggestions.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-muted-foreground mb-1.5">
-              Suggested foods now
+              Suggested foods for you
             </p>
             <div className="flex flex-wrap gap-1.5">
               {suggestions.map((f) => (
@@ -321,7 +533,36 @@ export default function SmartCoachCard({
           </div>
         )}
 
-        {/* Macro insight */}
+        {/* Age-specific advice section */}
+        <div
+          className="border border-border rounded-xl overflow-hidden"
+          data-ocid="smart_coach.age_insights"
+        >
+          <div
+            className="px-3 py-2 flex items-center gap-1.5"
+            style={{
+              background:
+                "linear-gradient(to right, oklch(0.65 0.18 300), oklch(0.58 0.2 260))",
+            }}
+          >
+            <span className="text-sm">{ageAdvice.emoji}</span>
+            <p className="text-xs font-bold text-white">{ageAdvice.title}</p>
+            <Badge className={`ml-auto text-xs border ${ageAdvice.badge}`}>
+              {ageGroupLabel}
+            </Badge>
+          </div>
+          <div className="p-2.5 space-y-1.5 bg-card">
+            {ageAdvice.tips.map((tip) => (
+              <div key={tip.text} className="flex items-start gap-1.5">
+                <span className="text-sm leading-none mt-0.5">{tip.icon}</span>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {tip.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div
           className={`flex items-start gap-2 rounded-xl px-3 py-2 border text-xs ${macroColor}`}
           data-ocid="smart_coach.macro_insight"
@@ -330,7 +571,6 @@ export default function SmartCoachCard({
           <span>{macroInsight}</span>
         </div>
 
-        {/* Gender Insights */}
         <div
           className="border border-border rounded-xl overflow-hidden"
           data-ocid="smart_coach.gender_insights"
@@ -355,7 +595,6 @@ export default function SmartCoachCard({
           </div>
         </div>
 
-        {/* Daily tip */}
         <div
           className="flex items-start gap-2 bg-muted/40 rounded-xl px-3 py-2 border border-border"
           data-ocid="smart_coach.daily_tip"
@@ -365,6 +604,32 @@ export default function SmartCoachCard({
             {todayTip}
           </p>
         </div>
+
+        {goalAdjustment && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className={`flex items-start gap-2 rounded-xl px-3 py-3 border text-xs font-medium ${adjustmentStyles[goalAdjustment.type]}`}
+            data-ocid="smart_coach.goal_adjustment"
+          >
+            {adjustmentIcons[goalAdjustment.type]}
+            <div>
+              <p className="font-bold mb-0.5">
+                {goalAdjustment.type === "plateau"
+                  ? "📊 Goal Adjustment Suggested"
+                  : goalAdjustment.type === "under"
+                    ? "📉 Calorie Intake Too Low"
+                    : "📈 Calorie Intake Too High"}
+              </p>
+              <p className="leading-relaxed">{goalAdjustment.message}</p>
+              <p className="mt-1 opacity-70">
+                7-day avg: {goalAdjustment.avg} kcal · Target: {calorieTarget}{" "}
+                kcal
+              </p>
+            </div>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );

@@ -20,10 +20,12 @@ import DailyCheckInCard from "./DailyCheckInCard";
 import FoodLogHistory from "./FoodLogHistory";
 import Footer from "./Footer";
 import GoalsSection from "./GoalsSection";
+import HabitRemindersCard from "./HabitRemindersCard";
 import MyStatsCard from "./MyStatsCard";
 import Navbar from "./Navbar";
 import NutritionSummaryPage from "./NutritionSummaryPage";
 import OfflineBanner from "./OfflineBanner";
+import PrivacySettingsModal from "./PrivacySettingsModal";
 import ReviewSection from "./ReviewSection";
 import StreakWidget from "./StreakWidget";
 import WeightGainStatusPage from "./WeightGainStatusPage";
@@ -134,7 +136,6 @@ export default function Dashboard({ userName }: DashboardProps) {
     setLogFoodOpen(true);
   };
 
-  // Wrap addFood to award streak points on each log
   const handleLogFood = (
     entry: Omit<FoodLogEntryLocal, "id" | "timestamp">,
   ) => {
@@ -222,7 +223,7 @@ export default function Dashboard({ userName }: DashboardProps) {
 
       {/* Dashboard grid */}
       <main className="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-1">
-        {/* Streak Widget — prominently below hero */}
+        {/* Streak Widget */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -278,6 +279,8 @@ export default function Dashboard({ userName }: DashboardProps) {
                 </div>
               </div>
             )}
+            {/* Habit Reminders */}
+            <HabitRemindersCard />
           </div>
 
           {/* Column 2 */}
@@ -346,6 +349,10 @@ export default function Dashboard({ userName }: DashboardProps) {
         <ReviewSection />
       </main>
 
+      {/* Footer with Privacy link */}
+      <div className="max-w-7xl mx-auto w-full px-4 md:px-6 pb-2 flex justify-center">
+        <PrivacySettingsModal />
+      </div>
       <Footer />
 
       <LogFoodModal

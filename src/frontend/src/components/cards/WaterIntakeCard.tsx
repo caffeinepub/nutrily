@@ -1,14 +1,18 @@
 import { useLogWaterIntake } from "../../hooks/useQueries";
-import { DAILY_GOALS } from "../../types";
+import {
+  getUserAge,
+  getWaterGoalGlasses,
+  getWaterGoalLitres,
+} from "../../utils/ageUtils";
 
 interface Props {
   glasses: number;
 }
 
-const GLASS_INDICES = [0, 1, 2, 3, 4, 5, 6, 7];
-
 export default function WaterIntakeCard({ glasses }: Props) {
-  const goal = DAILY_GOALS.water;
+  const age = getUserAge();
+  const goalGlasses = getWaterGoalGlasses(age);
+  const goalLitres = getWaterGoalLitres(age);
   const { mutate } = useLogWaterIntake();
 
   const handleToggle = (index: number) => {
@@ -16,30 +20,47 @@ export default function WaterIntakeCard({ glasses }: Props) {
     mutate(newCount);
   };
 
-  const pct = Math.round((glasses / goal) * 100);
+  const mlConsumed = glasses * 250;
+  const mlGoal = goalGlasses * 250;
+  const litresConsumed = mlConsumed / 1000;
+  const pct = Math.min(Math.round((glasses / goalGlasses) * 100), 100);
+
+  // Age-based label
+  let ageNote = "";
+  if (age < 18) ageNote = "Teen: 1.5L daily";
+  else if (age <= 55) ageNote = "Adult: 2.0L daily";
+  else ageNote = "Senior: 1.8L daily";
 
   return (
     <div className="bg-card rounded-xl border border-border shadow-card p-5">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-1">
         <h3 className="text-sm font-semibold text-foreground">Water Intake</h3>
-        <span className="text-xs text-muted-foreground">
-          Daily Goal: {goal} glasses
-        </span>
+        <span className="text-xs text-muted-foreground">{ageNote}</span>
       </div>
+      <p className="text-xs text-muted-foreground mb-3">
+        Goal:{" "}
+        <span className="font-semibold text-foreground">
+          {goalLitres.toFixed(1)} L
+        </span>{" "}
+        · {goalGlasses} glasses of 250ml
+      </p>
 
-      <div className="flex gap-2 mb-4">
-        {GLASS_INDICES.slice(0, goal).map((i) => (
+      <div className="flex gap-1.5 mb-4 flex-wrap">
+        {Array.from({ length: goalGlasses }, (_, i) => i).map((i) => (
           <button
             key={`glass-${i}`}
             type="button"
             data-ocid={`water.toggle.${(i + 1) as 1}`}
             onClick={() => handleToggle(i)}
-            title={`Glass ${i + 1}`}
-            className="flex-1 flex flex-col items-center gap-1 transition-transform hover:scale-110"
+            title={`${(i + 1) * 250}ml`}
+            className="flex flex-col items-center gap-1 transition-transform hover:scale-110"
+            style={{
+              width: `${Math.max(14, Math.min(22, Math.floor(100 / (goalGlasses + 1))))}px`,
+            }}
           >
             <svg
               viewBox="0 0 24 32"
-              className="w-full max-w-[22px]"
+              className="w-full"
               fill="none"
               aria-hidden="true"
             >
@@ -75,10 +96,14 @@ export default function WaterIntakeCard({ glasses }: Props) {
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        Glasses tracked{" "}
+        Consumed{" "}
         <span className="font-semibold text-foreground">
-          {glasses}/{goal}
-        </span>
+          {litresConsumed >= 1
+            ? `${litresConsumed.toFixed(2)}L`
+            : `${mlConsumed}ml`}
+        </span>{" "}
+        / {goalLitres.toFixed(1)}L{" "}
+        <span className="text-muted-foreground/60">({mlGoal}ml goal)</span>
       </p>
     </div>
   );

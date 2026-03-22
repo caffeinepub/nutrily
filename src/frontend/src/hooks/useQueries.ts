@@ -10,8 +10,62 @@ import type {
   UserProfile,
 } from "../backend";
 import type { Announcement, Article, DietPlan, UserReport } from "../types";
-import { getTodayStartNs } from "../types";
 import { useActor } from "./useActor";
+
+// ─── localStorage helpers ─────────────────────────────────────────────────────
+
+function getTodayDateStr(): string {
+  const now = new Date();
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+}
+
+interface LocalFoodLogItem {
+  foodName: string;
+  quantity: number;
+  mealType: string;
+  logTimestamp: number;
+  date: string;
+}
+
+interface LocalWaterLog {
+  glasses: number;
+  date: string;
+}
+
+interface LocalHealthMetrics {
+  weight: number;
+  steps: number;
+  heartRate: number;
+  timestamp: number;
+  date: string;
+}
+
+interface LocalCheckIn extends DailyCheckIn {
+  savedAt: number;
+}
+
+interface LocalStreak {
+  currentStreak: number;
+  longestStreak: number;
+  totalPoints: number;
+  lastActiveDate: string;
+}
+
+function readLS<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeLS<T>(key: string, value: T) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+// ─── Food database (backend, works anonymously) ───────────────────────────────
 
 export function useGetAllFoodItems() {
   const { actor, isFetching } = useActor();
@@ -43,92 +97,280 @@ export function useSearchFood(name: string) {
   });
 }
 
-export function useTodayFoodLogs() {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["todayFoodLogs"],
-    queryFn: async () => {
-      if (!actor) return [];
-      const logs = await actor.getFoodLogsForDate(getTodayStartNs());
-      return logs.flatMap((log) =>
-        log.entries.map((entry) => ({ entry, logTimestamp: log.timestamp })),
-      );
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useTodayWaterIntake() {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["todayWater"],
-    queryFn: async () => {
-      if (!actor) return 0;
-      const logs = await actor.getWaterIntakeForDate(getTodayStartNs());
-      if (logs.length === 0) return 0;
-      const allEntries = logs.flatMap((l) => l.entries);
-      if (allEntries.length === 0) return 0;
-      return Number(allEntries[allEntries.length - 1].glasses);
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useTodayHealthMetrics() {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ["todayMetrics"],
-    queryFn: async () => {
-      if (!actor) return null;
-      const metrics = await actor.getHealthMetricsForDate(getTodayStartNs());
-      return metrics.length > 0 ? metrics[metrics.length - 1] : null;
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
+// ─── User profile (localStorage) ─────────────────────────────────────────────
 
 export function useCallerUserProfile() {
-  const { actor, isFetching: actorFetching } = useActor();
-  const query = useQuery<UserProfile | null>({
+  return useQuery<UserProfile | null>({
     queryKey: ["currentUserProfile"],
     queryFn: async () => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.getCallerUserProfile();
+      const raw = localStorage.getItem("doitepic_user");
+      if (!raw) return null;
+      const u = JSON.parse(raw);
+      return {
+        name: u.name ?? "",
+        phone: u.phone ?? "",
+        weightKg: u.weightKg ?? 0,
+        heightCm: u.heightCm ?? 0,
+        gender: u.gender ?? "",
+        goal: u.goal ?? undefined,
+      } as UserProfile;
     },
-    enabled: !!actor && !actorFetching,
-    retry: false,
-  });
-  return {
-    ...query,
-    isLoading: actorFetching || query.isLoading,
-    isFetched: !!actor && query.isFetched,
-  };
-}
-
-export function useIsCallerAdmin() {
-  const { actor, isFetching } = useActor();
-  return useQuery<boolean>({
-    queryKey: ["isCallerAdmin"],
-    queryFn: async () => {
-      if (!actor) return false;
-      return actor.isCallerAdmin();
-    },
-    enabled: !!actor && !isFetching,
     staleTime: 1000 * 60,
   });
 }
 
+export function useIsCallerAdmin() {
+  // Always returns false for non-admin users; admin access is via secret modal
+  return useQuery<boolean>({
+    queryKey: ["isCallerAdmin"],
+    queryFn: async () => false,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+}
+
+export function useSaveUserProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (profile: UserProfile) => {
+      const existing = readLS<Record<string, unknown>>("doitepic_user", {});
+      writeLS("doitepic_user", { ...existing, ...profile });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["currentUserProfile"] }),
+  });
+}
+
+// ─── Food logs (localStorage) ─────────────────────────────────────────────────
+
+export function useTodayFoodLogs() {
+  return useQuery({
+    queryKey: ["todayFoodLogs"],
+    queryFn: async () => {
+      const today = getTodayDateStr();
+      const logs = readLS<LocalFoodLogItem[]>("doitepic_food_logs", []);
+      return logs
+        .filter((l) => l.date === today)
+        .map((l) => ({
+          entry: {
+            foodName: l.foodName,
+            quantity: l.quantity,
+            mealType: l.mealType,
+            date: BigInt(l.logTimestamp) * 1_000_000n,
+          } as FoodLogEntry,
+          logTimestamp: BigInt(l.logTimestamp),
+        }));
+    },
+    staleTime: 0,
+  });
+}
+
+export function useLogFoodEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (entry: FoodLogEntry) => {
+      const today = getTodayDateStr();
+      const logs = readLS<LocalFoodLogItem[]>("doitepic_food_logs", []);
+      const item: LocalFoodLogItem = {
+        foodName: entry.foodName,
+        quantity: entry.quantity,
+        mealType: entry.mealType as string,
+        logTimestamp: Date.now(),
+        date: today,
+      };
+      writeLS("doitepic_food_logs", [...logs, item]);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["todayFoodLogs"] }),
+  });
+}
+
+export function useRemoveFoodLogEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (entryTimestamp: bigint) => {
+      const tsMs = Number(entryTimestamp);
+      const logs = readLS<LocalFoodLogItem[]>("doitepic_food_logs", []);
+      writeLS(
+        "doitepic_food_logs",
+        logs.filter((l) => l.logTimestamp !== tsMs),
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["todayFoodLogs"] }),
+  });
+}
+
+// ─── Water intake (localStorage) ──────────────────────────────────────────────
+
+export function useTodayWaterIntake() {
+  return useQuery({
+    queryKey: ["todayWater"],
+    queryFn: async () => {
+      const today = getTodayDateStr();
+      const logs = readLS<LocalWaterLog[]>("doitepic_water", []);
+      const todayLog = logs.find((l) => l.date === today);
+      return todayLog?.glasses ?? 0;
+    },
+    staleTime: 0,
+  });
+}
+
+export function useLogWaterIntake() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (glasses: number) => {
+      const today = getTodayDateStr();
+      const logs = readLS<LocalWaterLog[]>("doitepic_water", []);
+      const idx = logs.findIndex((l) => l.date === today);
+      if (idx >= 0) {
+        logs[idx].glasses = glasses;
+      } else {
+        logs.push({ glasses, date: today });
+      }
+      writeLS("doitepic_water", logs);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["todayWater"] }),
+  });
+}
+
+// ─── Health metrics (localStorage) ────────────────────────────────────────────
+
+export function useTodayHealthMetrics() {
+  return useQuery({
+    queryKey: ["todayMetrics"],
+    queryFn: async () => {
+      const today = getTodayDateStr();
+      const logs = readLS<LocalHealthMetrics[]>("doitepic_health_metrics", []);
+      const todayLog = logs.find((l) => l.date === today);
+      if (!todayLog) return null;
+      return {
+        weight: todayLog.weight,
+        steps: BigInt(todayLog.steps),
+        heartRate: todayLog.heartRate,
+        timestamp: BigInt(todayLog.timestamp),
+      } as HealthMetrics;
+    },
+    staleTime: 0,
+  });
+}
+
+export function useLogHealthMetrics() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (metrics: HealthMetrics) => {
+      const today = getTodayDateStr();
+      const logs = readLS<LocalHealthMetrics[]>("doitepic_health_metrics", []);
+      const item: LocalHealthMetrics = {
+        weight: metrics.weight,
+        steps: Number(metrics.steps),
+        heartRate: metrics.heartRate,
+        timestamp: Number(metrics.timestamp) || Date.now(),
+        date: today,
+      };
+      const idx = logs.findIndex((l) => l.date === today);
+      if (idx >= 0) logs[idx] = item;
+      else logs.push(item);
+      writeLS("doitepic_health_metrics", logs);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["todayMetrics"] }),
+  });
+}
+
+// ─── Daily check-ins (localStorage) ───────────────────────────────────────────
+
 export function useAllCheckIns() {
-  const { actor, isFetching } = useActor();
   return useQuery<Array<DailyCheckIn>>({
     queryKey: ["allCheckIns"],
     queryFn: async () => {
-      if (!actor) return [];
-      return [];
+      return readLS<LocalCheckIn[]>("doitepic_checkins", []).map(
+        ({ savedAt: _s, ...ci }) => ci as DailyCheckIn,
+      );
     },
-    enabled: !!actor && !isFetching,
+    staleTime: 0,
   });
 }
+
+export function useSaveDailyCheckIn() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (checkIn: DailyCheckIn) => {
+      const checkins = readLS<LocalCheckIn[]>("doitepic_checkins", []);
+      const idx = checkins.findIndex((c) => c.date === checkIn.date);
+      const item: LocalCheckIn = { ...checkIn, savedAt: Date.now() };
+      if (idx >= 0) checkins[idx] = item;
+      else checkins.push(item);
+      writeLS("doitepic_checkins", checkins);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allCheckIns"] }),
+  });
+}
+
+// ─── Streak (localStorage) ────────────────────────────────────────────────────
+
+export interface UserStreak {
+  currentStreak: bigint;
+  longestStreak: bigint;
+  totalPoints: bigint;
+  lastActiveDate: string;
+}
+
+export function useCallerStreak() {
+  return useQuery<UserStreak | null>({
+    queryKey: ["callerStreak"],
+    queryFn: async () => {
+      const s = readLS<LocalStreak | null>("doitepic_streak", null);
+      if (!s) return null;
+      return {
+        currentStreak: BigInt(s.currentStreak),
+        longestStreak: BigInt(s.longestStreak),
+        totalPoints: BigInt(s.totalPoints),
+        lastActiveDate: s.lastActiveDate,
+      };
+    },
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useUpdateStreak() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      dateStr,
+      points,
+    }: { dateStr: string; points: bigint }) => {
+      const existing = readLS<LocalStreak>("doitepic_streak", {
+        currentStreak: 0,
+        longestStreak: 0,
+        totalPoints: 0,
+        lastActiveDate: "",
+      });
+      const lastDate = existing.lastActiveDate;
+      const yesterday = new Date();
+      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      const yStr = `${yesterday.getUTCFullYear()}-${String(yesterday.getUTCMonth() + 1).padStart(2, "0")}-${String(yesterday.getUTCDate()).padStart(2, "0")}`;
+
+      let newStreak = existing.currentStreak;
+      if (lastDate === dateStr) {
+        // already updated today — just add points
+      } else if (lastDate === yStr) {
+        newStreak += 1;
+      } else if (lastDate === "") {
+        newStreak = 1;
+      } else {
+        newStreak = 1;
+      }
+
+      const newLongest = Math.max(existing.longestStreak, newStreak);
+      const updated: LocalStreak = {
+        currentStreak: newStreak,
+        longestStreak: newLongest,
+        totalPoints: existing.totalPoints + Number(points),
+        lastActiveDate: dateStr,
+      };
+      writeLS("doitepic_streak", updated);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["callerStreak"] }),
+  });
+}
+
+// ─── Admin-only hooks (keep using actor) ──────────────────────────────────────
 
 export function useAllUsersCheckIns() {
   const { actor, isFetching } = useActor();
@@ -177,77 +419,7 @@ export function useUserJoinTimes() {
   );
 }
 
-export function useLogFoodEntry() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (entry: FoodLogEntry) => {
-      if (!actor) throw new Error("Not authenticated");
-      return actor.logFoodEntry(entry);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["todayFoodLogs"] }),
-  });
-}
-
-export function useRemoveFoodLogEntry() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (entryTimestamp: bigint) => {
-      if (!actor) throw new Error("Not authenticated");
-      return actor.removeFoodLogEntry(entryTimestamp);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["todayFoodLogs"] }),
-  });
-}
-
-export function useLogWaterIntake() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (glasses: number) => {
-      if (!actor) throw new Error("Not authenticated");
-      return actor.logWaterIntake(BigInt(glasses));
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["todayWater"] }),
-  });
-}
-
-export function useLogHealthMetrics() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (metrics: HealthMetrics) => {
-      if (!actor) throw new Error("Not authenticated");
-      return actor.logHealthMetrics(metrics);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["todayMetrics"] }),
-  });
-}
-
-export function useSaveUserProfile() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (profile: UserProfile) => {
-      if (!actor) throw new Error("Not authenticated");
-      return actor.saveCallerUserProfile(profile);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["currentUserProfile"] }),
-  });
-}
-
-export function useSaveDailyCheckIn() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (checkIn: DailyCheckIn) => {
-      if (!actor) throw new Error("Not authenticated");
-      return actor.saveDailyCheckIn(checkIn);
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["allCheckIns"] }),
-  });
-}
+// ─── Reviews (actor, public) ──────────────────────────────────────────────────
 
 export function useGetPublicReviews() {
   const { actor, isFetching } = useActor();
@@ -680,52 +852,7 @@ export function useDeleteUserAccount() {
   });
 }
 
-// ─── Streak Hooks ─────────────────────────────────────────────────────────────
-
-export interface UserStreak {
-  currentStreak: bigint;
-  longestStreak: bigint;
-  totalPoints: bigint;
-  lastActiveDate: string;
-}
-
-export function useCallerStreak() {
-  const { actor, isFetching } = useActor();
-  return useQuery<UserStreak | null>({
-    queryKey: ["callerStreak"],
-    queryFn: async () => {
-      if (!actor) return null;
-      try {
-        const result = await (actor as any).getCallerStreak();
-        if (Array.isArray(result) && result.length > 0) return result[0];
-        return null;
-      } catch {
-        return null;
-      }
-    },
-    enabled: !!actor && !isFetching,
-    staleTime: 1000 * 30,
-  });
-}
-
-export function useUpdateStreak() {
-  const { actor } = useActor();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      dateStr,
-      points,
-    }: { dateStr: string; points: bigint }) => {
-      if (!actor) return;
-      try {
-        await (actor as any).updateStreak(dateStr, points);
-      } catch {
-        // Silently ignore streak errors — not critical
-      }
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["callerStreak"] }),
-  });
-}
+// ─── User Streak admin view ────────────────────────────────────────────────────
 
 export function useAllUserStreaks() {
   const { actor, isFetching } = useActor();

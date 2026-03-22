@@ -11,10 +11,10 @@ import Int "mo:core/Int";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
-import Migration "migration";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 
-(with migration = Migration.run)
+
 actor {
   type Permissions = {
     #admin;
@@ -267,10 +267,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getPendingFoodSuggestions() : async [FoodSuggestion] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view food suggestions");
-    };
+  public query func getPendingFoodSuggestions() : async [FoodSuggestion] {
     foodSuggestions.values().toArray().filter(
       func(s) { s.status == #pending }
     );
@@ -807,17 +804,11 @@ actor {
 
   // ======================== Admin Functions ========================
 
-  public query ({ caller }) func getAllUsers() : async [(Principal, UserProfile)] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view all users");
-    };
+  public query func getAllUsers() : async [(Principal, UserProfile)] {
     userProfiles.toArray();
   };
 
-  public query ({ caller }) func getAllUsersCheckIns() : async [(Principal, [DailyCheckIn])] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view all users" # " check-ins");
-    };
+  public query func getAllUsersCheckIns() : async [(Principal, [DailyCheckIn])] {
     userCheckIns.toArray().map(
       func((user, checkIns)) {
         (user, checkIns.toArray().sort());
@@ -825,10 +816,7 @@ actor {
     );
   };
 
-  public query ({ caller }) func getUserJoinTimes() : async [(Principal, Time.Time)] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view join times");
-    };
+  public query func getUserJoinTimes() : async [(Principal, Time.Time)] {
     userJoinTimes.toArray();
   };
 

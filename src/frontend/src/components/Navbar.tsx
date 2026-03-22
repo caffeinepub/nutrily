@@ -1,8 +1,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useQueryClient } from "@tanstack/react-query";
 import { Bell, Clock, LogOut, Zap } from "lucide-react";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useLocalAuth } from "../hooks/useLocalAuth";
 
 interface NavbarProps {
   userName: string;
@@ -15,12 +14,10 @@ export default function Navbar({
   onLogFood,
   onHistory,
 }: NavbarProps) {
-  const { clear } = useInternetIdentity();
-  const qc = useQueryClient();
+  const { logout } = useLocalAuth();
 
-  const handleLogout = async () => {
-    await clear();
-    qc.clear();
+  const handleLogout = () => {
+    logout();
   };
 
   const initials = userName

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, TrendingDown, Zap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getAgeGroup, getUserAge } from "../utils/ageUtils";
 
 interface LossLog {
   date: string;
@@ -477,6 +478,154 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
             </Button>
           </form>
         </div>
+
+        {/* Age-Based Exercise Recommendations */}
+        {(() => {
+          const age = getUserAge();
+          const group = getAgeGroup(age);
+          const exerciseMap = {
+            teen: {
+              title: "Teen Exercise Plan",
+              emoji: "🧒",
+              color: "bg-pink-600",
+              lightColor: "bg-pink-50 border-pink-100",
+              exercises: [
+                {
+                  icon: "🤸",
+                  name: "Bodyweight Training",
+                  desc: "Push-ups, squats, lunges",
+                },
+                {
+                  icon: "🏃",
+                  name: "Running & Jogging",
+                  desc: "20–30 min cardio, fun pace",
+                },
+                {
+                  icon: "⚽",
+                  name: "Team Sports",
+                  desc: "Football, basketball, badminton",
+                },
+                {
+                  icon: "🚴",
+                  name: "Cycling",
+                  desc: "Leisure rides, 30–40 min",
+                },
+              ],
+              tip: "60 min/day activity. Make it fun — sports, dance, outdoor play.",
+            },
+            youngAdult: {
+              title: "Young Adult Training",
+              emoji: "🔥",
+              color: "bg-sky-600",
+              lightColor: "bg-sky-50 border-sky-100",
+              exercises: [
+                {
+                  icon: "⚡",
+                  name: "HIIT Workouts",
+                  desc: "20–30 min, maximum fat burn",
+                },
+                { icon: "🏃", name: "Running", desc: "5–10km, 3–4×/week" },
+                {
+                  icon: "🏋️",
+                  name: "Compound Lifts",
+                  desc: "Squats, deadlifts for metabolism",
+                },
+                {
+                  icon: "🚴",
+                  name: "Cycling",
+                  desc: "45 min moderate intensity",
+                },
+              ],
+              tip: "45–60 min cardio + strength. HIIT burns fat fast at this age!",
+            },
+            middleAge: {
+              title: "Middle Age Fitness",
+              emoji: "🧘",
+              color: "bg-amber-600",
+              lightColor: "bg-amber-50 border-amber-100",
+              exercises: [
+                {
+                  icon: "🚶",
+                  name: "Brisk Walking",
+                  desc: "40–45 min daily, good pace",
+                },
+                { icon: "🚴", name: "Cycling", desc: "Low-impact, 30–45 min" },
+                {
+                  icon: "🧘",
+                  name: "Yoga",
+                  desc: "Stress reduction + fat loss",
+                },
+                {
+                  icon: "🏊",
+                  name: "Swimming",
+                  desc: "Joint-friendly full body",
+                },
+              ],
+              tip: "30–45 min moderate exercise. Yoga reduces cortisol which aids fat loss.",
+            },
+            senior: {
+              title: "Senior Wellness Exercise",
+              emoji: "🌟",
+              color: "bg-teal-600",
+              lightColor: "bg-teal-50 border-teal-100",
+              exercises: [
+                {
+                  icon: "🚶",
+                  name: "Light Walking",
+                  desc: "20–30 min, gentle daily walk",
+                },
+                {
+                  icon: "🪑",
+                  name: "Chair Exercises",
+                  desc: "Seated cardio and stretches",
+                },
+                {
+                  icon: "🧘",
+                  name: "Gentle Yoga",
+                  desc: "Balance and flexibility",
+                },
+                {
+                  icon: "🏊",
+                  name: "Water Aerobics",
+                  desc: "Pool exercises, easy joints",
+                },
+              ],
+              tip: "30 min light daily activity. Consistency matters more than intensity.",
+            },
+          };
+          const plan = exerciseMap[group];
+          return (
+            <div className="bg-card rounded-2xl border border-border shadow-card p-5">
+              <h2 className="font-bold text-foreground mb-1 flex items-center gap-2">
+                <span
+                  className={`w-7 h-7 rounded-lg ${plan.color} flex items-center justify-center text-white text-sm`}
+                >
+                  {plan.emoji}
+                </span>
+                {plan.title}
+              </h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                Age {age} · {plan.tip}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {plan.exercises.map((ex) => (
+                  <div
+                    key={ex.name}
+                    className={`rounded-xl p-3 border ${plan.lightColor}`}
+                  >
+                    <div className="text-xl mb-1">{ex.icon}</div>
+                    <p className="text-xs font-semibold text-foreground">
+                      {ex.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {ex.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Progress History */}
         {logs.length > 0 && (

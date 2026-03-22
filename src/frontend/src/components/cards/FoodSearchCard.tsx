@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import type { ExtendedFoodItem } from "../../types";
 
 interface Props {
@@ -19,6 +20,8 @@ const FEATURED = [
   "Dosa Plain",
 ];
 
+const FOOD_CACHE_KEY = "doitepic_food_cache";
+
 export default function FoodSearchCard({
   allFoods,
   onFoodSelect,
@@ -26,20 +29,45 @@ export default function FoodSearchCard({
 }: Props) {
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
+  const isOnline = useNetworkStatus();
+
+  // Cache foods on mount/update
+  useEffect(() => {
+    if (allFoods.length > 0) {
+      try {
+        localStorage.setItem(FOOD_CACHE_KEY, JSON.stringify(allFoods));
+      } catch (_) {
+        // storage full
+      }
+    }
+  }, [allFoods]);
+
+  // When offline, use cached foods for search
+  const effectiveFoods: ExtendedFoodItem[] = (() => {
+    if (!isOnline && allFoods.length === 0) {
+      try {
+        const cached = localStorage.getItem(FOOD_CACHE_KEY);
+        if (cached) return JSON.parse(cached) as ExtendedFoodItem[];
+      } catch (_) {
+        // ignore
+      }
+    }
+    return allFoods;
+  })();
 
   const results = submitted
-    ? allFoods
+    ? effectiveFoods
         .filter((f) => f.name.toLowerCase().includes(submitted.toLowerCase()))
         .slice(0, 20)
     : [];
 
-  const featuredFoods = allFoods
+  const featuredFoods = effectiveFoods
     .filter((f) =>
       FEATURED.some((n) => f.name.toLowerCase().includes(n.toLowerCase())),
     )
     .slice(0, 4);
   const displayFeatured =
-    featuredFoods.length > 0 ? featuredFoods : allFoods.slice(0, 4);
+    featuredFoods.length > 0 ? featuredFoods : effectiveFoods.slice(0, 4);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,9 +76,14 @@ export default function FoodSearchCard({
 
   return (
     <div className="bg-card rounded-xl border border-border shadow-card p-5">
-      <h3 className="text-sm font-semibold text-foreground mb-4">
-        Food Search
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold text-foreground">Food Search</h3>
+        {!isOnline && (
+          <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-medium">
+            📦 Cached
+          </span>
+        )}
+      </div>
 
       <form onSubmit={handleSearch} className="flex gap-2 mb-4">
         <Input

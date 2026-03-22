@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, TrendingUp, Zap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getAgeGroup, getUserAge } from "../utils/ageUtils";
 
 interface GainLog {
   date: string;
@@ -472,6 +473,162 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
             </Button>
           </form>
         </div>
+
+        {/* Age-Based Exercise Recommendations */}
+        {(() => {
+          const age = getUserAge();
+          const group = getAgeGroup(age);
+          const exerciseMap = {
+            teen: {
+              title: "Teen Exercise Plan",
+              emoji: "🧒",
+              color: "bg-pink-600",
+              lightColor: "bg-pink-50 border-pink-100",
+              exercises: [
+                {
+                  icon: "🏋️",
+                  name: "Light Dumbbell Training",
+                  desc: "3 sets × 12 reps, focus on form",
+                },
+                {
+                  icon: "🤸",
+                  name: "Bodyweight Exercises",
+                  desc: "Push-ups, pull-ups, squats",
+                },
+                {
+                  icon: "⚽",
+                  name: "Sports & Games",
+                  desc: "Football, basketball, badminton",
+                },
+                {
+                  icon: "🏊",
+                  name: "Swimming",
+                  desc: "Full body workout, 3×/week",
+                },
+              ],
+              tip: "60 min/day of mixed activity. Avoid heavy lifts — focus on growth and fun!",
+            },
+            youngAdult: {
+              title: "Young Adult Training",
+              emoji: "💪",
+              color: "bg-emerald-600",
+              lightColor: "bg-emerald-50 border-emerald-100",
+              exercises: [
+                {
+                  icon: "🏋️",
+                  name: "Compound Lifts",
+                  desc: "Squats, deadlifts, bench press",
+                },
+                {
+                  icon: "⚡",
+                  name: "HIIT Sessions",
+                  desc: "20–30 min, 3×/week",
+                },
+                {
+                  icon: "🏃",
+                  name: "Running / Sprints",
+                  desc: "5km runs or interval sprints",
+                },
+                {
+                  icon: "💪",
+                  name: "Progressive Overload",
+                  desc: "Add weight every 2 weeks",
+                },
+              ],
+              tip: "45–60 min strength + cardio. This is your peak muscle-building window!",
+            },
+            middleAge: {
+              title: "Middle Age Fitness",
+              emoji: "🧘",
+              color: "bg-amber-600",
+              lightColor: "bg-amber-50 border-amber-100",
+              exercises: [
+                {
+                  icon: "🏋️",
+                  name: "Moderate Weight Training",
+                  desc: "3 sets × 10 reps, controlled pace",
+                },
+                {
+                  icon: "🚴",
+                  name: "Cycling",
+                  desc: "30–45 min, low-impact cardio",
+                },
+                {
+                  icon: "🧘",
+                  name: "Yoga & Mobility",
+                  desc: "Flexibility and joint health",
+                },
+                {
+                  icon: "🏊",
+                  name: "Swimming",
+                  desc: "Easy on joints, full body",
+                },
+              ],
+              tip: "30–45 min moderate exercise. Prioritise recovery and joint health.",
+            },
+            senior: {
+              title: "Senior Wellness Exercise",
+              emoji: "🌟",
+              color: "bg-teal-600",
+              lightColor: "bg-teal-50 border-teal-100",
+              exercises: [
+                {
+                  icon: "🚶",
+                  name: "Brisk Walking",
+                  desc: "30 min daily walk, gentle pace",
+                },
+                {
+                  icon: "🪑",
+                  name: "Chair Exercises",
+                  desc: "Seated strength and mobility",
+                },
+                {
+                  icon: "🧘",
+                  name: "Gentle Yoga",
+                  desc: "Balance, flexibility, breathing",
+                },
+                {
+                  icon: "🏊",
+                  name: "Water Aerobics",
+                  desc: "Low-impact pool exercises",
+                },
+              ],
+              tip: "30 min light activity. Focus on balance, flexibility and bone strength.",
+            },
+          };
+          const plan = exerciseMap[group];
+          return (
+            <div className="bg-card rounded-2xl border border-border shadow-card p-5">
+              <h2 className="font-bold text-foreground mb-1 flex items-center gap-2">
+                <span
+                  className={`w-7 h-7 rounded-lg ${plan.color} flex items-center justify-center text-white text-sm`}
+                >
+                  {plan.emoji}
+                </span>
+                {plan.title}
+              </h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                Age {age} · {plan.tip}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {plan.exercises.map((ex) => (
+                  <div
+                    key={ex.name}
+                    className={`rounded-xl p-3 border ${plan.lightColor}`}
+                  >
+                    <div className="text-xl mb-1">{ex.icon}</div>
+                    <p className="text-xs font-semibold text-foreground">
+                      {ex.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {ex.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Progress History */}
         {logs.length > 0 && (

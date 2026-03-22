@@ -31,11 +31,37 @@ const MILESTONES: MilestoneBadge[] = [
   },
 ];
 
+function getBestStreak(currentStreak: number, longestStreak: number): number {
+  try {
+    const stored = Number(localStorage.getItem("doitepic_best_streak") ?? "0");
+    const candidate = Math.max(stored, currentStreak, longestStreak);
+    if (candidate > stored) {
+      localStorage.setItem("doitepic_best_streak", String(candidate));
+    }
+    return candidate;
+  } catch (_) {
+    return longestStreak;
+  }
+}
+
+function checkMissedYesterday(): boolean {
+  try {
+    const logs = localStorage.getItem("doitepic_food_logs");
+    if (!logs) return false;
+    const arr = JSON.parse(logs) as Array<{ date: string }>;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().split("T")[0];
+    return !arr.some((l) => l.date === yStr);
+  } catch (_) {
+    return false;
+  }
+}
+
 export default function StreakWidget() {
   const { data: streak } = useCallerStreak();
   const { mutate: updateStreak } = useUpdateStreak();
 
-  // Ensure streak is initialized on mount
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     updateStreak({ dateStr: today, points: 0n });
@@ -45,7 +71,10 @@ export default function StreakWidget() {
   const longestStreak = streak ? Number(streak.longestStreak) : 0;
   const totalPoints = streak ? Number(streak.totalPoints) : 0;
 
-  const earnedMilestones = MILESTONES.filter((m) => longestStreak >= m.days);
+  const bestStreak = getBestStreak(currentStreak, longestStreak);
+  const missedYesterday = currentStreak > 0 && checkMissedYesterday();
+
+  const earnedMilestones = MILESTONES.filter((m) => bestStreak >= m.days);
 
   return (
     <motion.div
@@ -58,15 +87,13 @@ export default function StreakWidget() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         {/* Streak count */}
         <div className="flex items-center gap-3">
-          <div className="flex flex-col items-center">
-            <span className="text-4xl leading-none">🔥</span>
-          </div>
+          <span className="text-4xl leading-none">🔥</span>
           <div>
             <div className="text-2xl font-extrabold leading-none">
               {currentStreak} Day{currentStreak !== 1 ? "s" : ""} Streak!
             </div>
             <div className="text-xs text-white/75 mt-0.5">
-              Best: {longestStreak} day{longestStreak !== 1 ? "s" : ""}
+              Best: {bestStreak} day{bestStreak !== 1 ? "s" : ""}
             </div>
           </div>
         </div>
@@ -80,6 +107,19 @@ export default function StreakWidget() {
           <span className="text-base font-bold">{totalPoints} pts</span>
         </div>
       </div>
+
+      {/* Missed yesterday warning */}
+      {missedYesterday && (
+        <div
+          className="mt-2.5 bg-white/20 rounded-xl px-3 py-1.5 flex items-center gap-2"
+          data-ocid="streak.warning"
+        >
+          <span className="text-sm">⚠️</span>
+          <span className="text-xs font-semibold">
+            Missed yesterday — log today to keep your streak!
+          </span>
+        </div>
+      )}
 
       {/* Milestone badges */}
       {earnedMilestones.length > 0 && (
