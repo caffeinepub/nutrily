@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import type { DailyCheckIn } from "../backend";
 import { FOOD_DATABASE } from "../data/foodDatabase";
+import { KERALA_SUPPLEMENT } from "../data/keralaSupplement";
 import { useActor } from "../hooks/useActor";
 import { useDrinksLog } from "../hooks/useDrinksLog";
 import { useFoodLog } from "../hooks/useFoodLog";
@@ -17,17 +18,22 @@ import {
 import { calcEntryNutrition, calcMealQualityScore } from "../types";
 import type { ExtendedFoodItem } from "../types";
 import DailyCheckInCard from "./DailyCheckInCard";
+import DailyHealthScore from "./DailyHealthScore";
 import FoodLogHistory from "./FoodLogHistory";
 import Footer from "./Footer";
+import GoalVisualizationCard from "./GoalVisualizationCard";
 import GoalsSection from "./GoalsSection";
 import HabitRemindersCard from "./HabitRemindersCard";
+import MicroCoachingCard from "./MicroCoachingCard";
 import MyStatsCard from "./MyStatsCard";
 import Navbar from "./Navbar";
 import NutritionSummaryPage from "./NutritionSummaryPage";
 import OfflineBanner from "./OfflineBanner";
 import PrivacySettingsModal from "./PrivacySettingsModal";
 import ReviewSection from "./ReviewSection";
+import SmartSuggestionsCard from "./SmartSuggestionsCard";
 import StreakWidget from "./StreakWidget";
+import WeeklyMissionsCard from "./WeeklyMissionsCard";
 import WeightGainStatusPage from "./WeightGainStatusPage";
 import WeightLossStatusPage from "./WeightLossStatusPage";
 import CalorieTrackerCard from "./cards/CalorieTrackerCard";
@@ -90,11 +96,22 @@ export default function Dashboard({ userName }: DashboardProps) {
 
   const allFoods = useMemo(() => {
     const backendNames = new Set(backendFoods.map((f) => f.name));
+    // Build merged set: backend > kerala supplement > main database
+    const keralaNamesInBackend = new Set([...backendFoods.map((f) => f.name)]);
+    const supplementFiltered = KERALA_SUPPLEMENT.filter(
+      (f) => !keralaNamesInBackend.has(f.name),
+    );
+    const keralAndBackendNames = new Set([
+      ...backendFoods.map((f) => f.name),
+      ...KERALA_SUPPLEMENT.map((f) => f.name),
+    ]);
+    const mainFiltered = (FOOD_DATABASE as ExtendedFoodItem[]).filter(
+      (f) => !keralAndBackendNames.has(f.name) && !backendNames.has(f.name),
+    );
     return [
       ...backendFoods,
-      ...(FOOD_DATABASE as ExtendedFoodItem[]).filter(
-        (f) => !backendNames.has(f.name),
-      ),
+      ...supplementFiltered,
+      ...mainFiltered,
     ] as ExtendedFoodItem[];
   }, [backendFoods]);
 
@@ -105,19 +122,24 @@ export default function Dashboard({ userName }: DashboardProps) {
 
   const totals = useMemo(() => {
     const foodTotals = rawFoodEntries.reduce(
-      (acc, e) => ({
-        calories: acc.calories + e.calories,
-        protein: acc.protein + e.protein,
-        carbs: acc.carbs + e.carbs,
-        fat: acc.fat + e.fat,
-      }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      (acc, e) => {
+        const food = foodMap.get(e.foodName);
+        const factor = e.quantity / 100;
+        return {
+          calories: acc.calories + e.calories,
+          protein: acc.protein + e.protein,
+          carbs: acc.carbs + e.carbs,
+          fat: acc.fat + e.fat,
+          fiber: acc.fiber + (food ? (food.fiber ?? 0) * factor : 0),
+        };
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
     );
     return {
       ...foodTotals,
       calories: foodTotals.calories + totalDrinkCalories,
     };
-  }, [rawFoodEntries, totalDrinkCalories]);
+  }, [rawFoodEntries, totalDrinkCalories, foodMap]);
 
   const { score, grade } = calcMealQualityScore(
     totals.calories,
@@ -190,6 +212,12 @@ export default function Dashboard({ userName }: DashboardProps) {
 
   const greeting = getGreeting();
 
+  // Get goal type for GoalVisualizationCard
+  const userGoalType = (userProfile as any)?.goal ?? null;
+  const currentWeightKg = userProfile
+    ? Number(userProfile.weightKg)
+    : undefined;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar
@@ -200,13 +228,13 @@ export default function Dashboard({ userName }: DashboardProps) {
       <OfflineBanner />
 
       {/* Hero */}
-      <section className="hero-gradient py-12 px-6">
+      <section className="hero-gradient py-10 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-4xl md:text-5xl font-extrabold text-white mb-3"
+            className="text-4xl md:text-5xl font-display font-extrabold text-white mb-3"
           >
             {greeting}, {userName}! 🌱
           </motion.h1>
@@ -221,37 +249,119 @@ export default function Dashboard({ userName }: DashboardProps) {
         </div>
       </section>
 
-      {/* Dashboard grid */}
       <main className="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-1">
-        {/* Streak Widget */}
+        {/* 1. Streak Widget */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="mb-6"
+          className="mb-5"
         >
           <StreakWidget />
         </motion.div>
 
+        {/* 2. Daily Health Score */}
+        <div className="mb-5">
+          <DailyHealthScore
+            calories={totals.calories}
+            protein={totals.protein}
+            fiber={totals.fiber}
+            waterGlasses={waterGlasses}
+          />
+        </div>
+
+        {/* 3. Micro Coaching Card */}
+        <div className="mb-5">
+          <MicroCoachingCard />
+        </div>
+
+        {/* 4. My Stats */}
         {userProfile && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="mb-6"
+            className="mb-5"
           >
             <MyStatsCard profile={userProfile} />
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Column 1 */}
+        {/* 5. Calorie + Macro grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+          <CalorieTrackerCard calories={totals.calories} />
+          <MacroBreakdownCard
+            protein={totals.protein}
+            carbs={totals.carbs}
+            fat={totals.fat}
+          />
+        </div>
+
+        {/* 6. Smart Suggestions */}
+        <div className="mb-5">
+          <SmartSuggestionsCard
+            calories={totals.calories}
+            protein={totals.protein}
+            fiber={totals.fiber}
+            waterGlasses={waterGlasses}
+          />
+        </div>
+
+        {/* 7. Goal Visualization */}
+        <div className="mb-5">
+          <GoalVisualizationCard
+            currentWeight={currentWeightKg}
+            goalType={userGoalType}
+            caloriesConsumed={totals.calories}
+          />
+        </div>
+
+        {/* 8. Weekly Missions */}
+        <div className="mb-5">
+          <WeeklyMissionsCard />
+        </div>
+
+        {/* 9. Food Log */}
+        <div className="mb-5">
+          <FoodLogCard
+            entries={foodLogItems}
+            foodMap={foodMap}
+            onAddFood={openLogFood}
+            onRemoveEntry={removeFood}
+            drinkEntries={drinks}
+            onRemoveDrink={removeDrink}
+          />
+          <button
+            type="button"
+            onClick={() => setNutritionPage(true)}
+            data-ocid="nutrition.open_modal_button"
+            className="w-full text-xs text-primary font-medium hover:opacity-80 transition-opacity text-center py-2"
+          >
+            📊 View Full Nutrition Report
+          </button>
+        </div>
+
+        {/* 10. Water + Recent + Habit */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+          <WaterIntakeCard glasses={waterGlasses} />
+          <MealQualityCard score={score} grade={grade} />
+          <HabitRemindersCard />
+        </div>
+
+        {/* 11. Smart Coach + Metrics + Food Search */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+          <SmartCoachCard
+            caloriesConsumed={totals.calories}
+            protein={totals.protein}
+            carbs={totals.carbs}
+            fat={totals.fat}
+            userProfile={userProfileForStatus}
+            allFoods={allFoods}
+          />
           <div className="space-y-5">
-            <CalorieTrackerCard calories={totals.calories} />
-            <MacroBreakdownCard
-              protein={totals.protein}
-              carbs={totals.carbs}
-              fat={totals.fat}
+            <MyMetricsCard
+              metrics={healthMetrics}
+              onEdit={() => setMetricsOpen(true)}
             />
             {recentEntry && (
               <div className="bg-card rounded-xl border border-border shadow-card p-4">
@@ -267,7 +377,7 @@ export default function Dashboard({ userName }: DashboardProps) {
                       {recentEntry.foodName}
                     </p>
                     <p className="text-xs text-muted-foreground capitalize">
-                      {recentEntry.mealType} &middot; {recentEntry.quantity}g
+                      {recentEntry.mealType} · {recentEntry.quantity}g
                     </p>
                   </div>
                   <span className="text-sm font-semibold text-primary">
@@ -279,46 +389,6 @@ export default function Dashboard({ userName }: DashboardProps) {
                 </div>
               </div>
             )}
-            {/* Habit Reminders */}
-            <HabitRemindersCard />
-          </div>
-
-          {/* Column 2 */}
-          <div className="space-y-5">
-            <FoodLogCard
-              entries={foodLogItems}
-              foodMap={foodMap}
-              onAddFood={openLogFood}
-              onRemoveEntry={removeFood}
-              drinkEntries={drinks}
-              onRemoveDrink={removeDrink}
-            />
-            <button
-              type="button"
-              onClick={() => setNutritionPage(true)}
-              data-ocid="nutrition.open_modal_button"
-              className="w-full text-xs text-primary font-medium hover:opacity-80 transition-opacity text-center py-1"
-            >
-              📊 View Full Nutrition Report
-            </button>
-            <WaterIntakeCard glasses={waterGlasses} />
-          </div>
-
-          {/* Column 3 */}
-          <div className="space-y-5">
-            <MealQualityCard score={score} grade={grade} />
-            <SmartCoachCard
-              caloriesConsumed={totals.calories}
-              protein={totals.protein}
-              carbs={totals.carbs}
-              fat={totals.fat}
-              userProfile={userProfileForStatus}
-              allFoods={allFoods}
-            />
-            <MyMetricsCard
-              metrics={healthMetrics}
-              onEdit={() => setMetricsOpen(true)}
-            />
             <FoodSearchCard
               allFoods={allFoods}
               onFoodSelect={setSelectedFood}
@@ -331,6 +401,7 @@ export default function Dashboard({ userName }: DashboardProps) {
           </div>
         </div>
 
+        {/* 12. Check-In */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -345,11 +416,11 @@ export default function Dashboard({ userName }: DashboardProps) {
           </div>
         </motion.div>
 
+        {/* 13-15: Goals, Reviews, Privacy */}
         <GoalsSection onNavigateToStatus={setGoalPage} />
         <ReviewSection />
       </main>
 
-      {/* Footer with Privacy link */}
       <div className="max-w-7xl mx-auto w-full px-4 md:px-6 pb-2 flex justify-center">
         <PrivacySettingsModal />
       </div>

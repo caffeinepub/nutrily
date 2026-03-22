@@ -77,15 +77,15 @@ export default function FoodDetailModal({ food, onClose, onAddToLog }: Props) {
           <div className="space-y-4 pr-2">
             {/* Processed food alert */}
             {ext.isProcessed && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                <span className="text-red-500 text-lg leading-none mt-0.5">
+              <div className="bg-status-danger border border-destructive/30 rounded-lg p-3 flex items-start gap-2">
+                <span className="text-destructive text-lg leading-none mt-0.5">
                   ⚠️
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-red-700">
+                  <p className="text-sm font-bold text-destructive">
                     Processed Food Alert
                   </p>
-                  <p className="text-xs text-red-600 mt-0.5">
+                  <p className="text-xs text-destructive mt-0.5">
                     This is a highly processed food. Limit consumption.
                   </p>
                 </div>
@@ -94,11 +94,11 @@ export default function FoodDetailModal({ food, onClose, onAddToLog }: Props) {
 
             {/* Health warning */}
             {ext.healthWarning && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-xs font-semibold text-amber-800 mb-1">
+              <div className="bg-status-warning border border-warning/30 rounded-lg p-3">
+                <p className="text-xs font-semibold text-warning mb-1">
                   ⚠️ Health Warning
                 </p>
-                <p className="text-xs text-amber-700 leading-relaxed">
+                <p className="text-xs text-warning leading-relaxed">
                   {ext.healthWarning}
                 </p>
               </div>
@@ -232,7 +232,7 @@ export default function FoodDetailModal({ food, onClose, onAddToLog }: Props) {
                   {ext.additives.map((a) => (
                     <span
                       key={a}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200"
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-status-danger text-destructive border border-destructive/30"
                     >
                       {a}
                     </span>
@@ -266,7 +266,7 @@ export default function FoodDetailModal({ food, onClose, onAddToLog }: Props) {
           <Button
             data-ocid="food_detail.add_button"
             onClick={onAddToLog}
-            className="hero-gradient text-white border-0 hover:opacity-90"
+            className="bg-primary text-primary-foreground border-0 hover:bg-primary/90"
           >
             Add to Log
           </Button>

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dumbbell, Loader2, Target, TrendingDown, Zap } from "lucide-react";
+import { Dumbbell, Loader2, Target, TrendingDown } from "lucide-react";
 import { motion } from "motion/react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -15,8 +15,8 @@ const GOALS = [
     tagline: "Burn fat & get lean",
     Icon: TrendingDown,
     border: "border-green-400",
-    bg: "bg-green-50",
-    iconBg: "bg-green-100 text-green-600",
+    bg: "bg-status-healthy",
+    iconBg: "bg-status-healthy text-success",
     activeShadow: "shadow-green-100",
   },
   {
@@ -25,8 +25,8 @@ const GOALS = [
     tagline: "Build strength & size",
     Icon: Dumbbell,
     border: "border-blue-400",
-    bg: "bg-blue-50",
-    iconBg: "bg-blue-100 text-blue-600",
+    bg: "bg-status-info",
+    iconBg: "bg-status-info text-primary",
     activeShadow: "shadow-blue-100",
   },
   {
@@ -128,10 +128,11 @@ export default function ProfileSetup() {
         className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-10"
       >
         <div className="flex items-center justify-center gap-2 mb-6">
-          <div className="w-10 h-10 rounded-xl hero-gradient flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-2xl font-bold text-foreground">DOITEPIC</span>
+          <img
+            src="/assets/uploads/file_0000000091b4720b8ab0302490c69f98-1.png"
+            alt="DoitEpic"
+            className="h-12 w-auto object-contain"
+          />
         </div>
         <h2 className="text-xl font-bold text-foreground mb-1 text-center">
           Set Up Your Profile
@@ -174,7 +175,7 @@ export default function ProfileSetup() {
               autoComplete="tel"
             />
             {phoneError && (
-              <p className="text-xs text-red-500 mt-1">{phoneError}</p>
+              <p className="text-xs text-destructive mt-1">{phoneError}</p>
             )}
           </div>
 
@@ -198,7 +199,7 @@ export default function ProfileSetup() {
                 className={`mt-1 h-10 ${weightError ? "border-red-400 focus-visible:ring-red-400" : ""}`}
               />
               {weightError && (
-                <p className="text-xs text-red-500 mt-1">{weightError}</p>
+                <p className="text-xs text-destructive mt-1">{weightError}</p>
               )}
             </div>
             <div>
@@ -220,7 +221,7 @@ export default function ProfileSetup() {
                 className={`mt-1 h-10 ${heightError ? "border-red-400 focus-visible:ring-red-400" : ""}`}
               />
               {heightError && (
-                <p className="text-xs text-red-500 mt-1">{heightError}</p>
+                <p className="text-xs text-destructive mt-1">{heightError}</p>
               )}
             </div>
           </div>

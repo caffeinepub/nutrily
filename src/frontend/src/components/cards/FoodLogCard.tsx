@@ -2,6 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import type { DrinkEntry } from "../../hooks/useDrinksLog";
 import { MEAL_TYPES, calcEntryNutrition } from "../../types";
 import type { ExtendedFoodItem, LocalFoodEntry, MealType } from "../../types";
+import HonestyBadge from "../HonestyBadge";
 
 export interface FoodLogItem {
   id: string;
@@ -81,19 +82,28 @@ export default function FoodLogCard({
               <div className="space-y-1">
                 {items.map((item, idx) => {
                   const nutrition = calcEntryNutrition(item.entry, foodMap);
+                  const food = foodMap.get(item.entry.foodName);
                   return (
                     <div
                       key={item.id}
                       data-ocid={`food_log.item.${(idx + 1) as 1}`}
                       className="flex items-center gap-2 py-2 border-b border-border last:border-0"
                     >
-                      <div className="w-7 h-7 rounded bg-accent text-sm flex items-center justify-center flex-shrink-0">
+                      <div className="w-7 h-7 rounded bg-accent/30 text-sm flex items-center justify-center flex-shrink-0">
                         🥘
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {item.entry.foodName}
-                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {item.entry.foodName}
+                          </p>
+                          {food?.honestyRating && (
+                            <HonestyBadge
+                              rating={food.honestyRating}
+                              size="xs"
+                            />
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {item.entry.quantity}g
                         </p>
@@ -125,7 +135,7 @@ export default function FoodLogCard({
           </div>
         ))}
 
-        {/* Drinks section (localStorage-based) */}
+        {/* Drinks section */}
         <div>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
             Drinks
@@ -144,35 +154,46 @@ export default function FoodLogCard({
             </button>
           ) : (
             <div className="space-y-1">
-              {drinkEntries.map((drink) => (
-                <div
-                  key={drink.id}
-                  className="flex items-center gap-2 py-2 border-b border-border last:border-0"
-                >
-                  <div className="w-7 h-7 rounded bg-accent text-sm flex items-center justify-center flex-shrink-0">
-                    🥤
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {drink.foodName}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {drink.quantity}ml
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-foreground">
-                    {Math.round(drink.calories)} kcal
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => onRemoveDrink(drink.id)}
-                    className="ml-1 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                    title="Remove"
+              {drinkEntries.map((drink) => {
+                const drinkFood = foodMap.get(drink.foodName);
+                return (
+                  <div
+                    key={drink.id}
+                    className="flex items-center gap-2 py-2 border-b border-border last:border-0"
                   >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              ))}
+                    <div className="w-7 h-7 rounded bg-accent/30 text-sm flex items-center justify-center flex-shrink-0">
+                      🥤
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {drink.foodName}
+                        </p>
+                        {drinkFood?.honestyRating && (
+                          <HonestyBadge
+                            rating={drinkFood.honestyRating}
+                            size="xs"
+                          />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {drink.quantity}ml
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">
+                      {Math.round(drink.calories)} kcal
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onRemoveDrink(drink.id)}
+                      className="ml-1 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      title="Remove"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                );
+              })}
               <button
                 type="button"
                 onClick={() => onAddFood("drinks")}

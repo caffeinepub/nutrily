@@ -118,7 +118,7 @@ export default function HealthMetricsModal({ open, onClose }: Props) {
               data-ocid="health_metrics.submit_button"
               type="submit"
               disabled={isPending}
-              className="hero-gradient text-white border-0 hover:opacity-90"
+              className="bg-primary text-primary-foreground border-0 hover:bg-primary/90"
             >
               {isPending ? (
                 <>

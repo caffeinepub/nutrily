@@ -42,10 +42,10 @@ export default function OfflineBanner() {
           className={[
             "sticky top-16 z-40 px-4 py-2.5 flex items-center justify-center gap-2 text-sm font-medium shadow-md",
             justSynced
-              ? "bg-emerald-400 text-emerald-900"
+              ? "bg-success text-success-foreground"
               : syncing
-                ? "bg-blue-400 text-blue-900"
-                : "bg-yellow-400 text-yellow-900",
+                ? "bg-primary text-primary-foreground"
+                : "bg-warning text-warning-foreground",
           ].join(" ")}
         >
           {!isOnline && !syncing && (

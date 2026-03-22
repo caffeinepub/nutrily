@@ -281,12 +281,12 @@ const colorClasses: Record<
 > = {
   emerald: {
     border: "border-emerald-400",
-    bg: "bg-emerald-50",
-    text: "text-emerald-600",
-    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    icon: "bg-emerald-100 text-emerald-600",
-    header: "bg-emerald-50 border-b border-emerald-100",
-    headerBorder: "border-emerald-100",
+    bg: "bg-status-healthy",
+    text: "text-success",
+    badge: "bg-status-healthy text-success border-success/30",
+    icon: "bg-status-healthy text-success",
+    header: "bg-status-healthy border-b border-success/20",
+    headerBorder: "border-success/20",
   },
   sky: {
     border: "border-sky-400",
@@ -443,8 +443,8 @@ export default function GoalsSection({ onNavigateToStatus }: Props) {
                         className={[
                           "text-xs font-semibold",
                           activeGoal === "gain"
-                            ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                            : "bg-sky-600 hover:bg-sky-700 text-white",
+                            ? "bg-success hover:bg-success/90 text-white"
+                            : "bg-primary hover:bg-primary/90 text-white",
                         ].join(" ")}
                       >
                         Track My Status →
@@ -535,7 +535,7 @@ export default function GoalsSection({ onNavigateToStatus }: Props) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                        <span className="w-2 h-2 rounded-full bg-success shrink-0" />
                         <h4 className="text-sm font-bold text-foreground">
                           Foods to Eat
                         </h4>
@@ -550,7 +550,7 @@ export default function GoalsSection({ onNavigateToStatus }: Props) {
                             className="flex items-center gap-2 text-sm text-foreground"
                             data-ocid={`goals.diet_eat.item.${i + 1}`}
                           >
-                            <span className="text-emerald-500">✓</span>
+                            <span className="text-success">✓</span>
                             {item}
                           </motion.li>
                         ))}

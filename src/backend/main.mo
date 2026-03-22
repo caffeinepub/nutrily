@@ -34,6 +34,8 @@ actor {
     #maintenance;
   };
 
+  // NOTE: UserProfile kept identical to previous version for stable compatibility.
+  // age, gender fields are managed in frontend localStorage.
   public type UserProfile = {
     name : Text;
     phone : Text;
@@ -133,6 +135,8 @@ actor {
 
   // ======================== Food Database ========================
 
+  // NOTE: FoodItem kept identical to previous version for stable compatibility.
+  // honestyRating, dishIngredients, portionPresets are managed in frontend data.
   public type FoodItem = {
     name : Text;
     category : Text;
@@ -372,6 +376,7 @@ actor {
       Int.compare(log1.timestamp, log2.timestamp);
     };
   };
+
   public shared ({ caller }) func logWaterIntake(glasses : Nat) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can log water intake");
@@ -791,6 +796,96 @@ actor {
     userWaterIntake.remove(user);
     userHealthMetrics.remove(user);
     flaggedUsers.remove(user);
+  };
+
+  // ======================== Weekly Missions ========================
+  // New stable variables -- safe to add (no existing data to migrate)
+
+  public type WeeklyMission = {
+    id : Nat;
+    title : Text;
+    description : Text;
+    missionType : Text;
+    targetCount : Nat;
+    xpReward : Nat;
+  };
+
+  module WeeklyMission {
+    public func compare(m1 : WeeklyMission, m2 : WeeklyMission) : Order.Order {
+      Nat.compare(m1.id, m2.id);
+    };
+  };
+
+  public type WeeklyMissionProgress = {
+    missionId : Nat;
+    weekKey : Text;
+    currentCount : Nat;
+    completed : Bool;
+  };
+
+  module WeeklyMissionProgress {
+    public func compare(p1 : WeeklyMissionProgress, p2 : WeeklyMissionProgress) : Order.Order {
+      Nat.compare(p1.missionId, p2.missionId);
+    };
+  };
+
+  let weeklyMissions = Map.empty<Nat, WeeklyMission>();
+  var nextMissionId = 1;
+  let userMissionProgress = Map.empty<Principal, Set.Set<WeeklyMissionProgress>>();
+
+  public shared ({ caller }) func createWeeklyMission(mission : WeeklyMission) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can create missions");
+    };
+    let id = nextMissionId;
+    let newMission = { mission with id };
+    weeklyMissions.add(id, newMission);
+    nextMissionId += 1;
+    id;
+  };
+
+  public query func getAllWeeklyMissions() : async [WeeklyMission] {
+    weeklyMissions.values().toArray().sort();
+  };
+
+  public query ({ caller }) func getUserMissionProgress(weekKey : Text) : async [WeeklyMissionProgress] {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can view mission progress");
+    };
+    switch (userMissionProgress.get(caller)) {
+      case (null) { [] };
+      case (?progressSet) {
+        progressSet.toArray().filter(func(p) { p.weekKey == weekKey });
+      };
+    };
+  };
+
+  public shared ({ caller }) func updateMissionProgress(missionId : Nat, weekKey : Text, increment : Nat) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can update mission progress");
+    };
+    let mission = switch (weeklyMissions.get(missionId)) {
+      case (null) { Runtime.trap("Mission not found") };
+      case (?m) { m };
+    };
+    let progressSet = switch (userMissionProgress.get(caller)) {
+      case (null) { Set.empty<WeeklyMissionProgress>() };
+      case (?s) { s };
+    };
+    let existing = progressSet.toArray().filter(func(p) { p.missionId == missionId and p.weekKey == weekKey });
+    let currentCount = if (existing.size() > 0) { existing[0].currentCount } else { 0 };
+    let newCount = currentCount + increment;
+    let completed = newCount >= mission.targetCount;
+    if (existing.size() > 0) {
+      progressSet.remove(existing[0]);
+    };
+    progressSet.add({
+      missionId;
+      weekKey;
+      currentCount = newCount;
+      completed;
+    });
+    userMissionProgress.add(caller, progressSet);
   };
 
   // ======================== Helper Functions ========================

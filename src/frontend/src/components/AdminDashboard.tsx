@@ -60,7 +60,6 @@ import {
   UserX,
   Users,
   XCircle,
-  Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
@@ -188,12 +187,12 @@ function goalLabel(goal: ProfileGoal | undefined | string): string {
 
 function goalColor(goal: ProfileGoal | undefined | string): string {
   if (goal === ProfileGoal.weightLoss || goal === "weightLoss")
-    return "bg-red-600/20 text-red-400 border-red-600/40";
+    return "bg-red-600/20 text-destructive border-red-600/40";
   if (goal === ProfileGoal.muscleGain || goal === "muscleGain")
     return "bg-blue-600/20 text-blue-400 border-blue-600/40";
   if (goal === ProfileGoal.maintenance || goal === "maintenance")
     return "bg-green-600/20 text-green-400 border-green-600/40";
-  return "bg-gray-700 text-gray-400 border-gray-600";
+  return "bg-gray-700 text-muted-foreground border-gray-600";
 }
 
 function announcementTargetLabel(t: AnnouncementTarget | string): string {
@@ -278,7 +277,9 @@ function FoodFormDialog({
         <div className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <Label className="text-gray-300 text-xs">Food Name *</Label>
+              <Label className="text-muted-foreground text-xs">
+                Food Name *
+              </Label>
               <Input
                 data-ocid="admin.food.input"
                 className="bg-gray-800 border-gray-600 text-white mt-1"
@@ -288,7 +289,9 @@ function FoodFormDialog({
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">Category *</Label>
+              <Label className="text-muted-foreground text-xs">
+                Category *
+              </Label>
               <Input
                 className="bg-gray-800 border-gray-600 text-white mt-1"
                 placeholder="e.g. Protein"
@@ -297,7 +300,7 @@ function FoodFormDialog({
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">Region</Label>
+              <Label className="text-muted-foreground text-xs">Region</Label>
               <Select
                 value={form.region}
                 onValueChange={(v) => set("region", v)}
@@ -335,7 +338,7 @@ function FoodFormDialog({
               ] as [string, keyof FoodItem][]
             ).map(([label, field]) => (
               <div key={String(field)}>
-                <Label className="text-gray-300 text-xs">{label}</Label>
+                <Label className="text-muted-foreground text-xs">{label}</Label>
                 <Input
                   className="bg-gray-800 border-gray-600 text-white mt-1"
                   type="number"
@@ -347,7 +350,9 @@ function FoodFormDialog({
               </div>
             ))}
             <div>
-              <Label className="text-gray-300 text-xs">Serving Unit</Label>
+              <Label className="text-muted-foreground text-xs">
+                Serving Unit
+              </Label>
               <Input
                 className="bg-gray-800 border-gray-600 text-white mt-1"
                 placeholder="g / piece / cup"
@@ -397,19 +402,21 @@ function CheckInRow({
         className="text-xs max-w-[160px] truncate"
         title={checkIn.dietNotes}
       >
-        {checkIn.dietNotes || <span className="text-gray-500">—</span>}
+        {checkIn.dietNotes || <span className="text-muted-foreground">—</span>}
       </TableCell>
       <TableCell
         className="text-xs max-w-[160px] truncate"
         title={checkIn.exercisesDone}
       >
-        {checkIn.exercisesDone || <span className="text-gray-500">—</span>}
+        {checkIn.exercisesDone || (
+          <span className="text-muted-foreground">—</span>
+        )}
       </TableCell>
       <TableCell className="text-xs text-center">
-        <span className="text-blue-300">{Number(checkIn.waterGlasses)} gl</span>
+        <span className="text-primary">{Number(checkIn.waterGlasses)} gl</span>
       </TableCell>
       <TableCell className="text-xs text-center">
-        <span className="text-indigo-300">{checkIn.sleepHours}h</span>
+        <span className="text-primary">{checkIn.sleepHours}h</span>
       </TableCell>
     </TableRow>
   );
@@ -462,16 +469,16 @@ function UserCard({
               {(profile as any)?.gender && (
                 <Badge
                   variant="outline"
-                  className="text-xs border-gray-600 text-gray-400"
+                  className="text-xs border-gray-600 text-muted-foreground"
                 >
                   {(profile as any).gender}
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-gray-500 font-mono truncate">
+            <p className="text-xs text-muted-foreground font-mono truncate">
               {shortenPrincipal(pid)}
             </p>
-            <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-400">
+            <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
               {profile?.phone && (
                 <span className="flex items-center gap-1">
                   <Phone className="w-3 h-3" />
@@ -561,7 +568,7 @@ function UserCard({
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
             <div className="bg-gray-800 rounded-lg p-2 text-center">
-              <p className="text-[10px] text-gray-500">Latest</p>
+              <p className="text-[10px] text-muted-foreground">Latest</p>
               <p className="text-xs font-semibold text-white">{latest.date}</p>
             </div>
             <div className="bg-gray-800 rounded-lg p-2 text-center flex flex-col items-center gap-0.5">
@@ -571,14 +578,14 @@ function UserCard({
               </p>
             </div>
             <div className="bg-gray-800 rounded-lg p-2 text-center flex flex-col items-center gap-0.5">
-              <Moon className="w-3 h-3 text-indigo-400" />
+              <Moon className="w-3 h-3 text-primary" />
               <p className="text-xs font-semibold text-white">
                 {latest.sleepHours}h
               </p>
             </div>
             <div className="bg-gray-800 rounded-lg p-2 text-center">
-              <p className="text-[10px] text-gray-500">Status</p>
-              <Badge className="text-[10px] py-0 bg-red-600/20 text-red-400 border-red-600/40">
+              <p className="text-[10px] text-muted-foreground">Status</p>
+              <Badge className="text-[10px] py-0 bg-red-600/20 text-destructive border-red-600/40">
                 Active
               </Badge>
             </div>
@@ -596,19 +603,19 @@ function UserCard({
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-800 border-gray-700">
-                        <TableHead className="text-xs py-2 text-gray-400">
+                        <TableHead className="text-xs py-2 text-muted-foreground">
                           Date
                         </TableHead>
-                        <TableHead className="text-xs py-2 text-gray-400">
+                        <TableHead className="text-xs py-2 text-muted-foreground">
                           Diet
                         </TableHead>
-                        <TableHead className="text-xs py-2 text-gray-400">
+                        <TableHead className="text-xs py-2 text-muted-foreground">
                           Exercise
                         </TableHead>
-                        <TableHead className="text-xs py-2 text-center text-gray-400">
+                        <TableHead className="text-xs py-2 text-center text-muted-foreground">
                           Water
                         </TableHead>
-                        <TableHead className="text-xs py-2 text-center text-gray-400">
+                        <TableHead className="text-xs py-2 text-center text-muted-foreground">
                           Sleep
                         </TableHead>
                       </TableRow>
@@ -628,7 +635,7 @@ function UserCard({
       {checkIns.length === 0 && (
         <CardContent className="pt-0">
           <p
-            className="text-xs text-gray-500 italic"
+            className="text-xs text-muted-foreground italic"
             data-ocid={`admin.user.empty_state.${index + 1}`}
           >
             No check-ins yet
@@ -765,7 +772,7 @@ function FoodDatabaseTab() {
         <Card className="bg-gray-900 border-gray-800 text-center">
           <CardContent className="pt-4 pb-4">
             <p className="text-2xl font-extrabold text-white">{foods.length}</p>
-            <p className="text-xs text-gray-400 mt-1">Total Foods</p>
+            <p className="text-xs text-muted-foreground mt-1">Total Foods</p>
           </CardContent>
         </Card>
         <Card className="bg-gray-900 border-gray-800 text-center">
@@ -773,7 +780,7 @@ function FoodDatabaseTab() {
             <p className="text-2xl font-extrabold text-white">
               {uniqueRegions.length}
             </p>
-            <p className="text-xs text-gray-400 mt-1">Regions</p>
+            <p className="text-xs text-muted-foreground mt-1">Regions</p>
           </CardContent>
         </Card>
         <Card className="bg-gray-900 border-gray-800 text-center">
@@ -781,7 +788,7 @@ function FoodDatabaseTab() {
             <p className="text-2xl font-extrabold text-white">
               {uniqueCategories.length}
             </p>
-            <p className="text-xs text-gray-400 mt-1">Categories</p>
+            <p className="text-xs text-muted-foreground mt-1">Categories</p>
           </CardContent>
         </Card>
       </div>
@@ -792,7 +799,7 @@ function FoodDatabaseTab() {
           placeholder="Search foods…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500 max-w-xs"
+          className="bg-gray-800 border-gray-600 text-white placeholder:text-muted-foreground max-w-xs"
         />
         <Select value={regionFilter} onValueChange={setRegionFilter}>
           <SelectTrigger
@@ -836,24 +843,28 @@ function FoodDatabaseTab() {
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-800 border-gray-700">
-                <TableHead className="text-gray-400 text-xs">Name</TableHead>
-                <TableHead className="text-gray-400 text-xs">
+                <TableHead className="text-muted-foreground text-xs">
+                  Name
+                </TableHead>
+                <TableHead className="text-muted-foreground text-xs">
                   Category
                 </TableHead>
-                <TableHead className="text-gray-400 text-xs">Region</TableHead>
-                <TableHead className="text-gray-400 text-xs text-right">
+                <TableHead className="text-muted-foreground text-xs">
+                  Region
+                </TableHead>
+                <TableHead className="text-muted-foreground text-xs text-right">
                   Cal/100g
                 </TableHead>
-                <TableHead className="text-gray-400 text-xs text-right">
+                <TableHead className="text-muted-foreground text-xs text-right">
                   P
                 </TableHead>
-                <TableHead className="text-gray-400 text-xs text-right">
+                <TableHead className="text-muted-foreground text-xs text-right">
                   C
                 </TableHead>
-                <TableHead className="text-gray-400 text-xs text-right">
+                <TableHead className="text-muted-foreground text-xs text-right">
                   F
                 </TableHead>
-                <TableHead className="text-gray-400 text-xs text-center">
+                <TableHead className="text-muted-foreground text-xs text-center">
                   Actions
                 </TableHead>
               </TableRow>
@@ -863,7 +874,7 @@ function FoodDatabaseTab() {
                 <TableRow>
                   <TableCell
                     colSpan={8}
-                    className="text-center py-10 text-gray-500"
+                    className="text-center py-10 text-muted-foreground"
                     data-ocid="admin.food.empty_state"
                   >
                     No food items found.
@@ -879,13 +890,13 @@ function FoodDatabaseTab() {
                     <TableCell className="text-white text-sm font-medium">
                       {food.name}
                     </TableCell>
-                    <TableCell className="text-gray-300 text-xs">
+                    <TableCell className="text-muted-foreground text-xs">
                       {food.category}
                     </TableCell>
-                    <TableCell className="text-gray-300 text-xs">
+                    <TableCell className="text-muted-foreground text-xs">
                       <Badge
                         variant="outline"
-                        className="text-xs border-gray-600 text-gray-400"
+                        className="text-xs border-gray-600 text-muted-foreground"
                       >
                         {food.region}
                       </Badge>
@@ -893,7 +904,7 @@ function FoodDatabaseTab() {
                     <TableCell className="text-gray-200 text-xs text-right">
                       {food.caloriesPer100g}
                     </TableCell>
-                    <TableCell className="text-blue-300 text-xs text-right">
+                    <TableCell className="text-primary text-xs text-right">
                       {food.protein}g
                     </TableCell>
                     <TableCell className="text-yellow-300 text-xs text-right">
@@ -905,12 +916,14 @@ function FoodDatabaseTab() {
                     <TableCell className="text-center">
                       {deleteConfirmName === food.name ? (
                         <span className="flex items-center justify-center gap-1">
-                          <span className="text-xs text-red-400">Confirm?</span>
+                          <span className="text-xs text-destructive">
+                            Confirm?
+                          </span>
                           <Button
                             data-ocid={`admin.food.confirm_button.${i + 1}`}
                             size="sm"
                             variant="ghost"
-                            className="h-6 px-2 text-xs text-red-400 hover:bg-red-600/20"
+                            className="h-6 px-2 text-xs text-destructive hover:bg-red-600/20"
                             onClick={() => handleDelete(food.name)}
                             disabled={isDeleting}
                           >
@@ -920,7 +933,7 @@ function FoodDatabaseTab() {
                             data-ocid={`admin.food.cancel_button.${i + 1}`}
                             size="sm"
                             variant="ghost"
-                            className="h-6 px-2 text-xs text-gray-400 hover:bg-gray-700"
+                            className="h-6 px-2 text-xs text-muted-foreground hover:bg-gray-700"
                             onClick={() => setDeleteConfirmName(null)}
                           >
                             No
@@ -932,7 +945,7 @@ function FoodDatabaseTab() {
                             data-ocid={`admin.food.edit_button.${i + 1}`}
                             size="sm"
                             variant="ghost"
-                            className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-white hover:bg-gray-700"
                             onClick={() => openEdit(food)}
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -941,7 +954,7 @@ function FoodDatabaseTab() {
                             data-ocid={`admin.food.delete_button.${i + 1}`}
                             size="sm"
                             variant="ghost"
-                            className="h-7 w-7 p-0 text-gray-400 hover:text-red-400 hover:bg-red-600/20"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-red-600/20"
                             onClick={() => setDeleteConfirmName(food.name)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -960,12 +973,12 @@ function FoodDatabaseTab() {
       <Card className="bg-gray-900 border-gray-700">
         <CardHeader className="pb-3">
           <CardTitle className="text-white text-sm flex items-center gap-2">
-            <Upload className="w-4 h-4 text-red-400" />
+            <Upload className="w-4 h-4 text-destructive" />
             Bulk CSV Import
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             CSV columns:{" "}
             <code className="text-gray-300 bg-gray-800 px-1 rounded">
               name, category, region, caloriesPer100g, protein, carbs, fat,
@@ -1052,7 +1065,7 @@ function ApprovalsTab() {
   if (suggestions.length === 0)
     return (
       <div
-        className="text-center py-16 text-gray-500"
+        className="text-center py-16 text-muted-foreground"
         data-ocid="admin.approvals.empty_state"
       >
         <CheckCircle className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -1088,11 +1101,11 @@ function ApprovalsTab() {
                       Pending
                     </Badge>
                   </div>
-                  <div className="flex flex-wrap gap-3 text-xs text-gray-400 mb-2">
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-2">
                     <span>{suggestion.foodItem.category}</span>
-                    <span className="text-gray-600">•</span>
+                    <span className="text-muted-foreground">•</span>
                     <span>{suggestion.foodItem.region}</span>
-                    <span className="text-gray-600">•</span>
+                    <span className="text-muted-foreground">•</span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatTimestamp(suggestion.timestamp)}
@@ -1102,7 +1115,7 @@ function ApprovalsTab() {
                     <span className="text-gray-300">
                       {suggestion.foodItem.caloriesPer100g} kcal
                     </span>
-                    <span className="text-blue-300">
+                    <span className="text-primary">
                       P: {suggestion.foodItem.protein}g
                     </span>
                     <span className="text-yellow-300">
@@ -1129,7 +1142,7 @@ function ApprovalsTab() {
                     size="sm"
                     onClick={() => handleReject(i)}
                     disabled={isApproving || isRejecting}
-                    className="bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-600/40 text-xs h-8"
+                    className="bg-red-600/20 hover:bg-red-600/40 text-destructive border border-red-600/40 text-xs h-8"
                     variant="outline"
                   >
                     <XCircle className="w-3.5 h-3.5 mr-1" />
@@ -1212,7 +1225,7 @@ function AnalyticsTab({
             label: "Total Users",
             value: usersData.length,
             icon: Users,
-            color: "text-red-400",
+            color: "text-destructive",
           },
           {
             label: "Active Today (DAU)",
@@ -1237,7 +1250,7 @@ function AnalyticsTab({
             <CardContent className="pt-4 pb-4 text-center">
               <Icon className={`w-5 h-5 mx-auto mb-1 ${color}`} />
               <p className="text-2xl font-extrabold text-white">{value}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
             </CardContent>
           </Card>
         ))}
@@ -1248,7 +1261,7 @@ function AnalyticsTab({
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-white text-sm flex items-center gap-2">
-              <Target className="w-4 h-4 text-red-400" />
+              <Target className="w-4 h-4 text-destructive" />
               Goal Breakdown
             </CardTitle>
           </CardHeader>
@@ -1257,17 +1270,17 @@ function AnalyticsTab({
               {
                 label: "Weight Loss",
                 count: goalCounts.weightLoss,
-                color: "bg-red-500",
+                color: "bg-status-danger0",
               },
               {
                 label: "Muscle Gain",
                 count: goalCounts.muscleGain,
-                color: "bg-blue-500",
+                color: "bg-status-info0",
               },
               {
                 label: "Maintenance",
                 count: goalCounts.maintenance,
-                color: "bg-green-500",
+                color: "bg-status-healthy0",
               },
               {
                 label: "No Goal Set",
@@ -1283,7 +1296,7 @@ function AnalyticsTab({
                 <div key={label} data-ocid="admin.analytics.panel">
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-gray-300">{label}</span>
-                    <span className="text-gray-400">
+                    <span className="text-muted-foreground">
                       {count} ({pct}%)
                     </span>
                   </div>
@@ -1305,13 +1318,15 @@ function AnalyticsTab({
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-white text-sm flex items-center gap-2">
-              <Dumbbell className="w-4 h-4 text-red-400" />
+              <Dumbbell className="w-4 h-4 text-destructive" />
               Most Active Users
             </CardTitle>
           </CardHeader>
           <CardContent>
             {topUsers.length === 0 ? (
-              <p className="text-xs text-gray-500">No check-in data yet.</p>
+              <p className="text-xs text-muted-foreground">
+                No check-in data yet.
+              </p>
             ) : (
               <div className="space-y-2">
                 {topUsers.map(({ pid, name, count }, i) => (
@@ -1320,14 +1335,14 @@ function AnalyticsTab({
                     className="flex items-center gap-3"
                     data-ocid={`admin.analytics.item.${i + 1}`}
                   >
-                    <span className="text-xs font-bold text-red-400 w-4">
+                    <span className="text-xs font-bold text-destructive w-4">
                       {i + 1}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-white truncate">
                         {name}
                       </p>
-                      <p className="text-[10px] text-gray-500 font-mono">
+                      <p className="text-[10px] text-muted-foreground font-mono">
                         {shortenPrincipal(pid)}
                       </p>
                     </div>
@@ -1349,7 +1364,7 @@ function AnalyticsTab({
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader className="pb-3">
           <CardTitle className="text-white text-sm flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-red-400" />
+            <TrendingUp className="w-4 h-4 text-destructive" />
             User Registrations — Last 14 Days
           </CardTitle>
         </CardHeader>
@@ -1368,13 +1383,13 @@ function AnalyticsTab({
                   }}
                   transition={{ duration: 0.5 }}
                 />
-                <span className="text-[8px] text-gray-600 rotate-45 origin-left hidden sm:block">
+                <span className="text-[8px] text-muted-foreground rotate-45 origin-left hidden sm:block">
                   {date.slice(5)}
                 </span>
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-[10px] text-gray-600 mt-1">
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
             <span>{Object.keys(growth)[0]?.slice(5)}</span>
             <span>{Object.keys(growth).at(-1)?.slice(5)}</span>
           </div>
@@ -1477,7 +1492,7 @@ function DietPlansTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           {plans.length} plan{plans.length !== 1 ? "s" : ""} total
         </p>
         <Button
@@ -1491,7 +1506,7 @@ function DietPlansTab() {
 
       {plans.length === 0 ? (
         <div
-          className="text-center py-16 text-gray-500"
+          className="text-center py-16 text-muted-foreground"
           data-ocid="admin.plans.empty_state"
         >
           <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -1522,14 +1537,14 @@ function DietPlansTab() {
                           {goalLabel(plan.goalType)}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-400 mb-2">
+                      <p className="text-xs text-muted-foreground mb-2">
                         {plan.description}
                       </p>
                       <div className="flex flex-wrap gap-3 text-xs">
                         <span className="text-gray-300">
                           🔥 {plan.dailyCalorieTarget} kcal/day
                         </span>
-                        <span className="text-blue-300">
+                        <span className="text-primary">
                           P: {plan.proteinTarget}g
                         </span>
                         <span className="text-yellow-300">
@@ -1540,7 +1555,7 @@ function DietPlansTab() {
                         </span>
                       </div>
                       {plan.recommendedFoods.length > 0 && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           Foods: {plan.recommendedFoods.slice(0, 4).join(", ")}
                           {plan.recommendedFoods.length > 4 ? " …" : ""}
                         </p>
@@ -1549,7 +1564,9 @@ function DietPlansTab() {
                     <div className="flex items-center gap-2 shrink-0">
                       {deleteId === plan.id ? (
                         <>
-                          <span className="text-xs text-red-400">Delete?</span>
+                          <span className="text-xs text-destructive">
+                            Delete?
+                          </span>
                           <Button
                             data-ocid={`admin.plans.confirm_button.${i + 1}`}
                             size="sm"
@@ -1563,7 +1580,7 @@ function DietPlansTab() {
                             data-ocid={`admin.plans.cancel_button.${i + 1}`}
                             size="sm"
                             variant="ghost"
-                            className="h-7 px-2 text-xs text-gray-400 hover:bg-gray-800"
+                            className="h-7 px-2 text-xs text-muted-foreground hover:bg-gray-800"
                             onClick={() => setDeleteId(null)}
                           >
                             No
@@ -1575,7 +1592,7 @@ function DietPlansTab() {
                             data-ocid={`admin.plans.edit_button.${i + 1}`}
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-800"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-white hover:bg-gray-800"
                             onClick={() => openEdit(plan)}
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -1584,7 +1601,7 @@ function DietPlansTab() {
                             data-ocid={`admin.plans.delete_button.${i + 1}`}
                             size="sm"
                             variant="ghost"
-                            className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-600/20"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-red-600/20"
                             onClick={() => setDeleteId(plan.id)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1616,7 +1633,9 @@ function DietPlansTab() {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div>
-              <Label className="text-gray-300 text-xs">Plan Name *</Label>
+              <Label className="text-muted-foreground text-xs">
+                Plan Name *
+              </Label>
               <Input
                 data-ocid="admin.plans.input"
                 className="bg-gray-800 border-gray-600 text-white mt-1"
@@ -1626,7 +1645,7 @@ function DietPlansTab() {
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">Goal Type</Label>
+              <Label className="text-muted-foreground text-xs">Goal Type</Label>
               <Select
                 value={form.goalType as string}
                 onValueChange={(v) => set("goalType", v as ProfileGoal)}
@@ -1660,7 +1679,9 @@ function DietPlansTab() {
               </Select>
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">Description</Label>
+              <Label className="text-muted-foreground text-xs">
+                Description
+              </Label>
               <Textarea
                 className="bg-gray-800 border-gray-600 text-white mt-1 resize-none"
                 rows={2}
@@ -1679,7 +1700,9 @@ function DietPlansTab() {
                 ] as [string, keyof DietPlan][]
               ).map(([label, field]) => (
                 <div key={String(field)}>
-                  <Label className="text-gray-300 text-xs">{label}</Label>
+                  <Label className="text-muted-foreground text-xs">
+                    {label}
+                  </Label>
                   <Input
                     className="bg-gray-800 border-gray-600 text-white mt-1"
                     type="number"
@@ -1691,7 +1714,7 @@ function DietPlansTab() {
               ))}
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">
+              <Label className="text-muted-foreground text-xs">
                 Recommended Foods (comma-separated)
               </Label>
               <Input
@@ -1706,7 +1729,7 @@ function DietPlansTab() {
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">
+              <Label className="text-muted-foreground text-xs">
                 Meal Timing Suggestions (comma-separated)
               </Label>
               <Input
@@ -1892,7 +1915,7 @@ function ContentTab() {
           data-ocid="admin.content.tab"
           type="button"
           onClick={() => setSection("articles")}
-          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${section === "articles" ? "bg-red-600 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"}`}
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${section === "articles" ? "bg-red-600 text-white" : "text-muted-foreground hover:text-white hover:bg-gray-800"}`}
         >
           <BookOpen className="w-3.5 h-3.5 inline mr-1.5" />
           Articles
@@ -1900,7 +1923,7 @@ function ContentTab() {
         <button
           type="button"
           onClick={() => setSection("announcements")}
-          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${section === "announcements" ? "bg-red-600 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"}`}
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${section === "announcements" ? "bg-red-600 text-white" : "text-muted-foreground hover:text-white hover:bg-gray-800"}`}
         >
           <Megaphone className="w-3.5 h-3.5 inline mr-1.5" />
           Announcements
@@ -1911,7 +1934,7 @@ function ContentTab() {
       {section === "articles" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {articles.length} article{articles.length !== 1 ? "s" : ""}
             </p>
             <Button
@@ -1933,7 +1956,7 @@ function ContentTab() {
             </div>
           ) : articles.length === 0 ? (
             <div
-              className="text-center py-12 text-gray-500"
+              className="text-center py-12 text-muted-foreground"
               data-ocid="admin.articles.empty_state"
             >
               <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -1964,17 +1987,17 @@ function ContentTab() {
                               {article.category}
                             </Badge>
                           </div>
-                          <p className="text-xs text-gray-400 line-clamp-2">
+                          <p className="text-xs text-muted-foreground line-clamp-2">
                             {article.body}
                           </p>
-                          <p className="text-[10px] text-gray-600 mt-1">
+                          <p className="text-[10px] text-muted-foreground mt-1">
                             {formatTimestamp(article.createdAt)}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {deleteArticleId === article.id ? (
                             <>
-                              <span className="text-xs text-red-400">
+                              <span className="text-xs text-destructive">
                                 Delete?
                               </span>
                               <Button
@@ -1990,7 +2013,7 @@ function ContentTab() {
                                 data-ocid={`admin.articles.cancel_button.${i + 1}`}
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 px-2 text-xs text-gray-400 hover:bg-gray-800"
+                                className="h-7 px-2 text-xs text-muted-foreground hover:bg-gray-800"
                                 onClick={() => setDeleteArticleId(null)}
                               >
                                 No
@@ -2002,7 +2025,7 @@ function ContentTab() {
                                 data-ocid={`admin.articles.edit_button.${i + 1}`}
                                 size="sm"
                                 variant="ghost"
-                                className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-800"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-white hover:bg-gray-800"
                                 onClick={() => openEditArticle(article)}
                               >
                                 <Pencil className="w-3.5 h-3.5" />
@@ -2011,7 +2034,7 @@ function ContentTab() {
                                 data-ocid={`admin.articles.delete_button.${i + 1}`}
                                 size="sm"
                                 variant="ghost"
-                                className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-600/20"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-red-600/20"
                                 onClick={() => setDeleteArticleId(article.id)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -2033,7 +2056,7 @@ function ContentTab() {
       {section === "announcements" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {announcements.length} announcement
               {announcements.length !== 1 ? "s" : ""} — in-app only
             </p>
@@ -2056,7 +2079,7 @@ function ContentTab() {
             </div>
           ) : announcements.length === 0 ? (
             <div
-              className="text-center py-12 text-gray-500"
+              className="text-center py-12 text-muted-foreground"
               data-ocid="admin.ann.empty_state"
             >
               <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -2087,25 +2110,27 @@ function ContentTab() {
                               {announcementTargetLabel(ann.targetGoal)}
                             </Badge>
                             <Badge
-                              className={`text-xs ${ann.isActive ? "bg-green-600/20 text-green-400 border border-green-600/40" : "bg-gray-700 text-gray-500 border border-gray-600"}`}
+                              className={`text-xs ${ann.isActive ? "bg-green-600/20 text-green-400 border border-green-600/40" : "bg-gray-700 text-muted-foreground border border-gray-600"}`}
                             >
                               {ann.isActive ? "Active" : "Inactive"}
                             </Badge>
                           </div>
-                          <p className="text-xs text-gray-400">{ann.message}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {ann.message}
+                          </p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-7 px-2 text-xs text-gray-400 hover:bg-gray-800 border border-gray-700"
+                            className="h-7 px-2 text-xs text-muted-foreground hover:bg-gray-800 border border-gray-700"
                             onClick={() => handleToggleAnn(ann.id)}
                           >
                             {ann.isActive ? "Deactivate" : "Activate"}
                           </Button>
                           {deleteAnnId === ann.id ? (
                             <>
-                              <span className="text-xs text-red-400">
+                              <span className="text-xs text-destructive">
                                 Delete?
                               </span>
                               <Button
@@ -2121,7 +2146,7 @@ function ContentTab() {
                                 data-ocid={`admin.ann.cancel_button.${i + 1}`}
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 px-2 text-xs text-gray-400 hover:bg-gray-800"
+                                className="h-7 px-2 text-xs text-muted-foreground hover:bg-gray-800"
                                 onClick={() => setDeleteAnnId(null)}
                               >
                                 No
@@ -2133,7 +2158,7 @@ function ContentTab() {
                                 data-ocid={`admin.ann.edit_button.${i + 1}`}
                                 size="sm"
                                 variant="ghost"
-                                className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-gray-800"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-white hover:bg-gray-800"
                                 onClick={() => openEditAnn(ann)}
                               >
                                 <Pencil className="w-3.5 h-3.5" />
@@ -2142,7 +2167,7 @@ function ContentTab() {
                                 data-ocid={`admin.ann.delete_button.${i + 1}`}
                                 size="sm"
                                 variant="ghost"
-                                className="h-8 w-8 p-0 text-gray-400 hover:text-red-400 hover:bg-red-600/20"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-red-600/20"
                                 onClick={() => setDeleteAnnId(ann.id)}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -2176,7 +2201,7 @@ function ContentTab() {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div>
-              <Label className="text-gray-300 text-xs">Title *</Label>
+              <Label className="text-muted-foreground text-xs">Title *</Label>
               <Input
                 data-ocid="admin.articles.input"
                 className="bg-gray-800 border-gray-600 text-white mt-1"
@@ -2186,7 +2211,7 @@ function ContentTab() {
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">Category</Label>
+              <Label className="text-muted-foreground text-xs">Category</Label>
               <Select
                 value={articleForm.category}
                 onValueChange={(v) => setA("category", v)}
@@ -2211,7 +2236,7 @@ function ContentTab() {
               </Select>
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">Body *</Label>
+              <Label className="text-muted-foreground text-xs">Body *</Label>
               <Textarea
                 data-ocid="admin.articles.textarea"
                 className="bg-gray-800 border-gray-600 text-white mt-1 resize-none"
@@ -2222,7 +2247,7 @@ function ContentTab() {
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">
+              <Label className="text-muted-foreground text-xs">
                 Image URL (optional)
               </Label>
               <Input
@@ -2271,7 +2296,7 @@ function ContentTab() {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div>
-              <Label className="text-gray-300 text-xs">Title *</Label>
+              <Label className="text-muted-foreground text-xs">Title *</Label>
               <Input
                 data-ocid="admin.ann.input"
                 className="bg-gray-800 border-gray-600 text-white mt-1"
@@ -2281,7 +2306,7 @@ function ContentTab() {
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">Message *</Label>
+              <Label className="text-muted-foreground text-xs">Message *</Label>
               <Textarea
                 data-ocid="admin.ann.textarea"
                 className="bg-gray-800 border-gray-600 text-white mt-1 resize-none"
@@ -2292,7 +2317,9 @@ function ContentTab() {
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">Target Audience</Label>
+              <Label className="text-muted-foreground text-xs">
+                Target Audience
+              </Label>
               <Select
                 value={annForm.targetGoal as string}
                 onValueChange={(v) =>
@@ -2447,7 +2474,7 @@ function ModerationTab({
       return "border-yellow-600/40 text-yellow-400";
     if (status === ReportStatus.resolved || status === "resolved")
       return "border-green-600/40 text-green-400";
-    return "border-gray-600 text-gray-400";
+    return "border-gray-600 text-muted-foreground";
   };
 
   const pendingCount = reports.filter(
@@ -2461,12 +2488,12 @@ function ModerationTab({
           data-ocid="admin.moderation.tab"
           type="button"
           onClick={() => setSection("reports")}
-          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${section === "reports" ? "bg-red-600 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"}`}
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${section === "reports" ? "bg-red-600 text-white" : "text-muted-foreground hover:text-white hover:bg-gray-800"}`}
         >
           <AlertTriangle className="w-3.5 h-3.5" />
           Reports
           {pendingCount > 0 && (
-            <Badge className="bg-yellow-500 text-black text-xs px-1.5 py-0 h-4 ml-0.5">
+            <Badge className="bg-status-warning0 text-black text-xs px-1.5 py-0 h-4 ml-0.5">
               {pendingCount}
             </Badge>
           )}
@@ -2474,7 +2501,7 @@ function ModerationTab({
         <button
           type="button"
           onClick={() => setSection("flagged")}
-          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${section === "flagged" ? "bg-red-600 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"}`}
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${section === "flagged" ? "bg-red-600 text-white" : "text-muted-foreground hover:text-white hover:bg-gray-800"}`}
         >
           <ShieldAlert className="w-3.5 h-3.5" />
           Flagged Accounts
@@ -2500,7 +2527,7 @@ function ModerationTab({
             </div>
           ) : reports.length === 0 ? (
             <div
-              className="text-center py-12 text-gray-500"
+              className="text-center py-12 text-muted-foreground"
               data-ocid="admin.reports.empty_state"
             >
               <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -2537,7 +2564,7 @@ function ModerationTab({
                           {report.targetFoodName && (
                             <Badge
                               variant="outline"
-                              className="text-xs border-gray-600 text-gray-400"
+                              className="text-xs border-gray-600 text-muted-foreground"
                             >
                               Food: {report.targetFoodName}
                             </Badge>
@@ -2546,7 +2573,7 @@ function ModerationTab({
                         <p className="text-xs text-gray-300">
                           {report.description}
                         </p>
-                        <p className="text-[10px] text-gray-600 mt-1">
+                        <p className="text-[10px] text-muted-foreground mt-1">
                           By: {shortenPrincipal(report.reportedBy.toString())} ·{" "}
                           {formatTimestamp(report.createdAt)}
                         </p>
@@ -2567,7 +2594,7 @@ function ModerationTab({
                             data-ocid={`admin.reports.cancel_button.${i + 1}`}
                             size="sm"
                             variant="ghost"
-                            className="h-7 px-2 text-xs text-gray-400 hover:bg-gray-800 border border-gray-700"
+                            className="h-7 px-2 text-xs text-muted-foreground hover:bg-gray-800 border border-gray-700"
                             onClick={() => handleDismiss(report.id)}
                             disabled={isResolving || isDismissing}
                           >
@@ -2588,7 +2615,7 @@ function ModerationTab({
       {section === "flagged" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {flagged.length} flagged account{flagged.length !== 1 ? "s" : ""}
             </p>
             <Button
@@ -2612,7 +2639,7 @@ function ModerationTab({
             </div>
           ) : flagged.length === 0 ? (
             <div
-              className="text-center py-12 text-gray-500"
+              className="text-center py-12 text-muted-foreground"
               data-ocid="admin.flagged.empty_state"
             >
               <ShieldCheck className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -2636,12 +2663,12 @@ function ModerationTab({
                         <div className="flex items-center justify-between gap-3 flex-wrap">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
-                              <UserX className="w-4 h-4 text-red-400" />
+                              <UserX className="w-4 h-4 text-destructive" />
                               <span className="text-white text-sm font-medium">
                                 {profile?.name ?? "Unknown"}
                               </span>
                             </div>
-                            <p className="text-[10px] text-gray-500 font-mono">
+                            <p className="text-[10px] text-muted-foreground font-mono">
                               {shortenPrincipal(pid)}
                             </p>
                             <p className="text-xs text-red-300 mt-1">
@@ -2653,7 +2680,7 @@ function ModerationTab({
                               data-ocid={`admin.flagged.secondary_button.${i + 1}`}
                               size="sm"
                               variant="ghost"
-                              className="h-7 px-2 text-xs text-gray-400 hover:bg-gray-800 border border-gray-700"
+                              className="h-7 px-2 text-xs text-muted-foreground hover:bg-gray-800 border border-gray-700"
                               onClick={() => handleUnflag(principal)}
                               disabled={isUnflagging}
                             >
@@ -2661,7 +2688,7 @@ function ModerationTab({
                             </Button>
                             {deleteAccountPrincipal?.toString() === pid ? (
                               <>
-                                <span className="text-xs text-red-400">
+                                <span className="text-xs text-destructive">
                                   Delete account?
                                 </span>
                                 <Button
@@ -2677,7 +2704,7 @@ function ModerationTab({
                                   data-ocid={`admin.flagged.cancel_button.${i + 1}`}
                                   size="sm"
                                   variant="ghost"
-                                  className="h-7 px-2 text-xs text-gray-400 hover:bg-gray-800"
+                                  className="h-7 px-2 text-xs text-muted-foreground hover:bg-gray-800"
                                   onClick={() =>
                                     setDeleteAccountPrincipal(null)
                                   }
@@ -2690,7 +2717,7 @@ function ModerationTab({
                                 data-ocid={`admin.flagged.delete_button.${i + 1}`}
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 px-2 text-xs text-red-400 hover:bg-red-600/20 border border-red-600/40"
+                                className="h-7 px-2 text-xs text-destructive hover:bg-red-600/20 border border-red-600/40"
                                 onClick={() =>
                                   setDeleteAccountPrincipal(principal)
                                 }
@@ -2728,7 +2755,9 @@ function ModerationTab({
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div>
-              <Label className="text-gray-300 text-xs">Select User</Label>
+              <Label className="text-muted-foreground text-xs">
+                Select User
+              </Label>
               <Select value={flagTarget} onValueChange={setFlagTarget}>
                 <SelectTrigger
                   className="bg-gray-800 border-gray-600 text-white mt-1"
@@ -2750,7 +2779,7 @@ function ModerationTab({
               </Select>
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">Reason *</Label>
+              <Label className="text-muted-foreground text-xs">Reason *</Label>
               <Textarea
                 data-ocid="admin.moderation.textarea"
                 className="bg-gray-800 border-gray-600 text-white mt-1 resize-none"
@@ -2863,20 +2892,22 @@ export default function AdminDashboard() {
       >
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+            <img
+              src="/assets/uploads/file_0000000091b4720b8ab0302490c69f98-1.png"
+              alt="DoitEpic"
+              className="h-9 w-auto object-contain"
+            />
             <div>
               <h1 className="text-xl font-extrabold text-white tracking-wide">
                 DOITEPIC
               </h1>
-              <p className="text-gray-400 text-xs flex items-center gap-1">
+              <p className="text-muted-foreground text-xs flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" /> Secret Admin Panel
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Badge className="bg-red-600/20 text-red-400 border-red-600/40 text-xs flex items-center gap-1">
+            <Badge className="bg-red-600/20 text-destructive border-red-600/40 text-xs flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> Admin
             </Badge>
             <Button
@@ -2902,45 +2933,45 @@ export default function AdminDashboard() {
           <Card className="bg-gray-900 border-gray-800 text-center">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <Users className="w-4 h-4 text-red-400" />
+                <Users className="w-4 h-4 text-destructive" />
                 <span className="text-2xl font-extrabold text-white">
                   {entries.length}
                 </span>
               </div>
-              <p className="text-xs text-gray-400">Total Users</p>
+              <p className="text-xs text-muted-foreground">Total Users</p>
             </CardContent>
           </Card>
           <Card className="bg-gray-900 border-gray-800 text-center">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <ShieldCheck className="w-4 h-4 text-red-400" />
+                <ShieldCheck className="w-4 h-4 text-destructive" />
                 <span className="text-2xl font-extrabold text-white">
                   {activeUsers}
                 </span>
               </div>
-              <p className="text-xs text-gray-400">Active Trackers</p>
+              <p className="text-xs text-muted-foreground">Active Trackers</p>
             </CardContent>
           </Card>
           <Card className="bg-gray-900 border-gray-800 text-center">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <Salad className="w-4 h-4 text-red-400" />
+                <Salad className="w-4 h-4 text-destructive" />
                 <span className="text-2xl font-extrabold text-white">
                   {totalCheckIns}
                 </span>
               </div>
-              <p className="text-xs text-gray-400">Total Check-ins</p>
+              <p className="text-xs text-muted-foreground">Total Check-ins</p>
             </CardContent>
           </Card>
           <Card className="bg-gray-900 border-gray-800 text-center">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <Database className="w-4 h-4 text-red-400" />
+                <Database className="w-4 h-4 text-destructive" />
                 <span className="text-2xl font-extrabold text-white">
                   {foods.length}
                 </span>
               </div>
-              <p className="text-xs text-gray-400">Food Items</p>
+              <p className="text-xs text-muted-foreground">Food Items</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -2951,54 +2982,54 @@ export default function AdminDashboard() {
             <TabsList className="bg-gray-900 border border-gray-700 w-max min-w-full sm:w-auto inline-flex">
               <TabsTrigger
                 value="users"
-                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400 flex items-center gap-1.5 whitespace-nowrap"
+                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
               >
                 <Users className="w-3.5 h-3.5" />
                 Users ({entries.length})
               </TabsTrigger>
               <TabsTrigger
                 value="food"
-                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400 flex items-center gap-1.5 whitespace-nowrap"
+                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
               >
                 <Database className="w-3.5 h-3.5" />
                 Food DB
               </TabsTrigger>
               <TabsTrigger
                 value="approvals"
-                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400 flex items-center gap-1.5 whitespace-nowrap"
+                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
               >
                 <Globe className="w-3.5 h-3.5" />
                 Approvals
                 {pending.length > 0 && (
-                  <Badge className="bg-yellow-500 text-black text-xs px-1.5 py-0 ml-1 h-4">
+                  <Badge className="bg-status-warning0 text-black text-xs px-1.5 py-0 ml-1 h-4">
                     {pending.length}
                   </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
                 value="analytics"
-                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400 flex items-center gap-1.5 whitespace-nowrap"
+                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
               >
                 <BarChart3 className="w-3.5 h-3.5" />
                 Analytics
               </TabsTrigger>
               <TabsTrigger
                 value="plans"
-                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400 flex items-center gap-1.5 whitespace-nowrap"
+                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
               >
                 <Target className="w-3.5 h-3.5" />
                 Diet Plans
               </TabsTrigger>
               <TabsTrigger
                 value="content"
-                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400 flex items-center gap-1.5 whitespace-nowrap"
+                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
               >
                 <BookOpen className="w-3.5 h-3.5" />
                 Content
               </TabsTrigger>
               <TabsTrigger
                 value="moderation"
-                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-gray-400 flex items-center gap-1.5 whitespace-nowrap"
+                className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
               >
                 <ShieldAlert className="w-3.5 h-3.5" />
                 Moderation
@@ -3019,7 +3050,7 @@ export default function AdminDashboard() {
               </div>
             ) : entries.length === 0 ? (
               <div
-                className="text-center py-16 text-gray-500"
+                className="text-center py-16 text-muted-foreground"
                 data-ocid="admin.empty_state"
               >
                 <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -3091,7 +3122,7 @@ export default function AdminDashboard() {
       </main>
 
       <footer className="bg-gray-900 border-t border-gray-800 py-4 px-6 text-center">
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-muted-foreground">
           DOITEPIC Admin Panel &mdash; Restricted Access
         </p>
       </footer>
@@ -3112,7 +3143,7 @@ export default function AdminDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <Label className="text-gray-300 text-xs">Reason *</Label>
+            <Label className="text-muted-foreground text-xs">Reason *</Label>
             <Textarea
               data-ocid="admin.user.textarea"
               className="bg-gray-800 border-gray-600 text-white mt-1 resize-none"

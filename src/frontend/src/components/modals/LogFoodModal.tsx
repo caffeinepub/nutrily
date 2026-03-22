@@ -22,6 +22,7 @@ import type { DrinkEntry } from "../../hooks/useDrinksLog";
 import type { FoodLogEntryLocal } from "../../hooks/useFoodLog";
 import { MEAL_TYPES } from "../../types";
 import type { ExtendedFoodItem, LocalMealType, MealType } from "../../types";
+import HonestyBadge from "../HonestyBadge";
 
 // Kerala foods with contextual serving hints
 const KERALA_HINTS: Record<string, string> = {
@@ -30,8 +31,44 @@ const KERALA_HINTS: Record<string, string> = {
   Idiyappam: "1 piece ≈ 50g",
   Dosa: "1 piece ≈ 90g",
   Parotta: "1 piece ≈ 80g",
+  Porotta: "1 piece ≈ 80g",
   "Fish Curry": "1 serving ≈ 150g",
+  "Fish Curry (Kerala)": "1 serving ≈ 150g",
   Idli: "1 piece ≈ 60g",
+  "Kerala Biryani": "1 plate ≈ 400g",
+  "Chicken Biryani": "1 plate ≈ 400g",
+};
+
+// Natural language portion sizes → grams
+const NATURAL_PORTIONS: Record<
+  string,
+  { label: string; grams: (food?: ExtendedFoodItem) => number }
+> = {
+  "1 Plate": {
+    label: "1 Plate",
+    grams: (food) => {
+      const name = (food?.name ?? "").toLowerCase();
+      if (name.includes("biryani") || name.includes("rice")) return 400;
+      if (name.includes("curry") || name.includes("dal")) return 200;
+      return 350;
+    },
+  },
+  "1 Bowl": {
+    label: "1 Bowl",
+    grams: () => 250,
+  },
+  "1 Glass": {
+    label: "1 Glass",
+    grams: () => 240,
+  },
+  "1 Handful": {
+    label: "1 Handful",
+    grams: (food) => {
+      const name = (food?.name ?? "").toLowerCase();
+      if (name.includes("nut") || name.includes("seed")) return 30;
+      return 50;
+    },
+  },
 };
 
 // Cups conversion: liquids = 240ml, grains/rice = 185g, default = 240g
@@ -58,7 +95,7 @@ function getCurrentTime() {
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-type Unit = "grams" | "pieces" | "cups";
+type Unit = "grams" | "pieces" | "cups" | "natural";
 
 export default function LogFoodModal({
   open,
@@ -74,6 +111,7 @@ export default function LogFoodModal({
   const [quantity, setQuantity] = useState("100");
   const [pieces, setPieces] = useState("1");
   const [cups, setCups] = useState("1");
+  const [naturalPortion, setNaturalPortion] = useState("1 Plate");
   const [unit, setUnit] = useState<Unit>("grams");
   const [mealType, setMealType] = useState<LocalMealType>(
     "breakfast" as MealType,
@@ -135,6 +173,10 @@ export default function LogFoodModal({
     }
     if (unit === "cups") {
       return cupsToGrams(foodName, Number(cups));
+    }
+    if (unit === "natural") {
+      const portion = NATURAL_PORTIONS[naturalPortion];
+      return portion ? portion.grams(selectedFood) : 350;
     }
     return Number(quantity);
   })();
@@ -211,12 +253,22 @@ export default function LogFoodModal({
     onClose();
   };
 
+  const unitOptions: Unit[] = isDrinks
+    ? ["grams"]
+    : ["grams", "pieces", "cups", "natural"];
+
+  const unitLabels: Record<Unit, string> = {
+    grams: isDrinks ? "ml" : "grams",
+    pieces: "pieces",
+    cups: "cups",
+    natural: "portion",
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent data-ocid="log_food.dialog" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{step === 1 ? "Log Food" : "Confirm Entry"}</DialogTitle>
-          {/* Step dots */}
           <div className="flex items-center gap-1.5 mt-1">
             <div
               className={`h-1.5 w-8 rounded-full transition-colors ${step >= 1 ? "bg-primary" : "bg-muted"}`}
@@ -281,8 +333,8 @@ export default function LogFoodModal({
                   data-ocid="log_food.search_input"
                   placeholder={
                     isDrinks
-                      ? "e.g. Coca-Cola, Orange Juice..."
-                      : "Type to search 500+ foods..."
+                      ? "e.g. Coconut Water, Chai..."
+                      : "Type to search Kerala + 500 foods..."
                   }
                   value={search || (foodName && !search ? foodName : "")}
                   onChange={(e) => {
@@ -306,12 +358,20 @@ export default function LogFoodModal({
                             setSearch("");
                           }}
                         >
-                          <div>
-                            <span className="font-medium">{f.name}</span>
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="font-medium truncate">
+                              {f.name}
+                            </span>
                             {hint && (
-                              <span className="text-xs text-muted-foreground ml-1.5">
+                              <span className="text-xs text-muted-foreground flex-shrink-0">
                                 ({hint})
                               </span>
+                            )}
+                            {f.honestyRating && (
+                              <HonestyBadge
+                                rating={f.honestyRating}
+                                size="xs"
+                              />
                             )}
                           </div>
                           <span className="text-xs text-muted-foreground flex-shrink-0">
@@ -343,13 +403,19 @@ export default function LogFoodModal({
                     </div>
                   )}
                 {foodName && !search && (
-                  <div className="flex items-center gap-2 mt-1.5 bg-accent rounded-lg px-3 py-1.5">
+                  <div className="flex items-center gap-2 mt-1.5 bg-accent/20 rounded-lg px-3 py-1.5">
                     <span className="text-xs text-muted-foreground">
                       Selected:
                     </span>
                     <span className="text-xs font-semibold text-primary flex-1 truncate">
                       {foodName}
                     </span>
+                    {selectedFood?.honestyRating && (
+                      <HonestyBadge
+                        rating={selectedFood.honestyRating}
+                        size="xs"
+                      />
+                    )}
                     <button
                       type="button"
                       onClick={() => setFoodName("")}
@@ -359,26 +425,33 @@ export default function LogFoodModal({
                     </button>
                   </div>
                 )}
+                {/* Dish ingredient breakdown */}
+                {selectedFood?.dishIngredients && (
+                  <div className="mt-1.5 px-3 py-1.5 bg-muted/60 rounded-lg">
+                    <p className="text-xs text-muted-foreground">
+                      🧩 <span className="font-medium">Ingredients:</span>{" "}
+                      {selectedFood.dishIngredients}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Unit selector */}
               <div>
                 <Label className="text-sm mb-1 block">Unit</Label>
-                <div className="flex gap-2">
-                  {(
-                    ["grams", ...(isDrinks ? [] : ["pieces", "cups"])] as Unit[]
-                  ).map((u) => (
+                <div className="flex gap-2 flex-wrap">
+                  {unitOptions.map((u) => (
                     <button
                       key={u}
                       type="button"
                       onClick={() => setUnit(u)}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors capitalize ${
+                      className={`flex-1 min-w-[60px] py-2 rounded-lg text-xs font-medium border transition-colors capitalize ${
                         unit === u
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-muted text-muted-foreground border-border hover:border-primary"
                       }`}
                     >
-                      {u === "grams" && isDrinks ? "ml" : u}
+                      {unitLabels[u]}
                     </button>
                   ))}
                 </div>
@@ -419,9 +492,6 @@ export default function LogFoodModal({
                         ? selectedFood.servingSize
                         : 100}
                       g{perPieceCals > 0 && ` · ${perPieceCals} kcal`}
-                      {selectedFood.servingUnit
-                        ? ` (${selectedFood.servingUnit})`
-                        : ""}
                     </p>
                   )}
                   {KERALA_HINTS[foodName] && (
@@ -455,10 +525,43 @@ export default function LogFoodModal({
                   )}
                 </div>
               )}
+              {unit === "natural" && (
+                <div>
+                  <Label className="text-sm">Portion Size</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    {Object.keys(NATURAL_PORTIONS).map((p) => {
+                      const gramsVal = NATURAL_PORTIONS[p].grams(selectedFood);
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setNaturalPortion(p)}
+                          className={`py-2.5 px-3 rounded-lg text-sm font-medium border transition-colors text-left ${
+                            naturalPortion === p
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-muted text-muted-foreground border-border hover:border-primary"
+                          }`}
+                        >
+                          <span className="block font-semibold">{p}</span>
+                          <span className="text-xs opacity-75">
+                            ≈ {gramsVal}g
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Selected: {naturalPortion} ≈{" "}
+                    {NATURAL_PORTIONS[naturalPortion]?.grams(selectedFood) ??
+                      350}
+                    g
+                  </p>
+                </div>
+              )}
 
               {/* Live calorie preview */}
               {estimatedCals > 0 && (
-                <div className="bg-accent rounded-lg p-3 flex items-center justify-between">
+                <div className="bg-accent/20 rounded-lg p-3 flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
                     Estimated calories
                   </span>
@@ -481,7 +584,7 @@ export default function LogFoodModal({
                   data-ocid="log_food.primary_button"
                   type="submit"
                   disabled={!foodName}
-                  className="hero-gradient text-white border-0 hover:opacity-90"
+                  className="bg-primary text-primary-foreground border-0 hover:bg-primary/90"
                 >
                   Next →
                 </Button>
@@ -497,15 +600,28 @@ export default function LogFoodModal({
               className="space-y-4"
             >
               {/* Confirmation summary */}
-              <div className="bg-accent rounded-xl p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-foreground">
-                    {foodName}
-                  </span>
-                  <span className="text-xs text-muted-foreground capitalize">
+              <div className="bg-accent/20 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className="text-sm font-bold text-foreground truncate">
+                      {foodName}
+                    </span>
+                    {selectedFood?.honestyRating && (
+                      <HonestyBadge
+                        rating={selectedFood.honestyRating}
+                        size="xs"
+                      />
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground capitalize flex-shrink-0">
                     {mealType}
                   </span>
                 </div>
+                {selectedFood?.dishIngredients && (
+                  <p className="text-xs text-muted-foreground">
+                    🧩 {selectedFood.dishIngredients}
+                  </p>
+                )}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-background rounded-lg p-2.5 text-center">
                     <p className="text-lg font-bold text-primary">
@@ -514,7 +630,7 @@ export default function LogFoodModal({
                     <p className="text-xs text-muted-foreground">kcal</p>
                   </div>
                   <div className="bg-background rounded-lg p-2.5 text-center">
-                    <p className="text-lg font-bold text-blue-600">
+                    <p className="text-lg font-bold text-primary">
                       {estimatedProtein}g
                     </p>
                     <p className="text-xs text-muted-foreground">protein</p>
@@ -526,7 +642,7 @@ export default function LogFoodModal({
                     <p className="text-xs text-muted-foreground">carbs</p>
                   </div>
                   <div className="bg-background rounded-lg p-2.5 text-center">
-                    <p className="text-lg font-bold text-yellow-600">
+                    <p className="text-lg font-bold text-warning">
                       {estimatedFat}g
                     </p>
                     <p className="text-xs text-muted-foreground">fat</p>
@@ -538,6 +654,8 @@ export default function LogFoodModal({
                     `${pieces} piece(s) ≈ ${Math.round(actualGrams)}g`}
                   {unit === "cups" &&
                     `${cups} cup(s) ≈ ${Math.round(actualGrams)}g`}
+                  {unit === "natural" &&
+                    `${naturalPortion} ≈ ${Math.round(actualGrams)}g`}
                 </p>
               </div>
 
@@ -545,10 +663,10 @@ export default function LogFoodModal({
               {isDuplicate && (
                 <div
                   data-ocid="log_food.error_state"
-                  className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2"
+                  className="flex items-start gap-2 bg-status-warning border border-warning/30 rounded-lg px-3 py-2"
                 >
-                  <span className="text-yellow-500 text-sm">⚠️</span>
-                  <p className="text-xs text-yellow-700 font-medium">
+                  <span className="text-warning text-sm">⚠️</span>
+                  <p className="text-xs text-warning font-medium">
                     {foodName} is already logged in {mealType} today. Adding
                     again will create a duplicate.
                   </p>
@@ -563,6 +681,14 @@ export default function LogFoodModal({
                   <p className="text-xs text-orange-700 font-medium">
                     Estimated calories are 0. Check the quantity or food
                     selection.
+                  </p>
+                </div>
+              )}
+              {selectedFood?.healthWarning && (
+                <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+                  <span className="text-amber-500 text-sm">ℹ️</span>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                    {selectedFood.healthWarning}
                   </p>
                 </div>
               )}
@@ -581,7 +707,7 @@ export default function LogFoodModal({
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="hero-gradient text-white border-0 hover:opacity-90"
+                  className="bg-primary text-primary-foreground border-0 hover:bg-primary/90"
                 >
                   {saving
                     ? "Saving..."

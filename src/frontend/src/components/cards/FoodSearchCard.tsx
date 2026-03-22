@@ -79,7 +79,7 @@ export default function FoodSearchCard({
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-foreground">Food Search</h3>
         {!isOnline && (
-          <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-medium">
+          <span className="text-[10px] text-warning bg-status-warning border border-warning/30 rounded-full px-2 py-0.5 font-medium">
             📦 Cached
           </span>
         )}
@@ -97,7 +97,7 @@ export default function FoodSearchCard({
           data-ocid="food_search.submit_button"
           type="submit"
           size="sm"
-          className="h-9 px-3 hero-gradient text-white border-0 hover:opacity-90 flex-shrink-0"
+          className="h-9 px-3 bg-primary text-primary-foreground border-0 hover:bg-primary/90 flex-shrink-0"
         >
           <Search size={14} />
         </Button>

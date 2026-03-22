@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Brain, Flame, ShieldAlert, Sparkles, X, Zap } from "lucide-react";
+import { Brain, Flame, ShieldAlert, Sparkles, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { ProfileGoal } from "../backend";
@@ -179,13 +179,14 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
         <button
           type="button"
           onClick={handleLogoClick}
-          className="flex items-center justify-center gap-2 mb-6 mx-auto focus:outline-none select-none"
+          className="flex items-center justify-center mb-6 mx-auto focus:outline-none select-none"
           aria-label="App logo"
         >
-          <div className="w-10 h-10 rounded-xl hero-gradient flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-2xl font-bold text-foreground">DOITEPIC</span>
+          <img
+            src="/assets/uploads/file_0000000091b4720b8ab0302490c69f98-1.png"
+            alt="DoitEpic"
+            className="h-16 w-auto object-contain"
+          />
         </button>
 
         <AnimatePresence mode="wait">
@@ -272,7 +273,10 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
           </div>
 
           {step1Error && !showStep2 && (
-            <p data-ocid="login.error_state" className="text-red-500 text-xs">
+            <p
+              data-ocid="login.error_state"
+              className="text-destructive text-xs"
+            >
               {step1Error}
             </p>
           )}
@@ -414,7 +418,7 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
                   {step2Error && (
                     <p
                       data-ocid="register.error_state"
-                      className="text-red-500 text-xs"
+                      className="text-destructive text-xs"
                     >
                       {step2Error}
                     </p>
@@ -492,7 +496,7 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
             >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <ShieldAlert className="w-5 h-5 text-red-400" />
+                  <ShieldAlert className="w-5 h-5 text-destructive" />
                   <h2 className="text-white font-bold text-lg">
                     Restricted Access
                   </h2>
@@ -503,19 +507,19 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
                     setShowAdminModal(false);
                     setAdminError("");
                   }}
-                  className="text-gray-500 hover:text-gray-300 transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-gray-400 text-xs mb-6">
+              <p className="text-muted-foreground text-xs mb-6">
                 This area is restricted. Unauthorized access is not permitted.
               </p>
               <form onSubmit={handleAdminSubmit} className="space-y-4">
                 <div>
                   <label
                     htmlFor="admin-name"
-                    className="text-xs text-gray-400 block mb-1"
+                    className="text-xs text-muted-foreground block mb-1"
                   >
                     Access Name
                   </label>
@@ -528,7 +532,7 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
                       setAdminError("");
                     }}
                     placeholder="Enter access name"
-                    className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-600 focus:border-red-500"
+                    className="bg-gray-900 border-gray-700 text-white placeholder:text-muted-foreground focus:border-red-500"
                     autoComplete="off"
                     autoFocus
                   />
@@ -536,7 +540,7 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
                 <div>
                   <label
                     htmlFor="admin-code"
-                    className="text-xs text-gray-400 block mb-1"
+                    className="text-xs text-muted-foreground block mb-1"
                   >
                     Secret Code
                   </label>
@@ -550,14 +554,14 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
                       setAdminError("");
                     }}
                     placeholder="Enter secret code"
-                    className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-600 focus:border-red-500"
+                    className="bg-gray-900 border-gray-700 text-white placeholder:text-muted-foreground focus:border-red-500"
                     autoComplete="off"
                   />
                 </div>
                 {adminError && (
                   <p
                     data-ocid="admin.error_state"
-                    className="text-red-400 text-xs"
+                    className="text-destructive text-xs"
                   >
                     {adminError}
                   </p>
@@ -565,7 +569,7 @@ export default function LoginPage({ onAdminAccess }: LoginPageProps) {
                 <Button
                   data-ocid="admin.submit_button"
                   type="submit"
-                  className="w-full bg-red-700 hover:bg-red-600 text-white border-0 font-semibold"
+                  className="w-full bg-destructive hover:bg-destructive/90 text-white border-0 font-semibold"
                 >
                   Access Admin Panel
                 </Button>

@@ -17,6 +17,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        display: ['Bricolage Grotesque', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "oklch(var(--border))",
@@ -52,6 +53,14 @@ export default {
           DEFAULT: "oklch(var(--card))",
           foreground: "oklch(var(--card-foreground))",
         },
+        success: {
+          DEFAULT: "oklch(var(--success) / <alpha-value>)",
+          foreground: "oklch(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "oklch(var(--warning) / <alpha-value>)",
+          foreground: "oklch(var(--warning-foreground))",
+        },
         chart: {
           1: "oklch(var(--chart-1))",
           2: "oklch(var(--chart-2))",
@@ -70,11 +79,16 @@ export default {
           ring: "oklch(var(--sidebar-ring))",
         },
         doitepic: {
+          "blue-deep": "oklch(var(--doitepic-blue-deep) / <alpha-value>)",
+          "blue-bright": "oklch(var(--doitepic-blue-bright) / <alpha-value>)",
           green: "oklch(var(--doitepic-green) / <alpha-value>)",
-          "green-dark": "oklch(var(--doitepic-green-dark) / <alpha-value>)",
-          blue: "oklch(var(--doitepic-blue) / <alpha-value>)",
+          "green-fresh": "oklch(var(--doitepic-green-fresh) / <alpha-value>)",
+          amber: "oklch(var(--doitepic-amber) / <alpha-value>)",
           orange: "oklch(var(--doitepic-orange) / <alpha-value>)",
           footer: "oklch(var(--doitepic-footer))",
+          /* legacy */
+          "green-dark": "oklch(var(--doitepic-green-dark) / <alpha-value>)",
+          blue: "oklch(var(--doitepic-blue) / <alpha-value>)",
         },
       },
       borderRadius: {
@@ -84,7 +98,10 @@ export default {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-        card: "0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.05)",
+        card: "0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.05)",
+        "card-md": "0 4px 12px 0 rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.05)",
+        glow: "0 0 20px oklch(0.47 0.18 264 / 0.25)",
+        "glow-green": "0 0 20px oklch(0.696 0.17 162 / 0.25)",
       },
       keyframes: {
         "accordion-down": {
@@ -99,11 +116,16 @@ export default {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "pulse-soft": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.6" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.4s ease-out forwards",
+        "pulse-soft": "pulse-soft 2s ease-in-out infinite",
       },
     },
   },

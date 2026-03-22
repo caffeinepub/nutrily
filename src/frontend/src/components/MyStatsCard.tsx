@@ -14,7 +14,7 @@ function bmi(weight: number, height: number) {
 
 function bmiLabel(bmiVal: string) {
   const n = Number.parseFloat(bmiVal);
-  if (n < 18.5) return { label: "Underweight", color: "text-amber-500" };
+  if (n < 18.5) return { label: "Underweight", color: "text-warning" };
   if (n < 25) return { label: "Normal", color: "text-primary" };
   if (n < 30) return { label: "Overweight", color: "text-orange-500" };
   return { label: "Obese", color: "text-destructive" };

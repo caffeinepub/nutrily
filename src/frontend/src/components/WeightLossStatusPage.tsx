@@ -280,7 +280,7 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-sky-600 px-4 py-4 flex items-center gap-3">
+      <div className="bg-primary px-4 py-4 flex items-center gap-3">
         <button
           type="button"
           data-ocid="weight_loss.back_button"
@@ -472,7 +472,7 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
             <Button
               data-ocid="weight_loss.submit_button"
               type="submit"
-              className="w-full bg-sky-600 hover:bg-sky-700 text-white"
+              className="w-full bg-primary hover:bg-primary/90 text-white"
             >
               🔥 Save Today's Progress
             </Button>
@@ -516,7 +516,7 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
             youngAdult: {
               title: "Young Adult Training",
               emoji: "🔥",
-              color: "bg-sky-600",
+              color: "bg-primary",
               lightColor: "bg-sky-50 border-sky-100",
               exercises: [
                 {
@@ -541,8 +541,8 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
             middleAge: {
               title: "Middle Age Fitness",
               emoji: "🧘",
-              color: "bg-amber-600",
-              lightColor: "bg-amber-50 border-amber-100",
+              color: "bg-accent",
+              lightColor: "bg-status-warning border-warning/20",
               exercises: [
                 {
                   icon: "🚶",
@@ -681,7 +681,7 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
         {/* Foods to Eat */}
         <div className="bg-card rounded-2xl border border-border shadow-card p-5">
           <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 text-sm">
+            <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
               ✅
             </span>
             Foods to Eat
@@ -690,13 +690,13 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
             {FOODS_EAT.map((f) => (
               <div
                 key={f.name}
-                className="bg-emerald-50 rounded-xl p-2.5 text-center border border-emerald-100"
+                className="bg-status-healthy rounded-xl p-2.5 text-center border border-success/20"
               >
                 <div className="text-2xl mb-1">{f.emoji}</div>
                 <p className="text-xs font-medium text-foreground leading-tight">
                   {f.name}
                 </p>
-                <p className="text-xs font-bold text-emerald-700 mt-0.5">
+                <p className="text-xs font-bold text-success mt-0.5">
                   {f.kcal} kcal
                 </p>
               </div>
@@ -707,7 +707,7 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
         {/* Foods to Avoid */}
         <div className="bg-card rounded-2xl border border-border shadow-card p-5">
           <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center text-red-600 text-sm">
+            <span className="w-7 h-7 rounded-lg bg-status-danger flex items-center justify-center text-destructive text-sm">
               🚫
             </span>
             Foods to Avoid
@@ -716,13 +716,13 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
             {FOODS_AVOID.map((f) => (
               <div
                 key={f.name}
-                className="bg-red-50 rounded-xl p-2.5 text-center border border-red-100"
+                className="bg-status-danger rounded-xl p-2.5 text-center border border-destructive/20"
               >
                 <div className="text-2xl mb-1">{f.emoji}</div>
                 <p className="text-xs font-medium text-foreground leading-tight">
                   {f.name}
                 </p>
-                <p className="text-xs font-bold text-red-700 mt-0.5">
+                <p className="text-xs font-bold text-destructive mt-0.5">
                   {f.kcal} kcal
                 </p>
               </div>
@@ -752,10 +752,10 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
                   {shake.name}
                 </h3>
                 <div className="flex gap-2 mb-3">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-status-healthy text-success font-medium">
                     {shake.kcal} kcal
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-status-info text-primary font-medium">
                     {shake.protein}g protein
                   </span>
                 </div>
@@ -765,7 +765,7 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
                       key={ing}
                       className="text-xs text-muted-foreground flex items-center gap-1.5"
                     >
-                      <span className="text-green-500">•</span>
+                      <span className="text-success">•</span>
                       {ing}
                     </li>
                   ))}

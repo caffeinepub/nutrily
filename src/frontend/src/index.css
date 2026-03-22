@@ -9,74 +9,255 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --radius: 0.75rem;
-    --primary: 0.62 0.14 155;
-    --primary-foreground: 1 0 0;
-    --background: 0.96 0.007 225;
-    --foreground: 0.23 0.02 245;
+
+    /* ── Light Mode: Fresh Energy ── */
+    /* Background: #F9FAFB → oklch(0.982 0.003 247) */
+    --background: 0.982 0.003 247;
+    /* Cards: #FFFFFF */
     --card: 1 0 0;
-    --card-foreground: 0.23 0.02 245;
+    --card-foreground: 0.145 0.018 264;
     --popover: 1 0 0;
-    --popover-foreground: 0.23 0.02 245;
-    --secondary: 0.94 0.007 225;
-    --secondary-foreground: 0.23 0.02 245;
-    --muted: 0.94 0.007 225;
-    --muted-foreground: 0.52 0.02 240;
-    --accent: 0.93 0.01 155;
-    --accent-foreground: 0.48 0.12 155;
+    --popover-foreground: 0.145 0.018 264;
+
+    /* Text Primary: #111827 → oklch(0.145 0.018 264) */
+    --foreground: 0.145 0.018 264;
+    /* Text Secondary: #6B7280 → oklch(0.52 0.018 252) */
+    --muted-foreground: 0.52 0.018 252;
+    --muted: 0.96 0.005 247;
+
+    /* Primary: Deep Blue #1E3A8A → oklch(0.34 0.152 264) */
+    --primary: 0.34 0.152 264;
+    --primary-foreground: 1 0 0;
+
+    /* Secondary: Emerald Green #10B981 → oklch(0.696 0.17 162) */
+    --secondary: 0.96 0.008 162;
+    --secondary-foreground: 0.25 0.07 162;
+
+    /* Accent: Amber #F59E0B → oklch(0.77 0.17 75) */
+    --accent: 0.77 0.17 75;
+    --accent-foreground: 0.145 0.018 264;
+
+    /* Border / Input */
+    --border: 0.91 0.008 247;
+    --input: 0.91 0.008 247;
+    --ring: 0.47 0.18 264;
+
+    /* Destructive: Red */
     --destructive: 0.577 0.245 27.325;
     --destructive-foreground: 1 0 0;
-    --border: 0.91 0.008 225;
-    --input: 0.91 0.008 225;
-    --ring: 0.62 0.14 155;
-    --chart-1: 0.62 0.14 155;
-    --chart-2: 0.56 0.2 260;
-    --chart-3: 0.73 0.15 60;
-    --chart-4: 0.828 0.189 84.429;
-    --chart-5: 0.769 0.188 70.08;
-    --sidebar: 0.22 0.025 245;
-    --sidebar-foreground: 0.93 0.007 225;
-    --sidebar-primary: 0.62 0.14 155;
+
+    /* Success: Green #22C55E → oklch(0.723 0.19 143) */
+    --success: 0.723 0.19 143;
+    --success-foreground: 1 0 0;
+
+    /* Warning: Amber #F59E0B → oklch(0.77 0.17 75) */
+    --warning: 0.77 0.17 75;
+    --warning-foreground: 0.145 0.018 264;
+
+    /* Charts */
+    --chart-1: 0.47 0.18 264; /* Deep Blue */
+    --chart-2: 0.696 0.17 162; /* Emerald Green */
+    --chart-3: 0.77 0.17 75; /* Amber */
+    --chart-4: 0.65 0.22 27; /* Orange-Red */
+    --chart-5: 0.723 0.19 143; /* Fresh Green */
+
+    /* Sidebar: dark navy */
+    --sidebar: 0.2 0.045 264;
+    --sidebar-foreground: 0.93 0.007 247;
+    --sidebar-primary: 0.47 0.18 264;
     --sidebar-primary-foreground: 1 0 0;
-    --sidebar-accent: 0.3 0.025 245;
-    --sidebar-accent-foreground: 0.93 0.007 225;
-    --sidebar-border: 0.3 0.025 245;
-    --sidebar-ring: 0.62 0.14 155;
-    /* Custom DoitEpic tokens */
-    --doitepic-green: 0.62 0.14 155;
-    --doitepic-green-dark: 0.56 0.13 155;
-    --doitepic-blue: 0.56 0.2 260;
-    --doitepic-orange: 0.73 0.15 60;
-    --doitepic-footer: 0.22 0.025 245;
+    --sidebar-accent: 0.28 0.045 264;
+    --sidebar-accent-foreground: 0.93 0.007 247;
+    --sidebar-border: 0.28 0.045 264;
+    --sidebar-ring: 0.47 0.18 264;
+
+    /* DoitEpic brand tokens */
+    --doitepic-blue-deep: 0.34 0.152 264; /* #1E3A8A */
+    --doitepic-blue-bright: 0.59 0.2 264; /* #3B82F6 */
+    --doitepic-green: 0.696 0.17 162; /* #10B981 */
+    --doitepic-green-fresh: 0.723 0.19 143; /* #22C55E */
+    --doitepic-amber: 0.77 0.17 75; /* #F59E0B */
+    --doitepic-orange: 0.72 0.19 45; /* #F97316 */
+    --doitepic-footer: 0.2 0.045 264;
+    /* legacy aliases */
+    --doitepic-green-dark: 0.56 0.14 162;
+    --doitepic-blue: 0.59 0.2 264;
+  }
+
+  .dark {
+    /* ── Dark Mode: Slate Navy ── */
+    /* Background: #0F172A → oklch(0.13 0.04 264) */
+    --background: 0.13 0.04 264;
+    /* Cards: #1E293B → oklch(0.21 0.04 264) */
+    --card: 0.21 0.04 264;
+    --card-foreground: 0.91 0.008 247;
+    --popover: 0.21 0.04 264;
+    --popover-foreground: 0.91 0.008 247;
+
+    /* Text: #E5E7EB → oklch(0.92 0.006 247) */
+    --foreground: 0.92 0.006 247;
+    --muted-foreground: 0.62 0.018 252;
+    --muted: 0.25 0.04 264;
+
+    /* Primary in dark: lighter blue #60A5FA → oklch(0.71 0.18 264) */
+    --primary: 0.71 0.18 264;
+    --primary-foreground: 0.13 0.04 264;
+
+    /* Secondary dark */
+    --secondary: 0.25 0.04 264;
+    --secondary-foreground: 0.91 0.008 247;
+
+    /* Accent: Amber stays warm */
+    --accent: 0.77 0.17 75;
+    --accent-foreground: 0.13 0.04 264;
+
+    --border: 0.28 0.04 264;
+    --input: 0.28 0.04 264;
+    --ring: 0.71 0.18 264;
+
+    --destructive: 0.65 0.25 27;
+    --destructive-foreground: 1 0 0;
+
+    /* Success in dark: #34D399 → oklch(0.79 0.17 162) */
+    --success: 0.79 0.17 162;
+    --success-foreground: 0.13 0.04 264;
+
+    --warning: 0.77 0.17 75;
+    --warning-foreground: 0.13 0.04 264;
+
+    --chart-1: 0.71 0.18 264;
+    --chart-2: 0.79 0.17 162;
+    --chart-3: 0.77 0.17 75;
+    --chart-4: 0.72 0.19 45;
+    --chart-5: 0.82 0.15 143;
+
+    --sidebar: 0.17 0.04 264;
+    --sidebar-foreground: 0.91 0.008 247;
+    --sidebar-primary: 0.71 0.18 264;
+    --sidebar-primary-foreground: 0.13 0.04 264;
+    --sidebar-accent: 0.22 0.04 264;
+    --sidebar-accent-foreground: 0.91 0.008 247;
+    --sidebar-border: 0.22 0.04 264;
+    --sidebar-ring: 0.71 0.18 264;
+
+    --doitepic-blue-deep: 0.71 0.18 264;
+    --doitepic-blue-bright: 0.71 0.18 264;
+    --doitepic-green: 0.79 0.17 162;
+    --doitepic-green-fresh: 0.82 0.15 143;
+    --doitepic-amber: 0.77 0.17 75;
+    --doitepic-orange: 0.72 0.19 45;
+    --doitepic-footer: 0.17 0.04 264;
+    --doitepic-green-dark: 0.72 0.15 162;
+    --doitepic-blue: 0.71 0.18 264;
   }
 
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: "Plus Jakarta Sans", system-ui, sans-serif;
   }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui,
+      sans-serif;
+    font-weight: 700;
+    color: oklch(var(--foreground));
+  }
 }
 
-.hero-gradient {
+/* ── Gradient utilities ── */
+.gradient-brand {
   background: linear-gradient(
     135deg,
-    oklch(0.62 0.14 155) 0%,
-    oklch(0.52 0.13 155) 100%
+    oklch(0.47 0.18 264) 0%,
+    oklch(0.696 0.17 162) 100%
+  );
+}
+.gradient-health {
+  background: linear-gradient(
+    135deg,
+    oklch(0.696 0.17 162) 0%,
+    oklch(0.77 0.17 75) 100%
+  );
+}
+.gradient-hero {
+  background: linear-gradient(
+    135deg,
+    oklch(0.34 0.152 264) 0%,
+    oklch(0.696 0.17 162) 60%,
+    oklch(0.77 0.17 75) 100%
+  );
+}
+/* Calorie progress gradient: green → yellow → red */
+.gradient-calorie {
+  background: linear-gradient(
+    90deg,
+    oklch(0.723 0.19 143) 0%,
+    oklch(0.77 0.17 75) 60%,
+    oklch(0.65 0.25 27) 100%
   );
 }
 
+/* ── Legacy helpers ── */
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    oklch(0.34 0.152 264) 0%,
+    oklch(0.696 0.17 162) 100%
+  );
+}
 .card-shadow {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px -1px
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px
     rgba(0, 0, 0, 0.05);
 }
-
 .gauge-track {
-  stroke: oklch(0.91 0.008 225);
+  stroke: oklch(0.91 0.008 247);
 }
 .gauge-fill {
-  stroke: oklch(0.62 0.14 155);
+  stroke: oklch(0.696 0.17 162);
+}
+
+/* ── Functional status colors ── */
+.status-healthy {
+  color: oklch(0.723 0.19 143);
+} /* Green */
+.status-info {
+  color: oklch(0.47 0.18 264);
+} /* Blue */
+.status-warning {
+  color: oklch(0.77 0.17 75);
+} /* Amber */
+.status-danger {
+  color: oklch(0.65 0.25 27);
+} /* Red */
+
+.bg-status-healthy {
+  background: oklch(0.723 0.19 143 / 0.12);
+}
+.bg-status-info {
+  background: oklch(0.47 0.18 264 / 0.12);
+}
+.bg-status-warning {
+  background: oklch(0.77 0.17 75 / 0.15);
+}
+.bg-status-danger {
+  background: oklch(0.65 0.25 27 / 0.12);
 }

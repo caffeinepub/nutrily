@@ -100,7 +100,7 @@ export default function ReviewSection() {
             <Button
               type="submit"
               disabled={!name.trim() || !text.trim() || isPending}
-              className="w-full hero-gradient text-white border-0 hover:opacity-90"
+              className="w-full bg-primary text-primary-foreground border-0 hover:bg-primary/90"
             >
               {isPending ? (
                 <>
@@ -140,7 +140,7 @@ export default function ReviewSection() {
                     {r.reviewType === "review" ? (
                       <Star
                         size={13}
-                        className="text-yellow-500 fill-yellow-500"
+                        className="text-warning fill-yellow-500"
                       />
                     ) : (
                       <MessageCircle size={13} className="text-primary" />
@@ -151,8 +151,8 @@ export default function ReviewSection() {
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                         r.reviewType === "review"
-                          ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                          : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                          ? "bg-status-warning text-warning"
+                          : "bg-status-info text-primary"
                       }`}
                     >
                       {r.reviewType === "review" ? "Review" : "Question"}

@@ -19,11 +19,12 @@ interface Props {
 }
 
 function getHealthBadge(food: ExtendedFoodItem | undefined) {
-  if (!food) return { label: "Unknown", color: "bg-gray-100 text-gray-600" };
+  if (!food)
+    return { label: "Unknown", color: "bg-gray-100 text-muted-foreground" };
   if (food.healthWarning)
     return {
       label: "Avoid",
-      color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+      color: "bg-status-danger text-destructive",
     };
   if (food.isProcessed || (food.additives && food.additives.length > 0))
     return {
@@ -34,13 +35,11 @@ function getHealthBadge(food: ExtendedFoodItem | undefined) {
   if ((food.sugar ?? 0) > 15 || (food.fat ?? 0) > 20)
     return {
       label: "Moderate",
-      color:
-        "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+      color: "bg-status-warning text-warning",
     };
   return {
     label: "Excellent",
-    color:
-      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    color: "bg-status-healthy text-success",
   };
 }
 
@@ -74,15 +73,13 @@ function getDrinkHealthBadge(name: string): {
   ) {
     return {
       label: "Good",
-      color:
-        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      color: "bg-status-healthy text-success",
       note: "Wholesome choice",
     };
   }
   return {
     label: "Moderate",
-    color:
-      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    color: "bg-status-warning text-warning",
     note: "Moderate — check sugar content",
   };
 }
@@ -145,19 +142,19 @@ export default function NutritionSummaryPage({
 
   let overallAssessment = {
     label: "Great Day!",
-    color: "text-green-600",
+    color: "text-success",
     icon: CheckCircle,
   };
   if (processedCount >= 3)
     overallAssessment = {
       label: "Watch Out",
-      color: "text-red-600",
+      color: "text-destructive",
       icon: AlertTriangle,
     };
   else if (processedCount >= 1)
     overallAssessment = {
       label: "Mostly Good",
-      color: "text-yellow-600",
+      color: "text-warning",
       icon: Info,
     };
 
@@ -231,12 +228,12 @@ export default function NutritionSummaryPage({
                       </div>
 
                       {food?.healthWarning && (
-                        <div className="mb-4 flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                        <div className="mb-4 flex items-start gap-2 bg-status-danger border border-destructive/30 rounded-lg p-3">
                           <AlertTriangle
                             size={14}
-                            className="text-red-600 flex-shrink-0 mt-0.5"
+                            className="text-destructive flex-shrink-0 mt-0.5"
                           />
-                          <p className="text-xs text-red-700 dark:text-red-400">
+                          <p className="text-xs text-destructive dark:text-destructive">
                             {food.healthWarning}
                           </p>
                         </div>
@@ -363,7 +360,7 @@ export default function NutritionSummaryPage({
             {drinkEntries.length > 0 && (
               <>
                 <h2 className="text-base font-bold text-foreground flex items-center gap-2 pt-2">
-                  <Droplets size={16} className="text-blue-500" /> Drinks
+                  <Droplets size={16} className="text-primary" /> Drinks
                 </h2>
                 {drinkEntries.map((drink, idx) => {
                   const badge = getDrinkHealthBadge(drink.foodName);
@@ -389,12 +386,12 @@ export default function NutritionSummaryPage({
                         </span>
                       </div>
 
-                      <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-3 mb-3">
+                      <div className="flex items-start gap-2 bg-status-info border border-primary/20 rounded-lg p-3 mb-3">
                         <Droplets
                           size={13}
-                          className="text-blue-500 flex-shrink-0 mt-0.5"
+                          className="text-primary flex-shrink-0 mt-0.5"
                         />
-                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                        <p className="text-xs text-primary dark:text-primary">
                           {badge.note}
                         </p>
                       </div>
@@ -461,11 +458,11 @@ export default function NutritionSummaryPage({
                 ))}
               </div>
               {drinkEntries.length > 0 && (
-                <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 rounded-lg px-4 py-2 mb-3">
-                  <span className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                <div className="flex items-center justify-between bg-status-info rounded-lg px-4 py-2 mb-3">
+                  <span className="text-xs text-primary dark:text-primary flex items-center gap-1">
                     <Droplets size={12} /> Drinks calories included
                   </span>
-                  <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                  <span className="text-xs font-semibold text-primary dark:text-primary">
                     +{Math.round(drinkCalories)} kcal
                   </span>
                 </div>

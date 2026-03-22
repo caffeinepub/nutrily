@@ -15,19 +15,19 @@ const MILESTONES: MilestoneBadge[] = [
     days: 3,
     label: "Bronze",
     emoji: "🥉",
-    color: "bg-amber-100 text-amber-700 border-amber-200",
+    color: "bg-status-warning text-warning border-warning/30",
   },
   {
     days: 7,
     label: "Silver",
     emoji: "🥈",
-    color: "bg-slate-100 text-slate-700 border-slate-300",
+    color: "bg-muted text-muted-foreground border-border",
   },
   {
     days: 30,
     label: "Gold",
     emoji: "🥇",
-    color: "bg-yellow-100 text-yellow-700 border-yellow-300",
+    color: "bg-status-warning text-warning border-yellow-300",
   },
 ];
 
@@ -81,7 +81,7 @@ export default function StreakWidget() {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 rounded-2xl p-4 text-white shadow-lg"
+      className="gradient-brand rounded-2xl p-4 text-white shadow-lg"
       data-ocid="streak.card"
     >
       <div className="flex items-center justify-between gap-4 flex-wrap">

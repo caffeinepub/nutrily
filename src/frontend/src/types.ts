@@ -26,6 +26,10 @@ export interface ExtendedFoodItem extends Omit<FoodItem, "region"> {
   ingredients?: string[];
   healthWarning?: string;
   isProcessed?: boolean;
+  /** Honesty rating for Food Honesty Meter */
+  honestyRating?: "clean" | "moderate" | "processed";
+  /** Ingredient breakdown string e.g. "Rice 60% · Chicken 25% · Oil 15%" */
+  dishIngredients?: string;
 }
 
 export const DAILY_GOALS = {
@@ -51,13 +55,14 @@ export function calcEntryNutrition(
   foodMap: Map<string, ExtendedFoodItem>,
 ) {
   const food = foodMap.get(entry.foodName);
-  if (!food) return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  if (!food) return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
   const factor = entry.quantity / 100;
   return {
     calories: food.caloriesPer100g * factor,
     protein: food.protein * factor,
     carbs: food.carbs * factor,
     fat: food.fat * factor,
+    fiber: (food.fiber ?? 0) * factor,
   };
 }
 

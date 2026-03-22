@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Twitter, Zap } from "lucide-react";
+import { Facebook, Instagram, Twitter } from "lucide-react";
 
 const SOCIAL = [
   { Icon: Twitter, label: "Twitter" },
@@ -66,9 +66,11 @@ export default function Footer() {
 
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md hero-gradient flex items-center justify-center">
-              <Zap className="w-3 h-3 text-white" />
-            </div>
+            <img
+              src="/assets/uploads/file_0000000091b4720b8ab0302490c69f98-1.png"
+              alt="DoitEpic"
+              className="h-6 w-auto object-contain"
+            />
             <span className="text-sm text-sidebar-foreground/60">
               © {year}. Built with ❤️ using{" "}
               <a

@@ -70,10 +70,10 @@ export default function PrivacySettingsModal({ trigger }: Props) {
             Your Data, Your Control
           </SheetTitle>
           <div className="flex items-center gap-2 mt-1">
-            <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200">
+            <Badge className="text-xs bg-status-healthy text-success border-success/30">
               🔒 Secure & Private
             </Badge>
-            <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+            <Badge className="text-xs bg-status-info text-primary border-primary/30">
               ⛓️ Blockchain-backed
             </Badge>
           </div>
@@ -104,12 +104,12 @@ export default function PrivacySettingsModal({ trigger }: Props) {
             </ul>
           </section>
 
-          <section className="bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-xl p-4">
-            <h3 className="text-sm font-bold text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
+          <section className="bg-status-info border border-primary/20 rounded-xl p-4">
+            <h3 className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
               <Shield className="w-4 h-4" />
               Data Ownership
             </h3>
-            <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+            <p className="text-xs text-primary dark:text-primary leading-relaxed">
               All your data is stored securely on the Internet Computer
               blockchain. Only you can access it — no third-party servers, no
               data selling, no advertisements based on your health data.

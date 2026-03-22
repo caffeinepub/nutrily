@@ -187,7 +187,7 @@ export default function DailyCheckInCard({ recentCheckIns }: Props) {
             data-ocid="checkin.submit_button"
             type="submit"
             disabled={isPending}
-            className="w-full h-9 text-sm hero-gradient text-white border-0 hover:opacity-90"
+            className="w-full h-9 text-sm bg-primary text-primary-foreground border-0 hover:bg-primary/90"
           >
             {isPending ? (
               <>

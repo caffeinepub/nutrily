@@ -275,7 +275,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-emerald-600 px-4 py-4 flex items-center gap-3">
+      <div className="bg-success px-4 py-4 flex items-center gap-3">
         <button
           type="button"
           data-ocid="weight_gain.back_button"
@@ -291,35 +291,35 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Today's Smart Plan */}
         <div
-          className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 p-5"
+          className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-success/30 p-5"
           data-ocid="weight_gain.smart_plan.card"
         >
-          <h2 className="font-bold text-emerald-800 mb-3 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-emerald-200 flex items-center justify-center text-emerald-700">
+          <h2 className="font-bold status-healthy mb-3 flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success">
               <Zap size={14} />
             </span>
             Today's Smart Plan
           </h2>
           <div className="grid grid-cols-2 gap-3 mb-3">
-            <div className="bg-white/70 rounded-xl p-3 border border-emerald-100">
-              <p className="text-xs text-emerald-600 font-semibold uppercase tracking-wide">
+            <div className="bg-white/70 rounded-xl p-3 border border-success/20">
+              <p className="text-xs text-success font-semibold uppercase tracking-wide">
                 Calorie Target
               </p>
-              <p className="text-2xl font-extrabold text-emerald-800">
+              <p className="text-2xl font-extrabold status-healthy">
                 {dailyCalorieGoal}
               </p>
-              <p className="text-xs text-emerald-600">kcal/day (BMR + 500)</p>
+              <p className="text-xs text-success">kcal/day (BMR + 500)</p>
             </div>
-            <div className="bg-white/70 rounded-xl p-3 border border-emerald-100">
-              <p className="text-xs text-emerald-600 font-semibold uppercase tracking-wide">
+            <div className="bg-white/70 rounded-xl p-3 border border-success/20">
+              <p className="text-xs text-success font-semibold uppercase tracking-wide">
                 Top 3 Foods Today
               </p>
-              <p className="text-sm font-bold text-emerald-800 leading-snug mt-1">
+              <p className="text-sm font-bold status-healthy leading-snug mt-1">
                 Brown Rice · Chicken Breast · Whole Milk
               </p>
             </div>
           </div>
-          <div className="bg-emerald-100/60 rounded-xl px-3 py-2 text-sm text-emerald-800 font-medium">
+          <div className="bg-status-healthy/60 rounded-xl px-3 py-2 text-sm status-healthy font-medium">
             {logs.length > 0
               ? `🔥 You've logged ${logs.length} day${logs.length !== 1 ? "s" : ""}. Keep it up!`
               : "📝 Start logging to track your progress"}
@@ -329,31 +329,31 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
         {/* Current Stats */}
         <div className="bg-card rounded-2xl border border-border shadow-card p-5">
           <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 text-sm">
+            <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
               📊
             </span>
             Current Stats
           </h2>
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-emerald-50 rounded-xl p-3 text-center">
+            <div className="bg-status-healthy rounded-xl p-3 text-center">
               <p className="text-xs text-muted-foreground mb-1">
                 Current Weight
               </p>
-              <p className="text-xl font-extrabold text-emerald-700">
+              <p className="text-xl font-extrabold text-success">
                 {userProfile?.weightKg ?? "—"}
                 <span className="text-xs font-normal ml-0.5">kg</span>
               </p>
             </div>
-            <div className="bg-emerald-50 rounded-xl p-3 text-center">
+            <div className="bg-status-healthy rounded-xl p-3 text-center">
               <p className="text-xs text-muted-foreground mb-1">BMR</p>
-              <p className="text-xl font-extrabold text-emerald-700">
+              <p className="text-xl font-extrabold text-success">
                 {bmr}
                 <span className="text-xs font-normal ml-0.5">kcal</span>
               </p>
             </div>
-            <div className="bg-emerald-50 rounded-xl p-3 text-center">
+            <div className="bg-status-healthy rounded-xl p-3 text-center">
               <p className="text-xs text-muted-foreground mb-1">Daily Goal</p>
-              <p className="text-xl font-extrabold text-emerald-700">
+              <p className="text-xl font-extrabold text-success">
                 {dailyCalorieGoal}
                 <span className="text-xs font-normal ml-0.5">kcal</span>
               </p>
@@ -371,9 +371,9 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
                 className="mt-1 h-9"
               />
             </div>
-            <div className="bg-emerald-50 rounded-xl p-3 flex flex-col justify-center">
+            <div className="bg-status-healthy rounded-xl p-3 flex flex-col justify-center">
               <p className="text-xs text-muted-foreground">To Gain</p>
-              <p className="text-sm font-bold text-emerald-700">
+              <p className="text-sm font-bold text-success">
                 {targetWeight && userProfile
                   ? `${(Number(targetWeight) - userProfile.weightKg).toFixed(1)} kg needed`
                   : "Set target weight"}
@@ -385,7 +385,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
         {/* Log Today */}
         <div className="bg-card rounded-2xl border border-border shadow-card p-5">
           <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 text-sm">
+            <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
               📝
             </span>
             Log Today's Progress
@@ -467,7 +467,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
             <Button
               data-ocid="weight_gain.submit_button"
               type="submit"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full bg-success hover:bg-success/90 text-white"
             >
               💪 Save Today's Progress
             </Button>
@@ -511,8 +511,8 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
             youngAdult: {
               title: "Young Adult Training",
               emoji: "💪",
-              color: "bg-emerald-600",
-              lightColor: "bg-emerald-50 border-emerald-100",
+              color: "bg-success",
+              lightColor: "bg-status-healthy border-success/20",
               exercises: [
                 {
                   icon: "🏋️",
@@ -540,8 +540,8 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
             middleAge: {
               title: "Middle Age Fitness",
               emoji: "🧘",
-              color: "bg-amber-600",
-              lightColor: "bg-amber-50 border-amber-100",
+              color: "bg-accent",
+              lightColor: "bg-status-warning border-warning/20",
               exercises: [
                 {
                   icon: "🏋️",
@@ -634,7 +634,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
         {logs.length > 0 && (
           <div className="bg-card rounded-2xl border border-border shadow-card p-5">
             <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 text-sm">
+              <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
                 📈
               </span>
               Progress History
@@ -651,7 +651,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
                       <span className="text-xs text-muted-foreground">
                         {log.date}
                       </span>
-                      <span className="text-sm font-bold text-emerald-700">
+                      <span className="text-sm font-bold text-success">
                         {log.weight} kg
                       </span>
                     </div>
@@ -684,7 +684,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
         {/* Recommended Foods */}
         <div className="bg-card rounded-2xl border border-border shadow-card p-5">
           <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 text-sm">
+            <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
               🥗
             </span>
             Best Foods for Weight Gain
@@ -693,13 +693,13 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
             {GAIN_FOODS.map((f) => (
               <div
                 key={f.name}
-                className="bg-emerald-50 rounded-xl p-2.5 text-center border border-emerald-100"
+                className="bg-status-healthy rounded-xl p-2.5 text-center border border-success/20"
               >
                 <div className="text-2xl mb-1">{f.emoji}</div>
                 <p className="text-xs font-medium text-foreground leading-tight">
                   {f.name}
                 </p>
-                <p className="text-xs font-bold text-emerald-700 mt-0.5">
+                <p className="text-xs font-bold text-success mt-0.5">
                   {f.kcal} kcal
                 </p>
               </div>
@@ -710,7 +710,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
         {/* Meal Plan Guide */}
         <div className="bg-card rounded-2xl border border-border shadow-card p-5">
           <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 text-sm">
+            <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
               🗓️
             </span>
             Daily Meal Plan Guide
@@ -760,9 +760,9 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
             ].map((meal) => (
               <div
                 key={meal.time}
-                className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3"
+                className="rounded-xl border border-success/20 bg-status-healthy/50 p-3"
               >
-                <p className="text-sm font-semibold text-emerald-800 mb-1">
+                <p className="text-sm font-semibold status-healthy mb-1">
                   {meal.time}
                 </p>
                 <ul className="space-y-0.5">
@@ -771,7 +771,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
                       key={item}
                       className="text-xs text-foreground flex items-center gap-1.5"
                     >
-                      <span className="text-emerald-400">•</span>
+                      <span className="text-success">•</span>
                       {item}
                     </li>
                   ))}
@@ -803,10 +803,10 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
                   {shake.name}
                 </h3>
                 <div className="flex gap-2 mb-3">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-status-healthy text-success font-medium">
                     {shake.kcal} kcal
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-status-info text-primary font-medium">
                     {shake.protein}g protein
                   </span>
                 </div>
@@ -816,7 +816,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
                       key={ing}
                       className="text-xs text-muted-foreground flex items-center gap-1.5"
                     >
-                      <span className="text-emerald-400">•</span>
+                      <span className="text-success">•</span>
                       {ing}
                     </li>
                   ))}

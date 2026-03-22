@@ -83,20 +83,20 @@ function getBMICategory(bmi: number): {
   if (bmi < 18.5)
     return {
       label: "Underweight",
-      color: "text-blue-600",
-      badge: "bg-blue-100 text-blue-700 border-blue-200",
+      color: "text-primary",
+      badge: "bg-status-info text-primary border-primary/30",
     };
   if (bmi < 25)
     return {
       label: "Normal",
-      color: "text-emerald-600",
-      badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
+      color: "text-success",
+      badge: "bg-status-healthy text-success border-success/30",
     };
   if (bmi < 30)
     return {
       label: "Overweight",
-      color: "text-yellow-600",
-      badge: "bg-yellow-100 text-yellow-700 border-yellow-200",
+      color: "text-warning",
+      badge: "bg-status-warning text-warning border-warning/30",
     };
   return {
     label: "Obese",
@@ -160,7 +160,7 @@ const AGE_GROUP_ADVICE = {
   },
   middleAge: {
     emoji: "🧘",
-    badge: "bg-amber-100 text-amber-700 border-amber-200",
+    badge: "bg-status-warning text-warning border-warning/30",
     title: "Middle Age Focus",
     tips: [
       {
@@ -183,7 +183,7 @@ const AGE_GROUP_ADVICE = {
   },
   senior: {
     emoji: "🌟",
-    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    badge: "bg-status-healthy text-success border-success/30",
     title: "Senior Wellness",
     tips: [
       {
@@ -355,16 +355,16 @@ export default function SmartCoachCard({
     goalSuggestions.length > 0 ? goalSuggestions : ageSuggestions;
 
   let macroInsight = "Great macro balance today! Keep it up. 🎯";
-  let macroColor = "bg-emerald-50 border-emerald-100 text-emerald-700";
+  let macroColor = "bg-status-healthy border-success/20 text-success";
   if (protein < proteinTarget * 0.5) {
     macroInsight = `Protein is low — target ${proteinTarget}g/day. Add eggs, chicken or dal. 🥚`;
     macroColor = "bg-orange-50 border-orange-100 text-orange-700";
   } else if (carbs < 100) {
     macroInsight = "Carbs are low — have rice, oats or whole wheat. 🌾";
-    macroColor = "bg-yellow-50 border-yellow-100 text-yellow-700";
+    macroColor = "bg-status-warning border-warning/20 text-warning";
   } else if (fat < fatRange.min) {
     macroInsight = `Healthy fats needed — target ${fatRange.min}–${fatRange.max}g/day. Try nuts, avocado or ghee. 🥜`;
-    macroColor = "bg-blue-50 border-blue-100 text-blue-700";
+    macroColor = "bg-status-info border-primary/20 text-primary";
   }
 
   const genderInsights =
@@ -415,9 +415,9 @@ export default function SmartCoachCard({
         ];
 
   const adjustmentStyles = {
-    plateau: "bg-amber-50 border-amber-200 text-amber-800",
-    under: "bg-blue-50 border-blue-200 text-blue-800",
-    over: "bg-red-50 border-red-200 text-red-800",
+    plateau: "bg-status-warning border-warning/30 text-warning",
+    under: "bg-status-info border-primary/30 text-primary",
+    over: "bg-status-danger border-destructive/30 text-destructive",
   };
   const adjustmentIcons = {
     plateau: <TrendingDown className="w-4 h-4 shrink-0" />,
@@ -441,7 +441,7 @@ export default function SmartCoachCard({
         )}
         <div className="ml-auto flex items-center gap-1.5">
           {goalAdjustment && (
-            <Badge className="text-xs bg-amber-400/90 text-amber-900 border-amber-300">
+            <Badge className="text-xs bg-accent text-accent-foreground">
               Smart Goal
             </Badge>
           )}
@@ -478,7 +478,7 @@ export default function SmartCoachCard({
           <span className="bg-violet-50 border border-violet-100 text-violet-700 rounded-full px-2.5 py-0.5 font-medium">
             🥩 Protein: {proteinTarget}g
           </span>
-          <span className="bg-amber-50 border border-amber-100 text-amber-700 rounded-full px-2.5 py-0.5 font-medium">
+          <span className="bg-status-warning border border-warning/20 text-warning rounded-full px-2.5 py-0.5 font-medium">
             🧈 Fat: {fatRange.min}–{fatRange.max}g
           </span>
           <span className="bg-sky-50 border border-sky-100 text-sky-700 rounded-full px-2.5 py-0.5 font-medium capitalize">
@@ -493,7 +493,7 @@ export default function SmartCoachCard({
           className={[
             "flex items-center gap-2 rounded-xl px-3 py-2.5 border text-sm font-semibold",
             goalReached
-              ? "bg-emerald-50 border-emerald-100 text-emerald-700"
+              ? "bg-status-healthy border-success/20 text-success"
               : "bg-orange-50 border-orange-100 text-orange-700",
           ].join(" ")}
           data-ocid="smart_coach.calorie_gap"
@@ -599,7 +599,7 @@ export default function SmartCoachCard({
           className="flex items-start gap-2 bg-muted/40 rounded-xl px-3 py-2 border border-border"
           data-ocid="smart_coach.daily_tip"
         >
-          <Lightbulb className="w-3.5 h-3.5 text-yellow-500 mt-0.5 shrink-0" />
+          <Lightbulb className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
           <p className="text-xs text-muted-foreground leading-relaxed">
             {todayTip}
           </p>
