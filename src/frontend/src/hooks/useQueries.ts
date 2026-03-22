@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   DailyCheckIn,
+  FoodItem,
   FoodLogEntry,
+  FoodSuggestion,
   HealthMetrics,
   Review,
   UserProfile,
@@ -20,6 +22,11 @@ export function useGetAllFoodItems() {
     enabled: !!actor && !isFetching,
     staleTime: 1000 * 60 * 5,
   });
+}
+
+// Alias for clarity in admin components
+export function useAllFoodItems() {
+  return useGetAllFoodItems();
 }
 
 export function useSearchFood(name: string) {
@@ -256,5 +263,96 @@ export function useSubmitReview() {
       return actor.submitReview(authorName, text, reviewType);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["publicReviews"] }),
+  });
+}
+
+// ─── Food Database Admin Hooks ────────────────────────────────────────────────
+
+export function useAddFoodItem() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (food: FoodItem) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.addFoodItem(food);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allFoodItems"] }),
+  });
+}
+
+export function useUpdateFoodItem() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (food: FoodItem) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.updateFoodItem(food);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allFoodItems"] }),
+  });
+}
+
+export function useDeleteFoodItem() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (name: string) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.deleteFoodItem(name);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allFoodItems"] }),
+  });
+}
+
+export function usePendingFoodSuggestions() {
+  const { actor, isFetching } = useActor();
+  return useQuery<FoodSuggestion[]>({
+    queryKey: ["pendingFoodSuggestions"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getPendingFoodSuggestions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useApproveFoodSuggestion() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (suggestionId: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.approveFoodSuggestion(suggestionId);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pendingFoodSuggestions"] });
+      qc.invalidateQueries({ queryKey: ["allFoodItems"] });
+    },
+  });
+}
+
+export function useRejectFoodSuggestion() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (suggestionId: bigint) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.rejectFoodSuggestion(suggestionId);
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["pendingFoodSuggestions"] }),
+  });
+}
+
+export function useSubmitFoodSuggestion() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (food: FoodItem) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.submitFoodSuggestion(food);
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["pendingFoodSuggestions"] }),
   });
 }

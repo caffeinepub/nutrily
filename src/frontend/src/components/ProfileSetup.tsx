@@ -1,34 +1,71 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Zap } from "lucide-react";
+import { Dumbbell, Loader2, Target, TrendingDown, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ProfileGoal } from "../backend";
 import { useSaveUserProfile } from "../hooks/useQueries";
+
+const GOALS = [
+  {
+    value: ProfileGoal.weightLoss,
+    label: "Weight Loss",
+    tagline: "Burn fat & get lean",
+    Icon: TrendingDown,
+    border: "border-green-400",
+    bg: "bg-green-50",
+    iconBg: "bg-green-100 text-green-600",
+    activeShadow: "shadow-green-100",
+  },
+  {
+    value: ProfileGoal.muscleGain,
+    label: "Muscle Gain",
+    tagline: "Build strength & size",
+    Icon: Dumbbell,
+    border: "border-blue-400",
+    bg: "bg-blue-50",
+    iconBg: "bg-blue-100 text-blue-600",
+    activeShadow: "shadow-blue-100",
+  },
+  {
+    value: ProfileGoal.maintenance,
+    label: "Maintenance",
+    tagline: "Stay healthy & balanced",
+    Icon: Target,
+    border: "border-orange-400",
+    bg: "bg-orange-50",
+    iconBg: "bg-orange-100 text-orange-600",
+    activeShadow: "shadow-orange-100",
+  },
+];
 
 export default function ProfileSetup() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [weightKg, setWeightKg] = useState("");
   const [heightCm, setHeightCm] = useState("");
+  const [selectedGoal, setSelectedGoal] = useState<ProfileGoal | null>(null);
   const { mutateAsync, isPending } = useSaveUserProfile();
 
   const isValid =
     name.trim().length > 0 &&
     phone.trim().length > 0 &&
     weightKg.trim().length > 0 &&
-    heightCm.trim().length > 0;
+    heightCm.trim().length > 0 &&
+    selectedGoal !== null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) return;
+    if (!isValid || selectedGoal === null) return;
     try {
       await mutateAsync({
         name: name.trim(),
         phone: phone.trim(),
         weightKg: Number.parseFloat(weightKg),
         heightCm: Number.parseFloat(heightCm),
+        goal: selectedGoal,
       });
       toast.success("Profile saved! Welcome to DOITEPIC.");
     } catch {
@@ -42,7 +79,7 @@ export default function ProfileSetup() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-10"
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-10"
       >
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="w-10 h-10 rounded-xl hero-gradient flex items-center justify-center">
@@ -128,6 +165,56 @@ export default function ProfileSetup() {
                 className="mt-1 h-10"
               />
             </div>
+          </div>
+
+          {/* Goal Selection */}
+          <div>
+            <Label className="text-sm font-medium block mb-2">
+              Your Primary Goal *
+            </Label>
+            <div className="grid grid-cols-3 gap-2">
+              {GOALS.map((goal) => {
+                const isSelected = selectedGoal === goal.value;
+                return (
+                  <button
+                    key={goal.value}
+                    type="button"
+                    data-ocid={`profile.${goal.value}.toggle`}
+                    onClick={() => setSelectedGoal(goal.value)}
+                    className={[
+                      "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer text-center",
+                      isSelected
+                        ? `${goal.border} ${goal.bg} shadow-md ${goal.activeShadow}`
+                        : "border-border hover:border-muted-foreground/30 bg-background",
+                    ].join(" ")}
+                  >
+                    <div
+                      className={[
+                        "w-8 h-8 rounded-lg flex items-center justify-center",
+                        isSelected
+                          ? goal.iconBg
+                          : "bg-muted text-muted-foreground",
+                      ].join(" ")}
+                    >
+                      <goal.Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground leading-tight">
+                        {goal.label}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                        {goal.tagline}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {selectedGoal === null && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Please select a goal to continue.
+              </p>
+            )}
           </div>
 
           <Button

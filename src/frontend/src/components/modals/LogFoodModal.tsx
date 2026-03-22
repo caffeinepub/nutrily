@@ -20,12 +20,12 @@ import { toast } from "sonner";
 import type { DrinkEntry } from "../../hooks/useDrinksLog";
 import type { FoodLogEntryLocal } from "../../hooks/useFoodLog";
 import { MEAL_TYPES } from "../../types";
-import type { FoodItem, LocalMealType, MealType } from "../../types";
+import type { ExtendedFoodItem, LocalMealType, MealType } from "../../types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  allFoods: FoodItem[];
+  allFoods: ExtendedFoodItem[];
   preselectedFoodName?: string;
   onLogDrink: (entry: Omit<DrinkEntry, "id" | "timestamp">) => void;
   onLogFood: (entry: Omit<FoodLogEntryLocal, "id" | "timestamp">) => void;

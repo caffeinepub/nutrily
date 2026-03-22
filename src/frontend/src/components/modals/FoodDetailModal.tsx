@@ -8,10 +8,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { ExtendedFoodItem, FoodItem } from "../../types";
+import type { ExtendedFoodItem } from "../../types";
 
 interface Props {
-  food: FoodItem | null;
+  food: ExtendedFoodItem | null;
   onClose: () => void;
   onAddToLog: () => void;
 }
@@ -61,7 +61,7 @@ function NutrientRow({
 
 export default function FoodDetailModal({ food, onClose, onAddToLog }: Props) {
   if (!food) return null;
-  const ext = food as ExtendedFoodItem;
+  const ext = food;
 
   return (
     <Dialog open={!!food} onOpenChange={(v) => !v && onClose()}>

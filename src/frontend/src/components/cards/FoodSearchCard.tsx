@@ -3,12 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import type { ExtendedFoodItem } from "../../types";
-import type { FoodItem } from "../../types";
 
 interface Props {
-  allFoods: FoodItem[];
-  onFoodSelect: (food: FoodItem) => void;
-  onAddToLog: (food: FoodItem) => void;
+  allFoods: ExtendedFoodItem[];
+  onFoodSelect: (food: ExtendedFoodItem) => void;
+  onAddToLog: (food: ExtendedFoodItem) => void;
 }
 
 const FEATURED = [
@@ -129,12 +128,11 @@ function FoodRow({
   onSelect,
   onAdd,
 }: {
-  food: FoodItem;
-  onSelect: (f: FoodItem) => void;
-  onAdd: (f: FoodItem) => void;
+  food: ExtendedFoodItem;
+  onSelect: (f: ExtendedFoodItem) => void;
+  onAdd: (f: ExtendedFoodItem) => void;
 }) {
-  const ext = food as ExtendedFoodItem;
-  const emoji = ext.isProcessed ? "⚠️" : "🥦";
+  const emoji = food.isProcessed ? "⚠️" : "🥦";
   return (
     <div className="flex items-center gap-2 py-1.5 hover:bg-muted rounded-lg px-1.5 group">
       <button

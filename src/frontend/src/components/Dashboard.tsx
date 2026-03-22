@@ -49,7 +49,9 @@ function getGreeting(): string {
 
 export default function Dashboard({ userName }: DashboardProps) {
   const [logFoodOpen, setLogFoodOpen] = useState(false);
-  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
+  const [selectedFood, setSelectedFood] = useState<ExtendedFoodItem | null>(
+    null,
+  );
   const [metricsOpen, setMetricsOpen] = useState(false);
   const [preselectedMeal, setPreselectedMeal] = useState<string | undefined>();
   const [goalPage, setGoalPage] = useState<"gain" | "loss" | null>(null);
@@ -156,6 +158,7 @@ export default function Dashboard({ userName }: DashboardProps) {
         entries={foodLogItems}
         foodMap={foodMap}
         onBack={() => setNutritionPage(false)}
+        drinkEntries={drinks}
       />
     );
   }
@@ -251,6 +254,7 @@ export default function Dashboard({ userName }: DashboardProps) {
             <button
               type="button"
               onClick={() => setNutritionPage(true)}
+              data-ocid="nutrition.open_modal_button"
               className="w-full text-xs text-primary font-medium hover:opacity-80 transition-opacity text-center py-1"
             >
               📊 View Full Nutrition Report

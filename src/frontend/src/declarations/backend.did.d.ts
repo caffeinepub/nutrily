@@ -27,6 +27,7 @@ export interface DailyWaterIntake {
 }
 export interface FoodItem {
   'fat' : number,
+  'region' : string,
   'fiber' : number,
   'carbs' : number,
   'name' : string,
@@ -43,6 +44,15 @@ export interface FoodLogEntry {
   'mealType' : MealType,
   'foodName' : string,
 }
+export interface FoodSuggestion {
+  'status' : FoodSuggestionStatus,
+  'submittedBy' : Principal,
+  'timestamp' : Time,
+  'foodItem' : FoodItem,
+}
+export type FoodSuggestionStatus = { 'pending' : null } |
+  { 'approved' : null } |
+  { 'rejected' : null };
 export interface HealthMetrics {
   'weight' : number,
   'steps' : bigint,
@@ -53,9 +63,19 @@ export type MealType = { 'breakfast' : null } |
   { 'lunch' : null } |
   { 'snack' : null } |
   { 'dinner' : null };
+export type ProfileGoal = { 'weightLoss' : null } |
+  { 'muscleGain' : null } |
+  { 'maintenance' : null };
+export interface Review {
+  'text' : string,
+  'authorName' : string,
+  'reviewType' : string,
+  'timestamp' : Time,
+}
 export type Time = bigint;
 export interface UserProfile {
   'heightCm' : number,
+  'goal' : [] | [ProfileGoal],
   'name' : string,
   'weightKg' : number,
   'phone' : string,
@@ -64,15 +84,10 @@ export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
 export interface WaterIntakeEntry { 'glasses' : bigint, 'timestamp' : Time }
-export interface Review {
-  'authorName' : string,
-  'text' : string,
-  'reviewType' : string,
-  'timestamp' : Time,
-}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addFoodItem' : ActorMethod<[FoodItem], undefined>,
+  'approveFoodSuggestion' : ActorMethod<[bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'deleteCallerUserProfile' : ActorMethod<[], undefined>,
   'deleteFoodItem' : ActorMethod<[string], undefined>,
@@ -90,8 +105,15 @@ export interface _SERVICE {
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCheckInsForDate' : ActorMethod<[string], Array<DailyCheckIn>>,
   'getFoodByCategory' : ActorMethod<[string], Array<FoodItem>>,
+  'getFoodByMacronutrients' : ActorMethod<
+    [number, number, number],
+    Array<FoodItem>
+  >,
+  'getFoodByName' : ActorMethod<[string], [] | [FoodItem]>,
+  'getFoodByRegion' : ActorMethod<[string], Array<FoodItem>>,
   'getFoodLogsForDate' : ActorMethod<[Time], Array<DailyFoodLog>>,
   'getHealthMetricsForDate' : ActorMethod<[Time], Array<HealthMetrics>>,
+  'getPendingFoodSuggestions' : ActorMethod<[], Array<FoodSuggestion>>,
   'getPublicReviews' : ActorMethod<[], Array<Review>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getWaterIntakeForDate' : ActorMethod<[Time], Array<DailyWaterIntake>>,
@@ -99,11 +121,14 @@ export interface _SERVICE {
   'logFoodEntry' : ActorMethod<[FoodLogEntry], undefined>,
   'logHealthMetrics' : ActorMethod<[HealthMetrics], undefined>,
   'logWaterIntake' : ActorMethod<[bigint], undefined>,
+  'rejectFoodSuggestion' : ActorMethod<[bigint], undefined>,
   'removeFoodLogEntry' : ActorMethod<[Time], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveDailyCheckIn' : ActorMethod<[DailyCheckIn], undefined>,
   'searchFoodByName' : ActorMethod<[string], Array<FoodItem>>,
+  'submitFoodSuggestion' : ActorMethod<[FoodItem], bigint>,
   'submitReview' : ActorMethod<[string, string, string], undefined>,
+  'updateFoodItem' : ActorMethod<[FoodItem], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

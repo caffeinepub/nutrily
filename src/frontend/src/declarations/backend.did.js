@@ -10,6 +10,7 @@ import { IDL } from '@icp-sdk/core/candid';
 
 export const FoodItem = IDL.Record({
   'fat' : IDL.Float64,
+  'region' : IDL.Text,
   'fiber' : IDL.Float64,
   'carbs' : IDL.Float64,
   'name' : IDL.Text,
@@ -55,8 +56,14 @@ export const HealthMetrics = IDL.Record({
   'heartRate' : IDL.Float64,
   'timestamp' : Time,
 });
+export const ProfileGoal = IDL.Variant({
+  'weightLoss' : IDL.Null,
+  'muscleGain' : IDL.Null,
+  'maintenance' : IDL.Null,
+});
 export const UserProfile = IDL.Record({
   'heightCm' : IDL.Float64,
+  'goal' : IDL.Opt(ProfileGoal),
   'name' : IDL.Text,
   'weightKg' : IDL.Float64,
   'phone' : IDL.Text,
@@ -69,10 +76,28 @@ export const DailyWaterIntake = IDL.Record({
   'entries' : IDL.Vec(WaterIntakeEntry),
   'timestamp' : Time,
 });
+export const FoodSuggestionStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'approved' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const FoodSuggestion = IDL.Record({
+  'status' : FoodSuggestionStatus,
+  'submittedBy' : IDL.Principal,
+  'timestamp' : Time,
+  'foodItem' : FoodItem,
+});
+export const Review = IDL.Record({
+  'text' : IDL.Text,
+  'authorName' : IDL.Text,
+  'reviewType' : IDL.Text,
+  'timestamp' : Time,
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addFoodItem' : IDL.Func([FoodItem], [], []),
+  'approveFoodSuggestion' : IDL.Func([IDL.Nat], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'deleteCallerUserProfile' : IDL.Func([], [], []),
   'deleteFoodItem' : IDL.Func([IDL.Text], [], []),
@@ -115,12 +140,25 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getFoodByCategory' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
+  'getFoodByMacronutrients' : IDL.Func(
+      [IDL.Float64, IDL.Float64, IDL.Float64],
+      [IDL.Vec(FoodItem)],
+      ['query'],
+    ),
+  'getFoodByName' : IDL.Func([IDL.Text], [IDL.Opt(FoodItem)], ['query']),
+  'getFoodByRegion' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
   'getFoodLogsForDate' : IDL.Func([Time], [IDL.Vec(DailyFoodLog)], ['query']),
   'getHealthMetricsForDate' : IDL.Func(
       [Time],
       [IDL.Vec(HealthMetrics)],
       ['query'],
     ),
+  'getPendingFoodSuggestions' : IDL.Func(
+      [],
+      [IDL.Vec(FoodSuggestion)],
+      ['query'],
+    ),
+  'getPublicReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -135,9 +173,14 @@ export const idlService = IDL.Service({
   'logFoodEntry' : IDL.Func([FoodLogEntry], [], []),
   'logHealthMetrics' : IDL.Func([HealthMetrics], [], []),
   'logWaterIntake' : IDL.Func([IDL.Nat], [], []),
+  'rejectFoodSuggestion' : IDL.Func([IDL.Nat], [], []),
+  'removeFoodLogEntry' : IDL.Func([Time], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'saveDailyCheckIn' : IDL.Func([DailyCheckIn], [], []),
   'searchFoodByName' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
+  'submitFoodSuggestion' : IDL.Func([FoodItem], [IDL.Nat], []),
+  'submitReview' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+  'updateFoodItem' : IDL.Func([FoodItem], [], []),
 });
 
 export const idlInitArgs = [];
@@ -145,6 +188,7 @@ export const idlInitArgs = [];
 export const idlFactory = ({ IDL }) => {
   const FoodItem = IDL.Record({
     'fat' : IDL.Float64,
+    'region' : IDL.Text,
     'fiber' : IDL.Float64,
     'carbs' : IDL.Float64,
     'name' : IDL.Text,
@@ -190,8 +234,14 @@ export const idlFactory = ({ IDL }) => {
     'heartRate' : IDL.Float64,
     'timestamp' : Time,
   });
+  const ProfileGoal = IDL.Variant({
+    'weightLoss' : IDL.Null,
+    'muscleGain' : IDL.Null,
+    'maintenance' : IDL.Null,
+  });
   const UserProfile = IDL.Record({
     'heightCm' : IDL.Float64,
+    'goal' : IDL.Opt(ProfileGoal),
     'name' : IDL.Text,
     'weightKg' : IDL.Float64,
     'phone' : IDL.Text,
@@ -204,10 +254,28 @@ export const idlFactory = ({ IDL }) => {
     'entries' : IDL.Vec(WaterIntakeEntry),
     'timestamp' : Time,
   });
+  const FoodSuggestionStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
+  const FoodSuggestion = IDL.Record({
+    'status' : FoodSuggestionStatus,
+    'submittedBy' : IDL.Principal,
+    'timestamp' : Time,
+    'foodItem' : FoodItem,
+  });
+  const Review = IDL.Record({
+    'text' : IDL.Text,
+    'authorName' : IDL.Text,
+    'reviewType' : IDL.Text,
+    'timestamp' : Time,
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addFoodItem' : IDL.Func([FoodItem], [], []),
+    'approveFoodSuggestion' : IDL.Func([IDL.Nat], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'deleteCallerUserProfile' : IDL.Func([], [], []),
     'deleteFoodItem' : IDL.Func([IDL.Text], [], []),
@@ -250,12 +318,25 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getFoodByCategory' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
+    'getFoodByMacronutrients' : IDL.Func(
+        [IDL.Float64, IDL.Float64, IDL.Float64],
+        [IDL.Vec(FoodItem)],
+        ['query'],
+      ),
+    'getFoodByName' : IDL.Func([IDL.Text], [IDL.Opt(FoodItem)], ['query']),
+    'getFoodByRegion' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
     'getFoodLogsForDate' : IDL.Func([Time], [IDL.Vec(DailyFoodLog)], ['query']),
     'getHealthMetricsForDate' : IDL.Func(
         [Time],
         [IDL.Vec(HealthMetrics)],
         ['query'],
       ),
+    'getPendingFoodSuggestions' : IDL.Func(
+        [],
+        [IDL.Vec(FoodSuggestion)],
+        ['query'],
+      ),
+    'getPublicReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -270,9 +351,14 @@ export const idlFactory = ({ IDL }) => {
     'logFoodEntry' : IDL.Func([FoodLogEntry], [], []),
     'logHealthMetrics' : IDL.Func([HealthMetrics], [], []),
     'logWaterIntake' : IDL.Func([IDL.Nat], [], []),
+    'rejectFoodSuggestion' : IDL.Func([IDL.Nat], [], []),
+    'removeFoodLogEntry' : IDL.Func([Time], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'saveDailyCheckIn' : IDL.Func([DailyCheckIn], [], []),
     'searchFoodByName' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
+    'submitFoodSuggestion' : IDL.Func([FoodItem], [IDL.Nat], []),
+    'submitReview' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+    'updateFoodItem' : IDL.Func([FoodItem], [], []),
   });
 };
 

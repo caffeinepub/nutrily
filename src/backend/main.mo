@@ -1,21 +1,20 @@
-import Map "mo:core/Map";
-import Set "mo:core/Set";
-import Option "mo:core/Option";
-import Runtime "mo:core/Runtime";
 import Array "mo:core/Array";
 import Iter "mo:core/Iter";
+import Set "mo:core/Set";
+import Map "mo:core/Map";
+import Runtime "mo:core/Runtime";
+import Nat "mo:core/Nat";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Float "mo:core/Float";
 import Int "mo:core/Int";
-import Principal "mo:core/Principal";
-import Nat "mo:core/Nat";
 import Order "mo:core/Order";
+import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
+import Migration "migration";
 
-
-
+(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   type Permissions = {
@@ -27,11 +26,18 @@ actor {
 
   // ======================== User Profile ========================
 
+  public type ProfileGoal = {
+    #weightLoss;
+    #muscleGain;
+    #maintenance;
+  };
+
   public type UserProfile = {
     name : Text;
     phone : Text;
     weightKg : Float;
     heightCm : Float;
+    goal : ?ProfileGoal;
   };
 
   let userProfiles = Map.empty<Principal, UserProfile>();
@@ -131,6 +137,7 @@ actor {
     sugar : Float;
     servingSize : Float;
     servingUnit : Text;
+    region : Text;
   };
 
   module FoodItem {
@@ -148,12 +155,38 @@ actor {
     foodDatabase.add(food.name.toLower(), food);
   };
 
+  public shared ({ caller }) func updateFoodItem(food : FoodItem) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update food items");
+    };
+    if (not foodDatabase.containsKey(food.name.toLower())) {
+      Runtime.trap("Food item not found");
+    };
+    foodDatabase.add(food.name.toLower(), food);
+  };
+
+  public query ({ caller }) func getFoodByName(name : Text) : async ?FoodItem {
+    foodDatabase.get(name);
+  };
+
   public query ({ caller }) func searchFoodByName(name : Text) : async [FoodItem] {
     foodDatabase.values().toArray().filter(func(f) { f.name.contains(#text name) });
   };
 
   public query ({ caller }) func getFoodByCategory(category : Text) : async [FoodItem] {
     foodDatabase.values().toArray().filter(func(f) { f.category == category });
+  };
+
+  public query ({ caller }) func getFoodByRegion(region : Text) : async [FoodItem] {
+    foodDatabase.values().toArray().filter(func(f) { f.region == region });
+  };
+
+  public query ({ caller }) func getFoodByMacronutrients(minProtein : Float, maxCarbs : Float, maxFat : Float) : async [FoodItem] {
+    foodDatabase.values().toArray().filter(
+      func(f) {
+        f.protein >= minProtein and f.carbs <= maxCarbs and f.fat <= maxFat;
+      }
+    );
   };
 
   public shared ({ caller }) func deleteFoodItem(name : Text) : async () {
@@ -166,10 +199,75 @@ actor {
     foodDatabase.remove(name);
   };
 
-  // ======================== Data Seeding ========================
+  // ======================== Food Suggestions ========================
 
-  system func preupgrade() {};
-  system func postupgrade() {};
+  public type FoodSuggestionStatus = { #pending; #approved; #rejected };
+
+  public type FoodSuggestion = {
+    foodItem : FoodItem;
+    status : FoodSuggestionStatus;
+    submittedBy : Principal;
+    timestamp : Time.Time;
+  };
+
+  let foodSuggestions = Map.empty<Nat, FoodSuggestion>();
+  var nextSuggestionId = 1;
+
+  public shared ({ caller }) func submitFoodSuggestion(food : FoodItem) : async Nat {
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: Only users can submit food suggestions");
+    };
+    let suggestion : FoodSuggestion = {
+      foodItem = food;
+      status = #pending;
+      submittedBy = caller;
+      timestamp = Time.now();
+    };
+    let id = nextSuggestionId;
+    foodSuggestions.add(id, suggestion);
+    nextSuggestionId += 1;
+    id;
+  };
+
+  public shared ({ caller }) func approveFoodSuggestion(suggestionId : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can approve food suggestions");
+    };
+    switch (foodSuggestions.get(suggestionId)) {
+      case (null) { Runtime.trap("Suggestion not found") };
+      case (?suggestion) {
+        let updatedSuggestion = {
+          suggestion with status = #approved;
+        };
+        foodSuggestions.add(suggestionId, updatedSuggestion);
+        foodDatabase.add(suggestion.foodItem.name.toLower(), suggestion.foodItem);
+      };
+    };
+  };
+
+  public shared ({ caller }) func rejectFoodSuggestion(suggestionId : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can reject food suggestions");
+    };
+    switch (foodSuggestions.get(suggestionId)) {
+      case (null) { Runtime.trap("Suggestion not found") };
+      case (?suggestion) {
+        let updatedSuggestion = {
+          suggestion with status = #rejected;
+        };
+        foodSuggestions.add(suggestionId, updatedSuggestion);
+      };
+    };
+  };
+
+  public query ({ caller }) func getPendingFoodSuggestions() : async [FoodSuggestion] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view food suggestions");
+    };
+    foodSuggestions.values().toArray().filter(
+      func(s) { s.status == #pending }
+    );
+  };
 
   // ======================== Food Logging ========================
 
@@ -400,6 +498,26 @@ actor {
     };
   };
 
+  // ======================== Admin Functions ========================
+
+  public query ({ caller }) func getAllUsers() : async [(Principal, UserProfile)] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view all users");
+    };
+    userProfiles.toArray();
+  };
+
+  public query ({ caller }) func getAllUsersCheckIns() : async [(Principal, [DailyCheckIn])] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can view all users" # " check-ins");
+    };
+    userCheckIns.toArray().map(
+      func((user, checkIns)) {
+        (user, checkIns.toArray().sort());
+      }
+    );
+  };
+
   // ======================== Get Summaries ========================
 
   public query ({ caller }) func getAllFoodItems() : async [FoodItem] {
@@ -434,25 +552,5 @@ actor {
       case (null) { [] };
       case (?metrics) { metrics.toArray().sort() };
     };
-  };
-
-  // ======================== Admin Functions ========================
-
-  public query ({ caller }) func getAllUsers() : async [(Principal, UserProfile)] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view all users");
-    };
-    userProfiles.toArray();
-  };
-
-  public query ({ caller }) func getAllUsersCheckIns() : async [(Principal, [DailyCheckIn])] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can view all users" # " check-ins");
-    };
-    userCheckIns.toArray().map(
-      func((user, checkIns)) {
-        (user, checkIns.toArray().sort());
-      }
-    );
   };
 };

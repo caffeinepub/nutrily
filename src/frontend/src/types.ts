@@ -12,7 +12,10 @@ export interface LocalFoodEntry {
   mealType: string;
 }
 
-export interface ExtendedFoodItem extends FoodItem {
+// ExtendedFoodItem omits the required `region` from FoodItem so legacy food database
+// entries (which don't have a region) remain valid. Region is re-declared as optional.
+export interface ExtendedFoodItem extends Omit<FoodItem, "region"> {
+  region?: string;
   addedSugar?: number;
   saturatedFat?: number;
   transFat?: number;
