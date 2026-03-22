@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Leaf, Twitter } from "lucide-react";
+import { Facebook, Instagram, Twitter, Zap } from "lucide-react";
 
 const SOCIAL = [
   { Icon: Twitter, label: "Twitter" },
@@ -15,7 +15,7 @@ export default function Footer() {
 
   const cols = [
     {
-      title: "Nutrily",
+      title: "DOITEPIC",
       links: ["Dashboard", "Food Log", "Metrics", "Reports"],
     },
     {
@@ -43,7 +43,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-nutrily-footer text-sidebar-foreground mt-16">
+    <footer className="bg-doitepic-footer text-sidebar-foreground mt-16">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           {cols.map((col) => (
@@ -67,7 +67,7 @@ export default function Footer() {
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md hero-gradient flex items-center justify-center">
-              <Leaf className="w-3 h-3 text-white" />
+              <Zap className="w-3 h-3 text-white" />
             </div>
             <span className="text-sm text-sidebar-foreground/60">
               © {year}. Built with ❤️ using{" "}

@@ -16,7 +16,6 @@ import {
   ChevronUp,
   Droplets,
   Dumbbell,
-  Leaf,
   Moon,
   Phone,
   Ruler,
@@ -24,6 +23,7 @@ import {
   Scale,
   ShieldCheck,
   Users,
+  Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
@@ -264,7 +264,6 @@ export default function AdminDashboard() {
 
   const isLoading = usersLoading || checkInsLoading;
 
-  // Build maps
   const profileMap = new Map<string, UserProfile>();
   for (const [principal, profile] of usersData) {
     profileMap.set(principal.toString(), profile);
@@ -275,7 +274,6 @@ export default function AdminDashboard() {
     checkInsMap.set(principal.toString(), cis);
   }
 
-  // Merge: show all principals that have either a profile or check-ins
   const allPrincipals = new Map<string, Principal>();
   for (const [p] of usersData) allPrincipals.set(p.toString(), p);
   for (const [p] of checkInsData) allPrincipals.set(p.toString(), p);
@@ -291,23 +289,28 @@ export default function AdminDashboard() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-gray-950 flex flex-col">
       {/* Header */}
-      <header className="hero-gradient py-6 px-6" data-ocid="admin.page">
+      <header
+        className="bg-gray-900 border-b border-gray-800 py-5 px-6"
+        data-ocid="admin.page"
+      >
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-              <Leaf className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-extrabold text-white">
-                Nutrily Admin
+              <h1 className="text-xl font-extrabold text-white tracking-wide">
+                DOITEPIC
               </h1>
-              <p className="text-white/70 text-xs">Follow-Up Dashboard</p>
+              <p className="text-gray-400 text-xs flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" /> Secret Admin Panel
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Badge className="bg-white/20 text-white border-white/30 text-xs flex items-center gap-1">
+            <Badge className="bg-red-600/20 text-red-400 border-red-600/40 text-xs flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> Admin
             </Badge>
             <Button
@@ -315,7 +318,7 @@ export default function AdminDashboard() {
               variant="outline"
               size="sm"
               onClick={clear}
-              className="text-white border-white/40 bg-white/10 hover:bg-white/20 h-8 text-xs"
+              className="text-gray-300 border-gray-700 bg-gray-800 hover:bg-gray-700 h-8 text-xs"
             >
               Logout
             </Button>
@@ -330,56 +333,59 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="grid grid-cols-3 gap-4 mb-8"
         >
-          <Card className="text-center">
+          <Card className="bg-gray-900 border-gray-800 text-center">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <Users className="w-4 h-4 text-primary" />
-                <span className="text-2xl font-extrabold text-foreground">
+                <Users className="w-4 h-4 text-red-400" />
+                <span className="text-2xl font-extrabold text-white">
                   {entries.length}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">Total Users</p>
+              <p className="text-xs text-gray-400">Total Users</p>
             </CardContent>
           </Card>
-          <Card className="text-center">
+          <Card className="bg-gray-900 border-gray-800 text-center">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <CheckInIcon />
-                <span className="text-2xl font-extrabold text-foreground">
+                <ShieldCheck className="w-4 h-4 text-red-400" />
+                <span className="text-2xl font-extrabold text-white">
                   {activeUsers}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">Active Trackers</p>
+              <p className="text-xs text-gray-400">Active Trackers</p>
             </CardContent>
           </Card>
-          <Card className="text-center">
+          <Card className="bg-gray-900 border-gray-800 text-center">
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <Salad className="w-4 h-4 text-primary" />
-                <span className="text-2xl font-extrabold text-foreground">
+                <Salad className="w-4 h-4 text-red-400" />
+                <span className="text-2xl font-extrabold text-white">
                   {totalCheckIns}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">Total Check-ins</p>
+              <p className="text-xs text-gray-400">Total Check-ins</p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* User list */}
         <div className="mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold text-foreground">User Follow-Up</h2>
+          <Users className="w-5 h-5 text-red-400" />
+          <h2 className="text-lg font-bold text-white">User Follow-Up</h2>
         </div>
 
         {isLoading ? (
           <div className="space-y-4" data-ocid="admin.loading_state">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32 w-full rounded-xl" />
+              <Skeleton
+                key={i}
+                className="h-32 w-full rounded-xl bg-gray-800"
+              />
             ))}
           </div>
         ) : entries.length === 0 ? (
           <div
-            className="text-center py-16 text-muted-foreground"
+            className="text-center py-16 text-gray-500"
             data-ocid="admin.empty_state"
           >
             <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -406,11 +412,11 @@ export default function AdminDashboard() {
         )}
       </main>
 
-      <Footer />
+      <footer className="bg-gray-900 border-t border-gray-800 py-4 px-6 text-center">
+        <p className="text-xs text-gray-600">
+          DOITEPIC Admin Panel &mdash; Restricted Access
+        </p>
+      </footer>
     </div>
   );
-}
-
-function CheckInIcon() {
-  return <ShieldCheck className="w-4 h-4 text-primary" />;
 }

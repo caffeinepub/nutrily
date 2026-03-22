@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import type { DailyCheckIn } from "../backend";
+import { FOOD_DATABASE } from "../data/foodDatabase";
 import { useActor } from "../hooks/useActor";
 import {
   useCallerUserProfile,
@@ -38,7 +39,7 @@ export default function Dashboard({ userName }: DashboardProps) {
   const [metricsOpen, setMetricsOpen] = useState(false);
   const [preselectedMeal, setPreselectedMeal] = useState<string | undefined>();
 
-  const { data: allFoods = [] } = useGetAllFoodItems();
+  const { data: backendFoods = [] } = useGetAllFoodItems();
   const { data: foodEntries = [] } = useTodayFoodLogs();
   const { data: waterGlasses = 0 } = useTodayWaterIntake();
   const { data: healthMetrics } = useTodayHealthMetrics();
@@ -49,12 +50,18 @@ export default function Dashboard({ userName }: DashboardProps) {
     queryKey: ["myCheckIns"],
     queryFn: async () => {
       if (!actor) return [];
-      // We can't get the caller's Principal directly, so we fetch via getAllUsersCheckIns
-      // and return empty if not admin; regular users see their submitted data via save
       return [];
     },
     enabled: !!actor && !isFetching,
   });
+
+  const allFoods = useMemo(() => {
+    const backendNames = new Set(backendFoods.map((f) => f.name));
+    return [
+      ...backendFoods,
+      ...FOOD_DATABASE.filter((f) => !backendNames.has(f.name)),
+    ];
+  }, [backendFoods]);
 
   const foodMap = useMemo(
     () => new Map(allFoods.map((f) => [f.name, f])),

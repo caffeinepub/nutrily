@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Leaf, Loader2 } from "lucide-react";
+import { Loader2, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ export default function ProfileSetup() {
         weightKg: Number.parseFloat(weightKg),
         heightCm: Number.parseFloat(heightCm),
       });
-      toast.success("Profile saved! Welcome to Nutrily.");
+      toast.success("Profile saved! Welcome to DOITEPIC.");
     } catch {
       toast.error("Failed to save profile. Please try again.");
     }
@@ -46,9 +46,9 @@ export default function ProfileSetup() {
       >
         <div className="flex items-center justify-center gap-2 mb-6">
           <div className="w-10 h-10 rounded-xl hero-gradient flex items-center justify-center">
-            <Leaf className="w-5 h-5 text-white" />
+            <Zap className="w-5 h-5 text-white" />
           </div>
-          <span className="text-2xl font-bold text-foreground">Nutrily</span>
+          <span className="text-2xl font-bold text-foreground">DOITEPIC</span>
         </div>
         <h2 className="text-xl font-bold text-foreground mb-1 text-center">
           Set Up Your Profile

@@ -12,12 +12,12 @@ interface Props {
 }
 
 const FEATURED = [
-  "Brown Rice",
-  "Chicken Breast",
-  "Salmon",
-  "Greek Yogurt",
-  "Avocado",
-  "Egg",
+  "Idli Plain",
+  "Chicken Biryani",
+  "Puttu Rice",
+  "Kerala Matta Rice",
+  "Avial",
+  "Dosa Plain",
 ];
 
 export default function FoodSearchCard({
@@ -51,7 +51,7 @@ export default function FoodSearchCard({
       <form onSubmit={handleSearch} className="flex gap-2 mb-4">
         <Input
           data-ocid="food_search.search_input"
-          placeholder="Search foods..."
+          placeholder="Search 300+ Indian foods..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="h-9 text-sm"

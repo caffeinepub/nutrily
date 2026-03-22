@@ -29,6 +29,11 @@ interface Props {
   preselectedFoodName?: string;
 }
 
+function getCurrentTime() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
+
 export default function LogFoodModal({
   open,
   onClose,
@@ -39,11 +44,11 @@ export default function LogFoodModal({
   const [quantity, setQuantity] = useState("100");
   const [mealType, setMealType] = useState<MealType>("breakfast" as MealType);
   const [search, setSearch] = useState("");
+  const [mealTime, setMealTime] = useState(getCurrentTime);
   const { mutateAsync, isPending } = useLogFoodEntry();
 
   useEffect(() => {
     if (open && preselectedFoodName) {
-      // Check if it's a meal type or food name
       const isMealType = MEAL_TYPES.some(
         (m) => m.value === preselectedFoodName,
       );
@@ -53,6 +58,9 @@ export default function LogFoodModal({
       } else {
         setFoodName(preselectedFoodName);
       }
+    }
+    if (open) {
+      setMealTime(getCurrentTime());
     }
     if (!open) {
       setFoodName("");
@@ -74,8 +82,13 @@ export default function LogFoodModal({
     e.preventDefault();
     if (!foodName || !quantity) return;
     try {
+      const [hours, mins] = mealTime.split(":").map(Number);
+      const d = new Date();
+      d.setHours(hours, mins, 0, 0);
+      const timestamp = BigInt(d.getTime()) * 1_000_000n;
+
       await mutateAsync({
-        date: BigInt(Date.now()) * 1_000_000n,
+        date: timestamp,
         quantity: Number(quantity),
         mealType,
         foodName,
@@ -101,7 +114,7 @@ export default function LogFoodModal({
               value={mealType}
               onValueChange={(v) => setMealType(v as MealType)}
             >
-              <SelectTrigger data-ocid="log_food.meal_select" className="mt-1">
+              <SelectTrigger data-ocid="log_food.select" className="mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -112,6 +125,17 @@ export default function LogFoodModal({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label className="text-sm">Time of meal</Label>
+            <Input
+              data-ocid="log_food.time_input"
+              type="time"
+              value={mealTime}
+              onChange={(e) => setMealTime(e.target.value)}
+              className="mt-1"
+            />
           </div>
 
           <div>

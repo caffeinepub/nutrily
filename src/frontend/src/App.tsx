@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/sonner";
+import { useState } from "react";
 import AdminDashboard from "./components/AdminDashboard";
 import Dashboard from "./components/Dashboard";
 import LoginPage from "./components/LoginPage";
@@ -10,6 +11,8 @@ import { useCallerUserProfile, useIsCallerAdmin } from "./hooks/useQueries";
 export default function App() {
   const { identity, isInitializing } = useInternetIdentity();
   const isAuthenticated = !!identity;
+  const [adminAccessGranted, setAdminAccessGranted] = useState(false);
+
   const {
     data: userProfile,
     isLoading: profileLoading,
@@ -18,7 +21,11 @@ export default function App() {
   const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
 
   const showProfileSetup =
-    isAuthenticated && !profileLoading && isFetched && userProfile === null;
+    isAuthenticated &&
+    !profileLoading &&
+    isFetched &&
+    userProfile === null &&
+    !isAdmin;
 
   const isLoadingAll =
     isInitializing ||
@@ -44,7 +51,7 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <>
-        <LoginPage />
+        <LoginPage onAdminAccess={() => setAdminAccessGranted(true)} />
         <Toaster />
       </>
     );
@@ -59,7 +66,8 @@ export default function App() {
     );
   }
 
-  if (isAdmin) {
+  // Show admin dashboard if backend confirms admin OR admin access was granted via secret panel
+  if (isAdmin || adminAccessGranted) {
     return (
       <>
         <AdminDashboard />

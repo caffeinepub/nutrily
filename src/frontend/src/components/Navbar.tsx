@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell, Leaf, LogOut } from "lucide-react";
+import { Bell, LogOut, Zap } from "lucide-react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 
 interface NavbarProps {
@@ -31,9 +31,9 @@ export default function Navbar({ userName, onLogFood }: NavbarProps) {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg hero-gradient flex items-center justify-center">
-              <Leaf className="w-4 h-4 text-white" />
+              <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-foreground">Nutrily</span>
+            <span className="text-lg font-bold text-foreground">DOITEPIC</span>
           </div>
           <nav className="hidden md:flex items-center gap-1">
             <span

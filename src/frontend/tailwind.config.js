@@ -69,12 +69,12 @@ export default {
           border: "oklch(var(--sidebar-border))",
           ring: "oklch(var(--sidebar-ring))",
         },
-        nutrily: {
-          green: "oklch(var(--nutrily-green) / <alpha-value>)",
-          "green-dark": "oklch(var(--nutrily-green-dark) / <alpha-value>)",
-          blue: "oklch(var(--nutrily-blue) / <alpha-value>)",
-          orange: "oklch(var(--nutrily-orange) / <alpha-value>)",
-          footer: "oklch(var(--nutrily-footer))",
+        doitepic: {
+          green: "oklch(var(--doitepic-green) / <alpha-value>)",
+          "green-dark": "oklch(var(--doitepic-green-dark) / <alpha-value>)",
+          blue: "oklch(var(--doitepic-blue) / <alpha-value>)",
+          orange: "oklch(var(--doitepic-orange) / <alpha-value>)",
+          footer: "oklch(var(--doitepic-footer))",
         },
       },
       borderRadius: {
