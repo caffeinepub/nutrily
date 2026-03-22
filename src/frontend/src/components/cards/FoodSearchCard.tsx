@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useState } from "react";
-import { useSearchFood } from "../../hooks/useQueries";
+import type { ExtendedFoodItem } from "../../types";
 import type { FoodItem } from "../../types";
 
 interface Props {
@@ -27,7 +27,12 @@ export default function FoodSearchCard({
 }: Props) {
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
-  const { data: results = [], isFetching } = useSearchFood(submitted);
+
+  const results = submitted
+    ? allFoods
+        .filter((f) => f.name.toLowerCase().includes(submitted.toLowerCase()))
+        .slice(0, 20)
+    : [];
 
   const featuredFoods = allFoods
     .filter((f) =>
@@ -51,7 +56,7 @@ export default function FoodSearchCard({
       <form onSubmit={handleSearch} className="flex gap-2 mb-4">
         <Input
           data-ocid="food_search.search_input"
-          placeholder="Search 300+ Indian foods..."
+          placeholder="Search 500+ foods..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="h-9 text-sm"
@@ -69,7 +74,7 @@ export default function FoodSearchCard({
       {submitted && (
         <div className="mb-4">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-            {isFetching ? "Searching..." : `Results (${results.length})`}
+            {`Results (${results.length})`}
           </p>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {results.map((food) => (
@@ -80,7 +85,7 @@ export default function FoodSearchCard({
                 onAdd={onAddToLog}
               />
             ))}
-            {!isFetching && results.length === 0 && (
+            {results.length === 0 && (
               <p
                 data-ocid="food_search.empty_state"
                 className="text-xs text-muted-foreground py-2"
@@ -128,6 +133,8 @@ function FoodRow({
   onSelect: (f: FoodItem) => void;
   onAdd: (f: FoodItem) => void;
 }) {
+  const ext = food as ExtendedFoodItem;
+  const emoji = ext.isProcessed ? "⚠️" : "🥦";
   return (
     <div className="flex items-center gap-2 py-1.5 hover:bg-muted rounded-lg px-1.5 group">
       <button
@@ -136,7 +143,7 @@ function FoodRow({
         onClick={() => onSelect(food)}
       >
         <div className="w-7 h-7 rounded bg-accent flex items-center justify-center text-xs flex-shrink-0">
-          🥦
+          {emoji}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-foreground truncate">
@@ -144,6 +151,9 @@ function FoodRow({
           </p>
           <p className="text-[10px] text-muted-foreground">
             {Math.round(food.caloriesPer100g)} kcal/100g
+            {food.category && (
+              <span className="ml-1 opacity-60">· {food.category}</span>
+            )}
           </p>
         </div>
       </button>

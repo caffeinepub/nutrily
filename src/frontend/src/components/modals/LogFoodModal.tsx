@@ -69,9 +69,12 @@ export default function LogFoodModal({
     }
   }, [open, preselectedFoodName]);
 
-  const filteredFoods = allFoods.filter((f) =>
-    f.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const showDropdown = search.length > 0;
+  const filteredFoods = showDropdown
+    ? allFoods
+        .filter((f) => f.name.toLowerCase().includes(search.toLowerCase()))
+        .slice(0, 20)
+    : [];
 
   const selectedFood = allFoods.find((f) => f.name === foodName);
   const estimatedCals = selectedFood
@@ -142,38 +145,53 @@ export default function LogFoodModal({
             <Label className="text-sm">Search Food</Label>
             <Input
               data-ocid="log_food.search_input"
-              placeholder="Type to search..."
-              value={search || foodName}
+              placeholder="Type to search 500+ foods..."
+              value={search || (foodName && !search ? foodName : "")}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setFoodName("");
+                if (e.target.value === "") {
+                  // keep foodName so user can clear and reselect
+                } else {
+                  setFoodName("");
+                }
               }}
               className="mt-1"
             />
-            {(search || !foodName) && filteredFoods.length > 0 && (
-              <div className="mt-1 border border-border rounded-lg overflow-hidden max-h-40 overflow-y-auto shadow-card">
-                {filteredFoods.slice(0, 20).map((f) => (
+            {showDropdown && filteredFoods.length > 0 && (
+              <div className="mt-1 border border-border rounded-lg overflow-hidden max-h-48 overflow-y-auto shadow-card z-50">
+                {filteredFoods.map((f) => (
                   <button
                     key={f.name}
                     type="button"
                     className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center justify-between gap-2"
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();
                       setFoodName(f.name);
                       setSearch("");
                     }}
                   >
-                    <span className="font-medium">{f.name}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="font-medium truncate">{f.name}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
                       {Math.round(f.caloriesPer100g)} kcal/100g
                     </span>
                   </button>
                 ))}
               </div>
             )}
-            {foodName && (
-              <p className="text-xs text-primary mt-1 font-medium">
-                Selected: {foodName}
-              </p>
+            {foodName && !search && (
+              <div className="flex items-center gap-2 mt-1.5 bg-accent rounded-lg px-3 py-1.5">
+                <span className="text-xs text-muted-foreground">Selected:</span>
+                <span className="text-xs font-semibold text-primary flex-1 truncate">
+                  {foodName}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFoodName("")}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
+              </div>
             )}
           </div>
 

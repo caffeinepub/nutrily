@@ -1,8 +1,5 @@
 import { DAILY_GOALS } from "../../types";
 
-const WEEKLY = [1820, 2100, 1950, 2300, 2050, 1780, 0];
-const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
-
 interface Props {
   calories: number;
 }
@@ -21,8 +18,6 @@ export default function CalorieTrackerCard({ calories }: Props) {
   const filledLen = arcLen * progress;
   const remainLen = circumference - filledLen;
 
-  const maxBar = Math.max(...WEEKLY, 1);
-
   return (
     <div className="bg-card rounded-xl border border-border shadow-card p-5">
       <div className="flex items-center justify-between mb-4">
@@ -32,7 +27,7 @@ export default function CalorieTrackerCard({ calories }: Props) {
         <span className="text-xs text-muted-foreground">Today</span>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col items-center gap-4">
         <div className="relative flex-shrink-0">
           <svg
             width="160"
@@ -91,30 +86,38 @@ export default function CalorieTrackerCard({ calories }: Props) {
           </div>
         </div>
 
-        <div className="flex-1">
-          <p className="text-xs text-muted-foreground mb-2">Weekly Progress</p>
-          <div className="flex items-end gap-1 h-16">
-            {WEEKLY.map((v, i) => (
-              <div
-                key={DAYS[i] + String(i)}
-                className="flex-1 flex flex-col items-center gap-0.5"
-              >
-                <div
-                  className="w-full rounded-sm"
-                  style={{
-                    height: `${(v / maxBar) * 52}px`,
-                    background:
-                      i === 6
-                        ? "oklch(0.91 0.008 225)"
-                        : "oklch(0.62 0.14 155)",
-                    minHeight: "4px",
-                  }}
-                />
-                <span className="text-[9px] text-muted-foreground">
-                  {DAYS[i]}
-                </span>
-              </div>
-            ))}
+        <div className="w-full">
+          {calories === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-2">
+              Log food to start tracking
+            </p>
+          ) : null}
+          <div className="grid grid-cols-3 divide-x divide-border border border-border rounded-lg overflow-hidden">
+            <div className="flex flex-col items-center py-3 px-2">
+              <span className="text-[10px] text-muted-foreground mb-1">
+                Consumed
+              </span>
+              <span className="text-sm font-bold text-foreground">
+                {Math.round(calories)}
+              </span>
+              <span className="text-[10px] text-muted-foreground">kcal</span>
+            </div>
+            <div className="flex flex-col items-center py-3 px-2">
+              <span className="text-[10px] text-muted-foreground mb-1">
+                Goal
+              </span>
+              <span className="text-sm font-bold text-foreground">{goal}</span>
+              <span className="text-[10px] text-muted-foreground">kcal</span>
+            </div>
+            <div className="flex flex-col items-center py-3 px-2">
+              <span className="text-[10px] text-muted-foreground mb-1">
+                Remaining
+              </span>
+              <span className="text-sm font-bold text-primary">
+                {remaining}
+              </span>
+              <span className="text-[10px] text-muted-foreground">kcal</span>
+            </div>
           </div>
         </div>
       </div>

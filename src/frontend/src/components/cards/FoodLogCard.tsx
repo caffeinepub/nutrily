@@ -15,6 +15,11 @@ export default function FoodLogCard({ entries, foodMap, onAddFood }: Props) {
     items: entries.filter((e) => e.mealType === value),
   }));
 
+  const totalCalories = entries.reduce(
+    (sum, entry) => sum + calcEntryNutrition(entry, foodMap).calories,
+    0,
+  );
+
   return (
     <div className="bg-card rounded-xl border border-border shadow-card p-5">
       <div className="flex items-center justify-between mb-4">
@@ -88,6 +93,15 @@ export default function FoodLogCard({ entries, foodMap, onAddFood }: Props) {
           </div>
         ))}
       </div>
+
+      {entries.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Total today:</span>
+          <span className="text-xs font-semibold text-primary">
+            {Math.round(totalCalories)} kcal
+          </span>
+        </div>
+      )}
     </div>
   );
 }

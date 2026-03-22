@@ -2,6 +2,19 @@ import type { FoodItem, FoodLogEntry, MealType } from "./backend";
 
 export type { FoodItem, FoodLogEntry, MealType };
 
+export interface ExtendedFoodItem extends FoodItem {
+  addedSugar?: number;
+  saturatedFat?: number;
+  transFat?: number;
+  cholesterol?: number;
+  sodium?: number;
+  potassium?: number;
+  additives?: string[];
+  ingredients?: string[];
+  healthWarning?: string;
+  isProcessed?: boolean;
+}
+
 export const DAILY_GOALS = {
   calories: 2300,
   protein: 150,
@@ -18,7 +31,7 @@ export function getTodayStartNs(): bigint {
 
 export function calcEntryNutrition(
   entry: FoodLogEntry,
-  foodMap: Map<string, FoodItem>,
+  foodMap: Map<string, ExtendedFoodItem>,
 ) {
   const food = foodMap.get(entry.foodName);
   if (!food) return { calories: 0, protein: 0, carbs: 0, fat: 0 };

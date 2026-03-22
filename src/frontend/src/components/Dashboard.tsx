@@ -12,18 +12,21 @@ import {
   useTodayWaterIntake,
 } from "../hooks/useQueries";
 import { calcEntryNutrition, calcMealQualityScore } from "../types";
-import type { FoodItem } from "../types";
+import type { ExtendedFoodItem, FoodItem } from "../types";
 import DailyCheckInCard from "./DailyCheckInCard";
 import Footer from "./Footer";
 import GoalsSection from "./GoalsSection";
 import MyStatsCard from "./MyStatsCard";
 import Navbar from "./Navbar";
+import WeightGainStatusPage from "./WeightGainStatusPage";
+import WeightLossStatusPage from "./WeightLossStatusPage";
 import CalorieTrackerCard from "./cards/CalorieTrackerCard";
 import FoodLogCard from "./cards/FoodLogCard";
 import FoodSearchCard from "./cards/FoodSearchCard";
 import MacroBreakdownCard from "./cards/MacroBreakdownCard";
 import MealQualityCard from "./cards/MealQualityCard";
 import MyMetricsCard from "./cards/MyMetricsCard";
+import SmartCoachCard from "./cards/SmartCoachCard";
 import WaterIntakeCard from "./cards/WaterIntakeCard";
 import FoodDetailModal from "./modals/FoodDetailModal";
 import HealthMetricsModal from "./modals/HealthMetricsModal";
@@ -33,11 +36,20 @@ interface DashboardProps {
   userName: string;
 }
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  if (hour >= 17 && hour < 21) return "Good evening";
+  return "Hello";
+}
+
 export default function Dashboard({ userName }: DashboardProps) {
   const [logFoodOpen, setLogFoodOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [metricsOpen, setMetricsOpen] = useState(false);
   const [preselectedMeal, setPreselectedMeal] = useState<string | undefined>();
+  const [goalPage, setGoalPage] = useState<"gain" | "loss" | null>(null);
 
   const { data: backendFoods = [] } = useGetAllFoodItems();
   const { data: foodEntries = [] } = useTodayFoodLogs();
@@ -59,8 +71,10 @@ export default function Dashboard({ userName }: DashboardProps) {
     const backendNames = new Set(backendFoods.map((f) => f.name));
     return [
       ...backendFoods,
-      ...FOOD_DATABASE.filter((f) => !backendNames.has(f.name)),
-    ];
+      ...(FOOD_DATABASE as ExtendedFoodItem[]).filter(
+        (f) => !backendNames.has(f.name),
+      ),
+    ] as ExtendedFoodItem[];
   }, [backendFoods]);
 
   const foodMap = useMemo(
@@ -97,6 +111,34 @@ export default function Dashboard({ userName }: DashboardProps) {
     setLogFoodOpen(true);
   };
 
+  const userProfileForStatus = userProfile
+    ? {
+        weightKg: Number(userProfile.weightKg),
+        heightCm: Number(userProfile.heightCm),
+        name: userProfile.name,
+      }
+    : undefined;
+
+  // Render goal-specific status pages
+  if (goalPage === "gain") {
+    return (
+      <WeightGainStatusPage
+        onBack={() => setGoalPage(null)}
+        userProfile={userProfileForStatus}
+      />
+    );
+  }
+  if (goalPage === "loss") {
+    return (
+      <WeightLossStatusPage
+        onBack={() => setGoalPage(null)}
+        userProfile={userProfileForStatus}
+      />
+    );
+  }
+
+  const greeting = getGreeting();
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar userName={userName} onLogFood={() => openLogFood()} />
@@ -110,7 +152,7 @@ export default function Dashboard({ userName }: DashboardProps) {
             transition={{ duration: 0.5 }}
             className="text-4xl md:text-5xl font-extrabold text-white mb-3"
           >
-            Good morning, {userName}! 🌱
+            {greeting}, {userName}! 🌱
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -187,6 +229,14 @@ export default function Dashboard({ userName }: DashboardProps) {
           {/* Column 3 */}
           <div className="space-y-5">
             <MealQualityCard score={score} grade={grade} />
+            <SmartCoachCard
+              caloriesConsumed={totals.calories}
+              protein={totals.protein}
+              carbs={totals.carbs}
+              fat={totals.fat}
+              userProfile={userProfileForStatus}
+              allFoods={allFoods}
+            />
             <MyMetricsCard
               metrics={healthMetrics}
               onEdit={() => setMetricsOpen(true)}
@@ -196,9 +246,8 @@ export default function Dashboard({ userName }: DashboardProps) {
               onFoodSelect={setSelectedFood}
               onAddToLog={(food) => {
                 setSelectedFood(null);
-                setPreselectedMeal(undefined);
-                setLogFoodOpen(true);
                 setPreselectedMeal(food.name);
+                setLogFoodOpen(true);
               }}
             />
           </div>
@@ -220,7 +269,7 @@ export default function Dashboard({ userName }: DashboardProps) {
         </motion.div>
 
         {/* Goals Section */}
-        <GoalsSection />
+        <GoalsSection onNavigateToStatus={setGoalPage} />
       </main>
 
       <Footer />

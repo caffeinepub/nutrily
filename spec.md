@@ -1,35 +1,28 @@
-# Nutrily
+# DOITEPIC
 
 ## Current State
-- Users log in via Internet Identity and set a profile (name only)
-- Dashboard shows food log, calorie tracking, water intake, health metrics, goals (weight gain/loss)
-- Admin role via authorization component
-- 50+ Kerala + common foods in database
+- CalorieTrackerCard receives real `calories` from today's food logs but shows hardcoded fake weekly bar chart (WEEKLY = [1820, 2100, 1950, ...]) that never reflects actual data
+- FoodLogCard shows logged entries and calculates calories from `foodMap` lookup by `foodName`
+- MacroBreakdownCard receives real `protein`, `carbs`, `fat` from food log totals
+- Data flow: `useTodayFoodLogs()` → `foodEntries` → `totals` → cards
 
 ## Requested Changes (Diff)
 
 ### Add
-- Extended UserProfile: name, phone number, weight (kg), height (cm)
-- ProfileSetup collects all four fields on first login
-- Users can update weight/height anytime from their dashboard (shown prominently in their space)
-- Daily follow-up tracking entries per user: diet log status, exercises done, water glasses, sleep hours
-- Admin dashboard page: lists all registered users with their profile details (name, phone, weight, height) and latest daily follow-up status (diet, exercise, water, sleep) in a structured follow-up format table/cards
-- Users can submit a daily check-in: what they ate (diet notes), exercises done today, water glasses, sleep hours last night
+- Real daily calorie summary in CalorieTrackerCard (today consumed vs goal, with animated ring)
+- Clear "No food logged yet" empty state messaging in FoodLogCard with a CTA
+- Total macro summary row in MacroBreakdownCard showing combined kcal contribution
+- A daily calorie total row at the bottom of FoodLogCard
 
 ### Modify
-- UserProfile type extended with phone, weight, height
-- ProfileSetup form updated to collect phone, weight, height in addition to name
-- Dashboard shows user's weight and height stats prominently
-- saveCallerUserProfile accepts updated profile including new fields
+- CalorieTrackerCard: Remove hardcoded WEEKLY fake bars; replace with today's real data ring + a simple message showing calories left; keep the progress ring already working
+- FoodLogCard: Add a footer row showing total calories logged today across all meals
+- MacroBreakdownCard: Show calorie equivalent beside each macro (protein 4kcal/g, carbs 4kcal/g, fat 9kcal/g) so user sees contribution
 
 ### Remove
-- Nothing removed
+- The WEEKLY hardcoded array and the fake weekly bar chart section from CalorieTrackerCard
 
 ## Implementation Plan
-1. Backend: extend UserProfile with phone, weightKg, heightCm
-2. Backend: add DailyCheckIn type (date, dietNotes, exercisesDone, waterGlasses, sleepHours) per user
-3. Backend: saveDailyCheckIn, getMyCheckIns, getAllUsersWithCheckIns (admin only), getAllUsers (admin only)
-4. Frontend: update ProfileSetup to collect name, phone, weight, height
-5. Frontend: show weight & height card prominently on user dashboard
-6. Frontend: add DailyCheckIn form on dashboard (diet notes, exercise, water, sleep)
-7. Frontend: admin dashboard route - shows all users in follow-up table with latest check-in status
+1. Update CalorieTrackerCard to remove fake bars, keep ring gauge with today's consumed/goal, add a clean stat grid showing Consumed / Goal / Remaining
+2. Update FoodLogCard to show daily total calories footer
+3. Update MacroBreakdownCard to show kcal contribution per macro row

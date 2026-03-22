@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Apple,
@@ -10,9 +11,13 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type GoalType = "gain" | "loss" | null;
+
+interface Props {
+  onNavigateToStatus?: (goal: "gain" | "loss") => void;
+}
 
 const GOALS = {
   gain: {
@@ -46,6 +51,22 @@ const GOALS = {
         name: "Barbell Rows",
         desc: "Thick back muscles and improved posture with this horizontal pull.",
       },
+      {
+        name: "Dips",
+        desc: "Bodyweight tricep and chest builder; great for upper-body mass.",
+      },
+      {
+        name: "Leg Press",
+        desc: "Heavy quad and glute training with reduced lower-back strain.",
+      },
+      {
+        name: "Incline Bench Press",
+        desc: "Upper chest and anterior deltoid development for a full chest look.",
+      },
+      {
+        name: "Cable Rows",
+        desc: "Mid-back isolation that improves posture and back thickness.",
+      },
     ],
     dietEat: [
       "Rice",
@@ -58,8 +79,18 @@ const GOALS = {
       "Peanut Butter",
       "Sweet Potato",
       "Avocado",
+      "Paneer",
+      "Soy Chunks",
+      "Ghee Rice",
+      "Greek Yogurt",
     ],
-    dietAvoid: ["Low-calorie snacks", "Excessive cardio foods", "Diet sodas"],
+    dietAvoid: [
+      "Low-calorie snacks",
+      "Excessive cardio foods",
+      "Diet sodas",
+      "Alcohol",
+      "Skipping meals",
+    ],
     sleepHours: "8–9 hours",
     sleepTips: [
       "Sleep is when muscles repair and grow — prioritise it like your workouts.",
@@ -106,6 +137,14 @@ const GOALS = {
         name: "Yoga / Pilates",
         desc: "Improves flexibility, reduces cortisol, and supports mindful eating habits.",
       },
+      {
+        name: "Brisk Walking",
+        desc: "Sustainable daily activity that adds up to serious calorie burn.",
+      },
+      {
+        name: "Zumba",
+        desc: "Fun cardio dance workout that burns 300–600 calories per session.",
+      },
     ],
     dietEat: [
       "Vegetables",
@@ -114,6 +153,12 @@ const GOALS = {
       "Whole grains",
       "Green tea",
       "Water-rich foods",
+      "Grilled chicken",
+      "Fish",
+      "Dal",
+      "Salads",
+      "Oats",
+      "Eggs",
     ],
     dietAvoid: [
       "Sugary drinks",
@@ -121,6 +166,9 @@ const GOALS = {
       "Processed snacks",
       "White bread",
       "Alcohol",
+      "Instant noodles",
+      "Biscuits",
+      "Fast food",
     ],
     sleepHours: "7–8 hours",
     sleepTips: [
@@ -139,8 +187,19 @@ const GOALS = {
   },
 };
 
-export default function GoalsSection() {
-  const [activeGoal, setActiveGoal] = useState<GoalType>(null);
+export default function GoalsSection({ onNavigateToStatus }: Props) {
+  const [activeGoal, setActiveGoal] = useState<GoalType>(() => {
+    const stored = localStorage.getItem("doitepic_active_goal");
+    return (stored as GoalType) ?? null;
+  });
+
+  useEffect(() => {
+    if (activeGoal) {
+      localStorage.setItem("doitepic_active_goal", activeGoal);
+    } else {
+      localStorage.removeItem("doitepic_active_goal");
+    }
+  }, [activeGoal]);
 
   const handleSelect = (id: GoalType) => {
     setActiveGoal((prev) => (prev === id ? null : id));
@@ -192,7 +251,6 @@ export default function GoalsSection() {
                   : "border-border bg-card hover:border-muted-foreground/30 shadow-sm hover:shadow-md",
               ].join(" ")}
             >
-              {/* Background accent blob */}
               <div
                 className={[
                   "absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 transition-opacity duration-300 group-hover:opacity-20",
@@ -262,21 +320,38 @@ export default function GoalsSection() {
             {/* Detail header band */}
             <div
               className={[
-                "px-6 py-4 flex items-center gap-3",
+                "px-6 py-4 flex items-center justify-between gap-3",
                 activeGoal === "gain"
                   ? "bg-emerald-50 border-b border-emerald-100"
                   : "bg-sky-50 border-b border-sky-100",
               ].join(" ")}
             >
-              <goal.Icon
-                className={[
-                  "w-6 h-6",
-                  activeGoal === "gain" ? "text-emerald-600" : "text-sky-600",
-                ].join(" ")}
-              />
-              <h3 className="font-bold text-foreground text-lg">
-                {goal.title} Plan
-              </h3>
+              <div className="flex items-center gap-3">
+                <goal.Icon
+                  className={[
+                    "w-6 h-6",
+                    activeGoal === "gain" ? "text-emerald-600" : "text-sky-600",
+                  ].join(" ")}
+                />
+                <h3 className="font-bold text-foreground text-lg">
+                  {goal.title} Plan
+                </h3>
+              </div>
+              {onNavigateToStatus && activeGoal && (
+                <Button
+                  data-ocid="goals.track_status_button"
+                  size="sm"
+                  onClick={() => onNavigateToStatus(activeGoal)}
+                  className={[
+                    "text-xs font-semibold",
+                    activeGoal === "gain"
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                      : "bg-sky-600 hover:bg-sky-700 text-white",
+                  ].join(" ")}
+                >
+                  Track My Status →
+                </Button>
+              )}
             </div>
 
             {/* Tabs */}
