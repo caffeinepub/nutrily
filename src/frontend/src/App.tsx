@@ -9,6 +9,17 @@ export default function App() {
   const { user, isLoggedIn, login } = useLocalAuth();
   const [adminAccessGranted, setAdminAccessGranted] = useState(false);
 
+  // Admin access check must come BEFORE the login check
+  // because admin enters via the login page without being a regular user
+  if (adminAccessGranted) {
+    return (
+      <>
+        <AdminDashboard onExit={() => setAdminAccessGranted(false)} />
+        <Toaster />
+      </>
+    );
+  }
+
   if (!isLoggedIn) {
     return (
       <>
@@ -16,15 +27,6 @@ export default function App() {
           onAdminAccess={() => setAdminAccessGranted(true)}
           onLogin={login}
         />
-        <Toaster />
-      </>
-    );
-  }
-
-  if (adminAccessGranted) {
-    return (
-      <>
-        <AdminDashboard />
         <Toaster />
       </>
     );

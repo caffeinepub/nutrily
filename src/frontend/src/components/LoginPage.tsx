@@ -4,6 +4,7 @@ import { Brain, Flame, ShieldAlert, Sparkles, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { ProfileGoal } from "../backend";
+import { useActor } from "../hooks/useActor";
 import type { LocalUser } from "../hooks/useLocalAuth";
 import { useLocalAuth } from "../hooks/useLocalAuth";
 
@@ -21,6 +22,39 @@ const GOALS = [
 export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
   const { login: localLogin } = useLocalAuth();
   const login = onLogin ?? localLogin;
+  const { actor } = useActor();
+
+  const goalToString = (g: ProfileGoal | "") => {
+    if (g === ProfileGoal.weightLoss) return "Weight Loss";
+    if (g === ProfileGoal.muscleGain) return "Muscle Gain";
+    return "Maintenance";
+  };
+
+  const syncUserToBackend = (profile: LocalUser) => {
+    if (!actor) return;
+    try {
+      let deviceId = localStorage.getItem("doitepic_device_id");
+      if (!deviceId) {
+        deviceId = crypto.randomUUID();
+        localStorage.setItem("doitepic_device_id", deviceId);
+      }
+      (actor as any)
+        .savePublicUser(deviceId, {
+          name: profile.name,
+          phone: profile.phone,
+          age: BigInt(profile.age),
+          weightKg: profile.weightKg,
+          heightCm: profile.heightCm,
+          gender: profile.gender,
+          goal: goalToString(profile.goal as ProfileGoal),
+          joinedAt: BigInt(Date.now()),
+          lastSeenAt: BigInt(Date.now()),
+        })
+        .catch(() => {});
+    } catch {
+      // silently ignore
+    }
+  };
 
   // Step 1 fields
   const [name, setName] = useState("");
@@ -97,6 +131,7 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
 
     if (nameMatch && phoneMatch) {
       login(profile);
+      syncUserToBackend(profile);
     } else {
       setStep1Error("Name or phone doesn't match your saved profile.");
     }
@@ -149,6 +184,7 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
       joinedAt: new Date().toISOString(),
     };
     login(profile);
+    syncUserToBackend(profile);
   };
 
   const features = [

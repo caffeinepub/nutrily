@@ -79,6 +79,40 @@ actor {
     userProfiles.remove(caller);
   };
 
+  // ======================== Public User Registry (no auth, phone-based) ========================
+  // Stores user profiles keyed by a device UUID so admin can see all registered users.
+
+  public type PublicUserRecord = {
+    name : Text;
+    phone : Text;
+    age : Nat;
+    weightKg : Float;
+    heightCm : Float;
+    gender : Text;
+    goal : Text;
+    joinedAt : Int;
+    lastSeenAt : Int;
+  };
+
+  let publicUserRegistry = Map.empty<Text, PublicUserRecord>();
+
+  // Called from frontend on register/login — no auth required
+  public func savePublicUser(deviceId : Text, record : PublicUserRecord) : async () {
+    publicUserRegistry.add(deviceId, record);
+  };
+
+  public query func getPublicUser(deviceId : Text) : async ?PublicUserRecord {
+    publicUserRegistry.get(deviceId);
+  };
+
+  public query func getAllPublicUsers() : async [(Text, PublicUserRecord)] {
+    publicUserRegistry.toArray();
+  };
+
+  public query func getPublicUserCount() : async Nat {
+    publicUserRegistry.size();
+  };
+
   // ======================== Daily Check-In ========================
 
   public type DailyCheckIn = {

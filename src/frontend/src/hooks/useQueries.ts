@@ -871,3 +871,31 @@ export function useAllUserStreaks() {
     enabled: !!actor && !isFetching,
   });
 }
+
+export interface PublicUserRecord {
+  name: string;
+  phone: string;
+  age: bigint;
+  weightKg: number;
+  heightCm: number;
+  gender: string;
+  goal: string;
+  joinedAt: bigint;
+  lastSeenAt: bigint;
+}
+
+export function useAllPublicUsers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Array<[string, PublicUserRecord]>>({
+    queryKey: ["allPublicUsers"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await (actor as any).getAllPublicUsers();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}

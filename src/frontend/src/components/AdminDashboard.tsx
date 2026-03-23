@@ -71,13 +71,15 @@ import type {
   UserProfile,
 } from "../backend";
 import { ProfileGoal } from "../backend";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+
 import {
+  type PublicUserRecord,
   useAddFoodItem,
   useAllAnnouncements,
   useAllArticles,
   useAllDietPlans,
   useAllFoodItems,
+  useAllPublicUsers,
   useAllReports,
   useAllUserStreaks,
   useAllUsers,
@@ -2816,11 +2818,12 @@ function ModerationTab({
 
 // ─── Main Admin Dashboard ─────────────────────────────────────────────────────
 
-export default function AdminDashboard() {
-  const { clear } = useInternetIdentity();
+export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
   const { data: usersData = [], isLoading: usersLoading } = useAllUsers();
   const { data: checkInsData = [], isLoading: checkInsLoading } =
     useAllUsersCheckIns();
+  const { data: publicUsers = [], isLoading: publicUsersLoading } =
+    useAllPublicUsers();
   const { data: foods = [] } = useAllFoodItems();
   const { data: pending = [] } = usePendingFoodSuggestions();
   const { data: joinTimes = [] } = useUserJoinTimes();
@@ -2832,7 +2835,7 @@ export default function AdminDashboard() {
   >();
   for (const [p, s] of allUserStreaks) streakMap.set(p.toString(), s);
 
-  const isLoading = usersLoading || checkInsLoading;
+  const isLoading = usersLoading || checkInsLoading || publicUsersLoading;
 
   const profileMap = new Map<string, UserProfile>();
   for (const [principal, profile] of usersData)
@@ -2914,7 +2917,7 @@ export default function AdminDashboard() {
               data-ocid="admin.logout_button"
               variant="outline"
               size="sm"
-              onClick={clear}
+              onClick={() => onExit?.()}
               className="text-gray-300 border-gray-700 bg-gray-800 hover:bg-gray-700 h-8 text-xs"
             >
               Logout
@@ -2935,7 +2938,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Users className="w-4 h-4 text-destructive" />
                 <span className="text-2xl font-extrabold text-white">
-                  {entries.length}
+                  {publicUsers.length || entries.length}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">Total Users</p>
@@ -2985,7 +2988,7 @@ export default function AdminDashboard() {
                 className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
               >
                 <Users className="w-3.5 h-3.5" />
-                Users ({entries.length})
+                Users ({publicUsers.length || entries.length})
               </TabsTrigger>
               <TabsTrigger
                 value="food"
@@ -3048,13 +3051,118 @@ export default function AdminDashboard() {
                   />
                 ))}
               </div>
-            ) : entries.length === 0 ? (
+            ) : publicUsers.length === 0 && entries.length === 0 ? (
               <div
                 className="text-center py-16 text-muted-foreground"
                 data-ocid="admin.empty_state"
               >
                 <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">No users registered yet.</p>
+                <p className="text-xs mt-1 opacity-60">
+                  Users will appear here after they log in to the app.
+                </p>
+              </div>
+            ) : publicUsers.length > 0 ? (
+              <div className="space-y-4">
+                {publicUsers.map(
+                  ([deviceId, user]: [string, PublicUserRecord], i: number) => {
+                    const bmi =
+                      user.weightKg /
+                      ((user.heightCm / 100) * (user.heightCm / 100));
+                    const joinedDate = new Date(
+                      Number(user.joinedAt),
+                    ).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    });
+                    const lastSeen = new Date(
+                      Number(user.lastSeenAt),
+                    ).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                    });
+                    return (
+                      <motion.div
+                        key={deviceId}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        data-ocid={`admin.users.item.${i + 1}`}
+                      >
+                        <Card className="bg-gray-900 border-gray-800">
+                          <CardContent className="pt-4 pb-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-600/40 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-blue-400 font-bold text-sm">
+                                    {user.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-white truncate">
+                                    {user.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {user.phone}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                <Badge className="bg-blue-600/20 text-blue-300 border-blue-600/40 text-xs">
+                                  {user.goal}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {user.gender}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-gray-800">
+                              <div className="text-center">
+                                <p className="text-xs text-muted-foreground">
+                                  Age
+                                </p>
+                                <p className="text-sm font-bold text-white">
+                                  {String(user.age)} y
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-xs text-muted-foreground">
+                                  Weight
+                                </p>
+                                <p className="text-sm font-bold text-white">
+                                  {user.weightKg} kg
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-xs text-muted-foreground">
+                                  Height
+                                </p>
+                                <p className="text-sm font-bold text-white">
+                                  {user.heightCm} cm
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-xs text-muted-foreground">
+                                  BMI
+                                </p>
+                                <p
+                                  className={`text-sm font-bold ${bmi < 18.5 ? "text-yellow-400" : bmi < 25 ? "text-green-400" : bmi < 30 ? "text-orange-400" : "text-red-400"}`}
+                                >
+                                  {bmi.toFixed(1)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex justify-between mt-2 pt-2 border-t border-gray-800 text-xs text-muted-foreground">
+                              <span>Joined: {joinedDate}</span>
+                              <span>Last seen: {lastSeen}</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  },
+                )}
               </div>
             ) : (
               <div className="space-y-4">

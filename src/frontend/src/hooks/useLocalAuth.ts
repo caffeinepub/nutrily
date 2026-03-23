@@ -24,24 +24,43 @@ function readUser(): LocalUser | null {
   }
 }
 
-export function useLocalAuth() {
-  const [user, setUser] = useState<LocalUser | null>(readUser);
+// ---- Shared module-level state so all hook instances stay in sync ----
+type Listener = (user: LocalUser | null) => void;
+let _user: LocalUser | null = readUser();
+const _listeners = new Set<Listener>();
 
-  // Keep in sync across tabs
+function _setUser(next: LocalUser | null) {
+  _user = next;
+  for (const fn of _listeners) fn(next);
+}
+// ----------------------------------------------------------------------
+
+export function useLocalAuth() {
+  const [user, setUser] = useState<LocalUser | null>(() => _user);
+
   useEffect(() => {
-    const handler = () => setUser(readUser());
+    // Subscribe to module-level changes (same tab)
+    _listeners.add(setUser);
+    // Also listen for cross-tab storage events
+    const handler = () => {
+      const u = readUser();
+      _setUser(u);
+    };
     window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    return () => {
+      _listeners.delete(setUser);
+      window.removeEventListener("storage", handler);
+    };
   }, []);
 
   const login = useCallback((profile: LocalUser) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-    setUser(profile);
+    _setUser(profile);
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
-    setUser(null);
+    _setUser(null);
   }, []);
 
   return {
