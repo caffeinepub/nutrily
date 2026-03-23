@@ -19,12 +19,15 @@ import { calcEntryNutrition, calcMealQualityScore } from "../types";
 import type { ExtendedFoodItem } from "../types";
 import DailyCheckInCard from "./DailyCheckInCard";
 import DailyHealthScore from "./DailyHealthScore";
+import EpicChallengeCard from "./EpicChallengeCard";
 import FoodLogHistory from "./FoodLogHistory";
 import Footer from "./Footer";
 import GoalVisualizationCard from "./GoalVisualizationCard";
 import GoalsSection from "./GoalsSection";
 import HabitRemindersCard from "./HabitRemindersCard";
+import Leaderboard from "./Leaderboard";
 import MicroCoachingCard from "./MicroCoachingCard";
+import MoodTrackerCard from "./MoodTrackerCard";
 import MyStatsCard from "./MyStatsCard";
 import Navbar from "./Navbar";
 import NutritionSummaryPage from "./NutritionSummaryPage";
@@ -37,6 +40,7 @@ import ThinkEpicPage from "./ThinkEpicPage";
 import WeeklyMissionsCard from "./WeeklyMissionsCard";
 import WeightGainStatusPage from "./WeightGainStatusPage";
 import WeightLossStatusPage from "./WeightLossStatusPage";
+import WorkoutPage from "./WorkoutPage";
 import CalorieTrackerCard from "./cards/CalorieTrackerCard";
 import FoodLogCard from "./cards/FoodLogCard";
 import FoodSearchCard from "./cards/FoodSearchCard";
@@ -72,6 +76,8 @@ export default function Dashboard({ userName }: DashboardProps) {
   const [nutritionPage, setNutritionPage] = useState(false);
   const [historyPage, setHistoryPage] = useState(false);
   const [thinkEpicPage, setThinkEpicPage] = useState(false);
+  const [workoutPage, setWorkoutPage] = useState(false);
+  const [leaderboardPage, setLeaderboardPage] = useState(false);
 
   const { data: backendFoods = [] } = useGetAllFoodItems();
   const { data: waterGlasses = 0 } = useTodayWaterIntake();
@@ -98,7 +104,6 @@ export default function Dashboard({ userName }: DashboardProps) {
 
   const allFoods = useMemo(() => {
     const backendNames = new Set(backendFoods.map((f) => f.name));
-    // Build merged set: backend > kerala supplement > main database
     const keralaNamesInBackend = new Set([...backendFoods.map((f) => f.name)]);
     const supplementFiltered = KERALA_SUPPLEMENT.filter(
       (f) => !keralaNamesInBackend.has(f.name),
@@ -211,13 +216,23 @@ export default function Dashboard({ userName }: DashboardProps) {
   if (historyPage) {
     return <FoodLogHistory onBack={() => setHistoryPage(false)} />;
   }
+  if (workoutPage) {
+    return <WorkoutPage onBack={() => setWorkoutPage(false)} />;
+  }
   if (thinkEpicPage) {
     return <ThinkEpicPage onBack={() => setThinkEpicPage(false)} />;
+  }
+  if (leaderboardPage) {
+    return (
+      <Leaderboard
+        onBack={() => setLeaderboardPage(false)}
+        currentUserName={userName}
+      />
+    );
   }
 
   const greeting = getGreeting();
 
-  // Get goal type for GoalVisualizationCard
   const userGoalType = (userProfile as any)?.goal ?? null;
   const currentWeightKg = userProfile
     ? Number(userProfile.weightKg)
@@ -230,6 +245,8 @@ export default function Dashboard({ userName }: DashboardProps) {
         onLogFood={() => openLogFood()}
         onHistory={() => setHistoryPage(true)}
         onThinkEpic={() => setThinkEpicPage(true)}
+        onMoveEpic={() => setWorkoutPage(true)}
+        onLeaderboard={() => setLeaderboardPage(true)}
       />
       <OfflineBanner />
 
@@ -265,6 +282,8 @@ export default function Dashboard({ userName }: DashboardProps) {
         >
           <StreakWidget />
         </motion.div>
+        <EpicChallengeCard />
+        <MoodTrackerCard />
 
         {/* 2. Daily Health Score */}
         <div className="mb-5">
@@ -301,6 +320,34 @@ export default function Dashboard({ userName }: DashboardProps) {
               <p className="font-bold text-base leading-tight">ThinkEpic</p>
               <p className="text-xs text-white/80 mt-0.5">
                 Kerala food safety · Smart alerts · Health guidance
+              </p>
+            </div>
+            <span className="text-white/60 text-lg group-hover:translate-x-1 transition-transform">
+              →
+            </span>
+          </button>
+        </motion.div>
+
+        {/* Leaderboard CTA Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="mb-5"
+        >
+          <button
+            type="button"
+            data-ocid="leaderboard.open_modal_button"
+            onClick={() => setLeaderboardPage(true)}
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-600 text-white shadow-md hover:shadow-lg hover:opacity-95 transition-all text-left group"
+          >
+            <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
+              <span className="text-xl">🏆</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-base leading-tight">Leaderboard</p>
+              <p className="text-xs text-white/80 mt-0.5">
+                See how you rank vs the community
               </p>
             </div>
             <span className="text-white/60 text-lg group-hover:translate-x-1 transition-transform">

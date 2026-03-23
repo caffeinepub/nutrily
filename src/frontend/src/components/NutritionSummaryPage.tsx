@@ -8,7 +8,10 @@ import {
 import type { DrinkEntry } from "../hooks/useDrinksLog";
 import type { ExtendedFoodItem } from "../types";
 import { calcEntryNutrition } from "../types";
+import BestDayCard from "./BestDayCard";
 import Footer from "./Footer";
+import MealTimingCard from "./MealTimingCard";
+import NutrientGapCard from "./NutrientGapCard";
 import type { FoodLogItem } from "./cards/FoodLogCard";
 
 interface Props {
@@ -491,6 +494,34 @@ export default function NutritionSummaryPage({
           </>
         )}
       </main>
+      {/* Extra analysis cards */}
+      {totalItemCount > 0 && (
+        <div className="max-w-4xl mx-auto w-full px-4 md:px-6 pb-6 space-y-4">
+          <NutrientGapCard
+            nutrients={{
+              protein: totals.protein,
+              fiber: 0,
+              calories: totals.calories,
+            }}
+          />
+          <MealTimingCard
+            entries={entries.map((item) => ({
+              mealType: item.entry.mealType,
+              timestamp: undefined,
+            }))}
+          />
+          <BestDayCard
+            todayScore={Math.min(
+              100,
+              Math.round(
+                (totals.calories / 2000) * 30 +
+                  (totals.protein / 60) * 40 +
+                  (entries.length >= 3 ? 30 : entries.length * 10),
+              ),
+            )}
+          />
+        </div>
+      )}
       <Footer />
     </div>
   );

@@ -15,6 +15,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import type { FoodLogEntryLocal } from "../hooks/useFoodLog";
 import type { LocalUser } from "../hooks/useLocalAuth";
+import DidYouKnowCard from "./DidYouKnowCard";
+import FoodMythBustersCard from "./FoodMythBustersCard";
+import HealthQuizCard from "./HealthQuizCard";
 
 interface ThinkEpicPageProps {
   onBack: () => void;
@@ -1597,6 +1600,29 @@ export default function ThinkEpicPage({ onBack }: ThinkEpicPageProps) {
         </section>
 
         {/* Back button at bottom */}
+        {/* Health Quiz of the Day */}
+        <section data-ocid="thinkepic.section" className="space-y-3">
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+            🧩 Health Quiz of the Day
+          </h2>
+          <HealthQuizCard />
+        </section>
+
+        {/* Food Myth Busters */}
+        <section data-ocid="thinkepic.section" className="space-y-3">
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+            💥 Food Myth Busters
+          </h2>
+          <FoodMythBustersCard />
+        </section>
+
+        {/* Did You Know */}
+        <section data-ocid="thinkepic.section" className="space-y-3">
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+            🌟 Kerala Food Facts
+          </h2>
+          <DidYouKnowCard />
+        </section>
         <div className="pb-6 pt-2">
           <Button
             variant="outline"

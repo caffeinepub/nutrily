@@ -1,6 +1,15 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Bell, Brain, Clock, LogOut, Moon, Sun } from "lucide-react";
+import {
+  Bell,
+  Brain,
+  Clock,
+  Dumbbell,
+  LogOut,
+  Moon,
+  Sun,
+  Trophy,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocalAuth } from "../hooks/useLocalAuth";
 
@@ -9,6 +18,8 @@ interface NavbarProps {
   onLogFood: () => void;
   onHistory?: () => void;
   onThinkEpic?: () => void;
+  onMoveEpic?: () => void;
+  onLeaderboard?: () => void;
 }
 
 export default function Navbar({
@@ -16,6 +27,8 @@ export default function Navbar({
   onLogFood,
   onHistory,
   onThinkEpic,
+  onMoveEpic,
+  onLeaderboard,
 }: NavbarProps) {
   const { logout } = useLocalAuth();
   const [isDark, setIsDark] = useState(() =>
@@ -77,6 +90,28 @@ export default function Navbar({
                 ThinkEpic
               </button>
             )}
+            {onMoveEpic && (
+              <button
+                type="button"
+                data-ocid="nav.moveepic_button"
+                onClick={onMoveEpic}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+              >
+                <Dumbbell size={14} />
+                MoveEpic
+              </button>
+            )}
+            {onLeaderboard && (
+              <button
+                type="button"
+                data-ocid="nav.leaderboard_button"
+                onClick={onLeaderboard}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+              >
+                <Trophy size={14} />
+                Leaderboard
+              </button>
+            )}
           </nav>
         </div>
 
@@ -91,6 +126,32 @@ export default function Navbar({
               className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
             >
               <Brain size={18} />
+            </button>
+          )}
+
+          {/* Mobile MoveEpic button */}
+          {onMoveEpic && (
+            <button
+              type="button"
+              data-ocid="nav.moveepic_button"
+              onClick={onMoveEpic}
+              title="MoveEpic"
+              className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
+            >
+              <Dumbbell size={18} />
+            </button>
+          )}
+
+          {/* Mobile Leaderboard button */}
+          {onLeaderboard && (
+            <button
+              type="button"
+              data-ocid="nav.leaderboard_button"
+              onClick={onLeaderboard}
+              title="Leaderboard"
+              className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
+            >
+              <Trophy size={18} />
             </button>
           )}
 

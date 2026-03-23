@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import CalorieSwapCard from "./CalorieSwapCard";
+import SuccessHabitsChecklist from "./SuccessHabitsChecklist";
 
 type GoalType = "gain" | "loss" | "maintenance" | null;
 
@@ -659,6 +661,30 @@ export default function GoalsSection({ onNavigateToStatus }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Success Habits + Calorie Swaps based on active goal */}
+      {activeGoal && (
+        <>
+          <SuccessHabitsChecklist
+            goalType={
+              activeGoal === "gain"
+                ? "gain"
+                : activeGoal === "loss"
+                  ? "loss"
+                  : "maintenance"
+            }
+          />
+          <CalorieSwapCard
+            goalType={
+              activeGoal === "gain"
+                ? "gain"
+                : activeGoal === "loss"
+                  ? "loss"
+                  : "maintenance"
+            }
+          />
+        </>
+      )}
     </section>
   );
 }

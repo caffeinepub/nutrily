@@ -8,6 +8,8 @@ import { ArrowLeft, TrendingUp, Zap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { getAgeGroup, getUserAge } from "../utils/ageUtils";
+import CalorieSwapCard from "./CalorieSwapCard";
+import SuccessHabitsChecklist from "./SuccessHabitsChecklist";
 
 interface GainLog {
   date: string;
@@ -780,6 +782,10 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
             ))}
           </div>
         </div>
+
+        {/* Success Habits Checklist */}
+        <SuccessHabitsChecklist goalType="gain" />
+        <CalorieSwapCard goalType="gain" />
 
         {/* Body Type & Workout Finder */}
         <BodyTypeWorkoutAdvisor />

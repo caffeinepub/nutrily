@@ -7,6 +7,7 @@ import { ProfileGoal } from "../backend";
 import { useActor } from "../hooks/useActor";
 import type { LocalUser } from "../hooks/useLocalAuth";
 import { useLocalAuth } from "../hooks/useLocalAuth";
+import HealthFactBanner from "./HealthFactBanner";
 
 interface LoginPageProps {
   onAdminAccess?: () => void;
@@ -226,6 +227,7 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
             className="h-16 w-auto object-contain"
           />
         </button>
+        <HealthFactBanner showStep2={showStep2} />
 
         <AnimatePresence mode="wait">
           {!showStep2 ? (
