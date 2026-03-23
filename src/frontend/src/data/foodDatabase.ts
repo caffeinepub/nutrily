@@ -1,4 +1,5 @@
 import type { ExtendedFoodItem } from "../types";
+import { KERALA_NUTS_DAIRY_SUPP } from "./keralaNutsDairySupp";
 
 export type FoodItem = {
   name: string;
@@ -1114,6 +1115,7 @@ const NEW_FOODS: ExtendedFoodItem[] = [
 
 export const FOOD_DATABASE: ExtendedFoodItem[] = [
   ...NEW_FOODS,
+  ...KERALA_NUTS_DAIRY_SUPP,
   // BREAKFAST - South Indian
   // BREAKFAST - South Indian
   {

@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Bell, Clock, LogOut, Moon, Sun } from "lucide-react";
+import { Bell, Brain, Clock, LogOut, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocalAuth } from "../hooks/useLocalAuth";
 
@@ -8,12 +8,14 @@ interface NavbarProps {
   userName: string;
   onLogFood: () => void;
   onHistory?: () => void;
+  onThinkEpic?: () => void;
 }
 
 export default function Navbar({
   userName,
   onLogFood,
   onHistory,
+  onThinkEpic,
 }: NavbarProps) {
   const { logout } = useLocalAuth();
   const [isDark, setIsDark] = useState(() =>
@@ -64,10 +66,34 @@ export default function Navbar({
             >
               Dashboard
             </span>
+            {onThinkEpic && (
+              <button
+                type="button"
+                data-ocid="nav.thinkepic_button"
+                onClick={onThinkEpic}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+              >
+                <Brain size={14} />
+                ThinkEpic
+              </button>
+            )}
           </nav>
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Mobile ThinkEpic button */}
+          {onThinkEpic && (
+            <button
+              type="button"
+              data-ocid="nav.thinkepic_button"
+              onClick={onThinkEpic}
+              title="ThinkEpic"
+              className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-primary transition-colors"
+            >
+              <Brain size={18} />
+            </button>
+          )}
+
           {onHistory && (
             <button
               type="button"

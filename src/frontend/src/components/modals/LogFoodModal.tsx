@@ -71,6 +71,34 @@ const NATURAL_PORTIONS: Record<
   },
 };
 
+const CARBONATED_KEYWORDS = [
+  "cola",
+  "soda",
+  "pepsi",
+  "coca",
+  "sprite",
+  "fanta",
+  "mountain dew",
+  "energy drink",
+  "red bull",
+  "monster",
+];
+const HIDDEN_SUGAR_KEYWORDS = [
+  "juice",
+  "flavored yogurt",
+  "biscuit",
+  "cookie",
+  "flavoured",
+];
+
+function isCarbonated(name: string) {
+  const n = name.toLowerCase();
+  return CARBONATED_KEYWORDS.some((k) => n.includes(k));
+}
+function hasHiddenSugar(name: string) {
+  const n = name.toLowerCase();
+  return HIDDEN_SUGAR_KEYWORDS.some((k) => n.includes(k));
+}
 // Cups conversion: liquids = 240ml, grains/rice = 185g, default = 240g
 function cupsToGrams(foodName: string, cups: number): number {
   const name = foodName.toLowerCase();
@@ -425,6 +453,39 @@ export default function LogFoodModal({
                     </button>
                   </div>
                 )}
+                {/* Carbonated drink warning */}
+                {foodName && isCarbonated(foodName) && (
+                  <div className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 p-3">
+                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                      ⚠️ High sugar drink detected
+                    </p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
+                      This contains ~35g sugar with no nutritional value. Try
+                      instead: 🥥 Coconut water, 🍋 Lemon water, or 🥛
+                      Buttermilk
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFoodName("Tender Coconut Water");
+                        setSearch("");
+                      }}
+                      className="text-xs bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 px-3 py-1 rounded-full font-semibold hover:bg-amber-300 dark:hover:bg-amber-700 transition-colors"
+                    >
+                      🔄 Swap to Coconut Water
+                    </button>
+                  </div>
+                )}
+                {/* Hidden sugar warning */}
+                {foodName &&
+                  !isCarbonated(foodName) &&
+                  hasHiddenSugar(foodName) && (
+                    <div className="mt-1.5 rounded-lg bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-700 px-3 py-2">
+                      <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                        ⚠️ Contains hidden added sugar
+                      </p>
+                    </div>
+                  )}
                 {/* Dish ingredient breakdown */}
                 {selectedFood?.dishIngredients && (
                   <div className="mt-1.5 px-3 py-1.5 bg-muted/60 rounded-lg">

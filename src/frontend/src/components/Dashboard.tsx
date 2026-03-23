@@ -33,6 +33,7 @@ import PrivacySettingsModal from "./PrivacySettingsModal";
 import ReviewSection from "./ReviewSection";
 import SmartSuggestionsCard from "./SmartSuggestionsCard";
 import StreakWidget from "./StreakWidget";
+import ThinkEpicPage from "./ThinkEpicPage";
 import WeeklyMissionsCard from "./WeeklyMissionsCard";
 import WeightGainStatusPage from "./WeightGainStatusPage";
 import WeightLossStatusPage from "./WeightLossStatusPage";
@@ -70,6 +71,7 @@ export default function Dashboard({ userName }: DashboardProps) {
   const [goalPage, setGoalPage] = useState<"gain" | "loss" | null>(null);
   const [nutritionPage, setNutritionPage] = useState(false);
   const [historyPage, setHistoryPage] = useState(false);
+  const [thinkEpicPage, setThinkEpicPage] = useState(false);
 
   const { data: backendFoods = [] } = useGetAllFoodItems();
   const { data: waterGlasses = 0 } = useTodayWaterIntake();
@@ -209,6 +211,9 @@ export default function Dashboard({ userName }: DashboardProps) {
   if (historyPage) {
     return <FoodLogHistory onBack={() => setHistoryPage(false)} />;
   }
+  if (thinkEpicPage) {
+    return <ThinkEpicPage onBack={() => setThinkEpicPage(false)} />;
+  }
 
   const greeting = getGreeting();
 
@@ -224,6 +229,7 @@ export default function Dashboard({ userName }: DashboardProps) {
         userName={userName}
         onLogFood={() => openLogFood()}
         onHistory={() => setHistoryPage(true)}
+        onThinkEpic={() => setThinkEpicPage(true)}
       />
       <OfflineBanner />
 
@@ -274,6 +280,34 @@ export default function Dashboard({ userName }: DashboardProps) {
         <div className="mb-5">
           <MicroCoachingCard />
         </div>
+
+        {/* ThinkEpic CTA Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.05 }}
+          className="mb-5"
+        >
+          <button
+            type="button"
+            data-ocid="thinkepic.open_modal_button"
+            onClick={() => setThinkEpicPage(true)}
+            className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white shadow-md hover:shadow-lg hover:opacity-95 transition-all text-left group"
+          >
+            <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
+              <span className="text-xl">🧠</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-base leading-tight">ThinkEpic</p>
+              <p className="text-xs text-white/80 mt-0.5">
+                Kerala food safety · Smart alerts · Health guidance
+              </p>
+            </div>
+            <span className="text-white/60 text-lg group-hover:translate-x-1 transition-transform">
+              →
+            </span>
+          </button>
+        </motion.div>
 
         {/* 4. My Stats */}
         {userProfile && (

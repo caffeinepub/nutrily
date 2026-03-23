@@ -4,6 +4,14 @@ import { MEAL_TYPES, calcEntryNutrition } from "../../types";
 import type { ExtendedFoodItem, LocalFoodEntry, MealType } from "../../types";
 import HonestyBadge from "../HonestyBadge";
 
+function getSugarScore(carbs: number): { label: string; dot: string } {
+  // Rough estimate: sugar ≈ carbs * 0.3 per 100g
+  const sugarPer100g = carbs * 0.3;
+  if (sugarPer100g < 5) return { label: "Low sugar", dot: "🟢" };
+  if (sugarPer100g < 15) return { label: "Moderate sugar", dot: "🟡" };
+  return { label: "High sugar", dot: "🔴" };
+}
+
 export interface FoodLogItem {
   id: string;
   entry: LocalFoodEntry;
@@ -102,6 +110,14 @@ export default function FoodLogCard({
                               rating={food.honestyRating}
                               size="xs"
                             />
+                          )}
+                          {food?.carbs != null && (
+                            <span
+                              title={getSugarScore(food.carbs).label}
+                              className="text-xs"
+                            >
+                              {getSugarScore(food.carbs).dot}
+                            </span>
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
