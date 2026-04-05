@@ -1465,6 +1465,15 @@ function WeeklySchedule({ schedule }: { schedule: DaySchedule[] }) {
   );
 }
 
+type WorkoutTab = "plans" | "library" | "history" | "tools";
+
+const WORKOUT_TABS: { id: WorkoutTab; label: string }[] = [
+  { id: "plans", label: "📋 Plans" },
+  { id: "library", label: "📚 Library" },
+  { id: "history", label: "📅 History" },
+  { id: "tools", label: "🔧 Tools" },
+];
+
 export default function WorkoutPage({
   onBack,
   onHome,
@@ -1474,6 +1483,7 @@ export default function WorkoutPage({
   onHistory,
   onLeaderboard,
 }: WorkoutPageProps) {
+  const [activeTab, setActiveTab] = useState<WorkoutTab>("plans");
   const [audience, setAudience] = useState<Audience>(getAutoAudience);
   const [env, setEnv] = useState<Environment>("home");
   const [showTimer, setShowTimer] = useState(false);
@@ -1482,207 +1492,118 @@ export default function WorkoutPage({
   const [timerEnv, setTimerEnv] = useState<Environment>("home");
   const [bodyPartFilter, setBodyPartFilter] = useState<string>("All");
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
-  const [selectedExercise, setSelectedExercise] = useState<
-    (typeof plan.exercises)[0] | null
-  >(null);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null,
+  );
+
+  // Suppress unused warnings
+  void useEffect;
+  void timerAudience;
+  void timerEnv;
 
   const plan = workoutData[audience][env];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#3B82F6] text-white">
-        <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             type="button"
             data-ocid="workout.back_button"
             onClick={onBack}
-            className="flex items-center gap-2 text-white/80 hover:text-white text-sm mb-6 transition-colors"
+            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
           >
-            <ArrowLeft size={16} />
-            Back to Dashboard
+            <ArrowLeft size={18} />
           </button>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
-              <Dumbbell size={24} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">MoveEpic</h1>
-              <p className="text-blue-100 text-sm">
-                Your complete workout guide — Home & Gym
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-3 mt-4 text-sm">
-            {[
-              "6 Audience Types",
-              "Home & Gym Plans",
-              "Technique Tips",
-              "Weekly Schedules",
-            ].map((tag) => (
-              <span
-                key={tag}
-                className="px-3 py-1 bg-white/15 rounded-full text-white/90 text-xs"
-              >
-                {tag}
-              </span>
-            ))}
+          <div className="flex items-center gap-2">
+            <Dumbbell size={20} className="text-white" />
+            <h1 className="text-base font-bold">MoveEpic 💪</h1>
           </div>
         </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        {/* Audience Tabs */}
-        <ExerciseOfDayCard />
-        <CalorieBurnCalculator />
-
-        <div data-ocid="workout.tab" className="mb-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-            Select Your Group
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {audienceConfig.map((a) => (
+        {/* Tab bar */}
+        <div className="max-w-5xl mx-auto px-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+            {WORKOUT_TABS.map((tab) => (
               <button
-                key={a.id}
+                key={tab.id}
                 type="button"
-                data-ocid={`workout.${a.id}_tab`}
-                onClick={() => setAudience(a.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  audience === a.id
-                    ? "bg-[#1E3A8A] text-white shadow-md scale-105"
-                    : "bg-card border border-border text-muted-foreground hover:border-primary hover:text-primary"
+                data-ocid={`workout.${tab.id}_tab`}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
+                  activeTab === tab.id
+                    ? "bg-white text-[#1E3A8A]"
+                    : "bg-white/20 text-white/90 hover:bg-white/30"
                 }`}
               >
-                {a.label}
-                <span
-                  className={`ml-1.5 text-xs ${audience === a.id ? "text-blue-200" : "text-muted-foreground/60"}`}
-                >
-                  ({a.ageRange})
-                </span>
+                {tab.label}
               </button>
             ))}
           </div>
         </div>
+      </header>
 
-        {/* Environment Toggle */}
-        <div className="flex items-center gap-2 mb-6 p-1 bg-muted rounded-xl w-fit">
-          <button
-            type="button"
-            data-ocid="workout.home_toggle"
-            onClick={() => setEnv("home")}
-            className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all ${
-              env === "home"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Home size={15} />
-            Home Workout
-          </button>
-          <button
-            type="button"
-            data-ocid="workout.gym_toggle"
-            onClick={() => setEnv("gym")}
-            className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all ${
-              env === "gym"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Dumbbell size={15} />
-            Gym Workout
-          </button>
-        </div>
-
-        {/* Body Part Filter */}
-        <div className="mb-4" data-ocid="workout.tab">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-            Filter by Muscle Group
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {["All", "Arms", "Legs", "Core", "Back", "Chest", "Full Body"].map(
-              (bp) => (
-                <button
-                  key={bp}
-                  type="button"
-                  onClick={() => setBodyPartFilter(bp)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    bodyPartFilter === bp
-                      ? "bg-[#1E3A8A] text-white shadow-sm"
-                      : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {bp}
-                </button>
-              ),
-            )}
-          </div>
-        </div>
-
-        {/* Category Filter */}
-        <div className="mb-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-            Category
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {(["All", "Beginner", "Muscle Gain", "Fat Loss"] as const).map(
-              (cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  data-ocid={`workout.category_${cat.toLowerCase().replace(/ /g, "_")}_tab`}
-                  onClick={() => setCategoryFilter(cat)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                    categoryFilter === cat
-                      ? cat === "All"
-                        ? "bg-[#1E3A8A] text-white border-[#1E3A8A]"
-                        : cat === "Beginner"
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : cat === "Muscle Gain"
-                            ? "bg-purple-600 text-white border-purple-600"
-                            : "bg-orange-500 text-white border-orange-500"
-                      : "border-border text-muted-foreground hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {cat === "All"
-                    ? "📋 All"
-                    : cat === "Beginner"
-                      ? "📘 Beginner"
-                      : cat === "Muscle Gain"
-                        ? "💪 Muscle Gain"
-                        : "🔥 Fat Loss"}
-                </button>
-              ),
-            )}
-          </div>
-        </div>
-
-        {/* Difficulty Legend */}
-        <div className="flex items-center gap-4 mb-5 text-xs text-muted-foreground">
-          <span className="font-medium">Difficulty:</span>
-          {(["Beginner", "Intermediate", "Advanced"] as Difficulty[]).map(
-            (d) => (
-              <div key={d} className="flex items-center gap-1.5">
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${difficultyColors[d].dot}`}
-                />
-                {d}
-              </div>
-            ),
-          )}
-        </div>
-
-        {/* Exercise Grid */}
-        <AnimatePresence mode="wait">
+      <div className="max-w-5xl mx-auto px-4 py-4 w-full flex-1 pb-24">
+        {/* TAB: Plans */}
+        {activeTab === "plans" && (
           <motion.div
-            key={`${audience}-${env}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            key="plans"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
+            className="space-y-4"
           >
+            {/* Audience Selector */}
+            <div data-ocid="workout.tab">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Select Your Group
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {audienceConfig.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    data-ocid={`workout.${a.id}_tab`}
+                    onClick={() => setAudience(a.id)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      audience === a.id
+                        ? "bg-[#1E3A8A] text-white shadow-md"
+                        : "bg-card border border-border text-muted-foreground hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {a.label}
+                    <span
+                      className={`ml-1 text-xs ${audience === a.id ? "text-blue-200" : "text-muted-foreground/60"}`}
+                    >
+                      ({a.ageRange})
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Home / Gym toggle */}
+            <div className="flex items-center gap-2 p-1 bg-muted rounded-xl w-fit">
+              <button
+                type="button"
+                data-ocid="workout.home_toggle"
+                onClick={() => setEnv("home")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${env === "home" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Home size={14} /> Home
+              </button>
+              <button
+                type="button"
+                data-ocid="workout.gym_toggle"
+                onClick={() => setEnv("gym")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${env === "gym" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Dumbbell size={14} /> Gym
+              </button>
+            </div>
+
             {/* Start Workout Button */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center">
               <button
                 type="button"
                 data-ocid="workout.primary_button"
@@ -1694,14 +1615,128 @@ export default function WorkoutPage({
                   setTimerEnv(env);
                   setShowTimer(true);
                 }}
-                className="flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] hover:from-[#1e40af] hover:to-[#2563eb] text-white font-bold rounded-full shadow-lg text-sm transition-all active:scale-95"
+                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white font-bold rounded-full shadow-lg text-sm transition-all active:scale-95"
               >
-                <span className="text-base">▶</span>
-                Start Workout
+                <span>▶</span> Start Workout
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Exercise Grid */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${audience}-${env}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {plan.exercises.map((ex, i) => (
+                    <ExerciseCard
+                      key={ex.name}
+                      exercise={ex}
+                      index={i}
+                      onClick={() => setSelectedExercise(ex)}
+                    />
+                  ))}
+                </div>
+                <WeeklySchedule schedule={plan.schedule} />
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
+        )}
+
+        {/* TAB: Library */}
+        {activeTab === "library" && (
+          <motion.div
+            key="library"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-4"
+          >
+            {/* Difficulty Legend */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="font-medium">Difficulty:</span>
+              {(["Beginner", "Intermediate", "Advanced"] as Difficulty[]).map(
+                (d) => (
+                  <div key={d} className="flex items-center gap-1.5">
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ${difficultyColors[d].dot}`}
+                    />
+                    {d}
+                  </div>
+                ),
+              )}
+            </div>
+
+            {/* Body Part Filter */}
+            <div data-ocid="workout.tab">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Filter by Muscle Group
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "All",
+                  "Arms",
+                  "Legs",
+                  "Core",
+                  "Back",
+                  "Chest",
+                  "Full Body",
+                ].map((bp) => (
+                  <button
+                    key={bp}
+                    type="button"
+                    onClick={() => setBodyPartFilter(bp)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${bodyPartFilter === bp ? "bg-[#1E3A8A] text-white shadow-sm" : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"}`}
+                  >
+                    {bp}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Category
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {(["All", "Beginner", "Muscle Gain", "Fat Loss"] as const).map(
+                  (cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      data-ocid={`workout.category_${cat.toLowerCase().replace(/ /g, "_")}_tab`}
+                      onClick={() => setCategoryFilter(cat)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                        categoryFilter === cat
+                          ? cat === "All"
+                            ? "bg-[#1E3A8A] text-white border-[#1E3A8A]"
+                            : cat === "Beginner"
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : cat === "Muscle Gain"
+                                ? "bg-purple-600 text-white border-purple-600"
+                                : "bg-orange-500 text-white border-orange-500"
+                          : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                      }`}
+                    >
+                      {cat === "All"
+                        ? "📋 All"
+                        : cat === "Beginner"
+                          ? "📘 Beginner"
+                          : cat === "Muscle Gain"
+                            ? "💪 Muscle Gain"
+                            : "🔥 Fat Loss"}
+                    </button>
+                  ),
+                )}
+              </div>
+            </div>
+
+            {/* Filtered exercise grid across all plans */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {plan.exercises
                 .filter((ex) => {
                   if (categoryFilter !== "All") {
@@ -1734,19 +1769,20 @@ export default function WorkoutPage({
                   if (bodyPartFilter === "Core")
                     return (
                       m.includes("core") ||
-                      m.includes("abs") ||
+                      m.includes("ab") ||
                       m.includes("oblique")
                     );
                   if (bodyPartFilter === "Back")
                     return (
                       m.includes("back") ||
                       m.includes("lat") ||
-                      m.includes("rhomboid")
+                      m.includes("rhomboid") ||
+                      m.includes("trap")
                     );
                   if (bodyPartFilter === "Chest")
                     return m.includes("chest") || m.includes("pec");
                   if (bodyPartFilter === "Full Body")
-                    return m.includes("full body");
+                    return m.includes("full") || m.includes("cardio");
                   return true;
                 })
                 .map((ex, i) => (
@@ -1758,37 +1794,42 @@ export default function WorkoutPage({
                   />
                 ))}
             </div>
-
-            {/* Weekly Schedule */}
-            <WeeklySchedule schedule={plan.schedule} />
           </motion.div>
-        </AnimatePresence>
+        )}
 
-        {/* Workout History */}
-        <WorkoutHistory />
-
-        {/* Safety Note */}
-        <div className="mt-8 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl">
-          <p className="text-sm text-amber-800 dark:text-amber-300">
-            <span className="font-bold">⚠️ Safety Note: </span>
-            Always warm up for 5–10 minutes before any workout. Stop if you feel
-            pain. Consult a doctor before starting a new exercise program,
-            especially if you have health conditions.
-          </p>
-        </div>
-
-        {/* Footer */}
-        <footer className="text-center text-xs text-muted-foreground mt-10 pb-6">
-          © {new Date().getFullYear()}. Built with ❤️ using{" "}
-          <a
-            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-            className="underline hover:text-foreground"
-            target="_blank"
-            rel="noreferrer"
+        {/* TAB: History */}
+        {activeTab === "history" && (
+          <motion.div
+            key="history"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            caffeine.ai
-          </a>
-        </footer>
+            <WorkoutHistory />
+          </motion.div>
+        )}
+
+        {/* TAB: Tools */}
+        {activeTab === "tools" && (
+          <motion.div
+            key="tools"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-4"
+          >
+            <ExerciseOfDayCard />
+            <CalorieBurnCalculator />
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl">
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                <span className="font-bold">⚠️ Safety Note: </span>
+                Always warm up for 5–10 minutes before any workout. Stop if you
+                feel pain. Consult a doctor before starting a new exercise
+                program.
+              </p>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Exercise Detail Modal */}
@@ -1820,6 +1861,7 @@ export default function WorkoutPage({
           />
         )}
       </AnimatePresence>
+
       <BottomNav
         activePage="move"
         onHome={onHome ?? onBack}

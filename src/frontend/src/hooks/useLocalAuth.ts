@@ -4,6 +4,7 @@ import type { ProfileGoal } from "../backend";
 export interface LocalUser {
   name: string;
   username: string; // user code e.g. EPIC-A3X9KZ
+  phone?: string; // optional phone number for persistent login
   age: number;
   weightKg: number;
   heightCm: number;

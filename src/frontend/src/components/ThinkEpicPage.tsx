@@ -89,7 +89,6 @@ const FRIED_KEYWORDS = [
   "unniyappam",
   "achappam",
 ];
-
 const FISH_KEYWORDS = [
   "fish",
   "meen",
@@ -105,7 +104,6 @@ const FISH_KEYWORDS = [
   "mussel",
   "kallummakkaya",
 ];
-
 const RICE_KEYWORDS = [
   "rice",
   "kanji",
@@ -135,23 +133,21 @@ function getSeasonalAlert(): {
   emoji: string;
   title: string;
 } {
-  const month = new Date().getMonth() + 1; // 1-12
-  if (month >= 6 && month <= 9) {
+  const month = new Date().getMonth() + 1;
+  if (month >= 6 && month <= 9)
     return {
       title: "🌧️ Rainy Season Alert",
       text: "Food poisoning risk is higher during monsoon. Avoid street food and day-old leftovers. Store cooked food in the fridge within 2 hours.",
       color: "red",
       emoji: "🌧️",
     };
-  }
-  if (month >= 3 && month <= 5) {
+  if (month >= 3 && month <= 5)
     return {
       title: "☀️ Summer Alert",
       text: "Stay hydrated! Aim for at least 3L of water today. Foods spoil faster in the heat — refrigerate leftovers immediately.",
       color: "blue",
       emoji: "☀️",
     };
-  }
   return {
     title: "🍃 Winter Wellness Tip",
     text: "Boost your immunity with turmeric, ginger, and warm foods. Great time for pepper rasam and ginger tea!",
@@ -248,6 +244,15 @@ function isCoconutTimer(name: string) {
   return COCONUT_KEYWORDS_TIMER.some((k) => n.includes(k));
 }
 
+type TabId = "alerts" | "sugar" | "safety" | "learn";
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: "alerts", label: "⚡ Alerts" },
+  { id: "sugar", label: "🍬 Sugar" },
+  { id: "safety", label: "🛡️ Safety" },
+  { id: "learn", label: "🧩 Learn" },
+];
+
 export default function ThinkEpicPage({
   onBack,
   onHome,
@@ -257,13 +262,11 @@ export default function ThinkEpicPage({
   onHistory,
   onLeaderboard,
 }: ThinkEpicPageProps) {
+  const [activeTab, setActiveTab] = useState<TabId>("alerts");
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodType>("");
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
-
-  // Food Safety Timer state
   const [timerTick, setTimerTick] = useState(0);
-  // Sugar Detox Mode
   const [sugarDetoxMode, setSugarDetoxMode] = useState<boolean>(() => {
     try {
       return localStorage.getItem("doitepic_sugar_detox_mode") === "true";
@@ -282,16 +285,13 @@ export default function ThinkEpicPage({
   const todayLog = useMemo(() => readTodayLog(), []);
   const allLog = useMemo(() => readAllRecentLogs(), []);
   const user = useMemo(() => readUserProfile(), []);
-
   const seasonal = getSeasonalAlert();
 
-  // Timer tick every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => setTimerTick((t) => t + 1), 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Sugar detox streak calculation
   const sugarDetoxStreak = useMemo(() => {
     if (!sugarDetoxStart) return 0;
     const start = new Date(sugarDetoxStart);
@@ -302,9 +302,8 @@ export default function ThinkEpicPage({
     return Math.max(0, diff);
   }, [sugarDetoxStart]);
 
-  // Food safety timers - computed inline from timerTick + todayLog
   const safetyTimers = (() => {
-    void timerTick; // triggers re-render on interval
+    void timerTick;
     return todayLog
       .filter((e) => isRiceTimer(e.foodName) || isCoconutTimer(e.foodName))
       .map((e) => {
@@ -333,15 +332,11 @@ export default function ThinkEpicPage({
       });
   })();
 
-  // Sugar tracker
-  const todaySugar = useMemo(() => {
-    return todayLog.reduce((sum, e) => {
-      const estimatedSugar = e.carbs * 0.3;
-      return sum + estimatedSugar;
-    }, 0);
-  }, [todayLog]);
+  const todaySugar = useMemo(
+    () => todayLog.reduce((sum, e) => sum + e.carbs * 0.3, 0),
+    [todayLog],
+  );
 
-  // Weekly sugar trend (last 7 days)
   const weeklySugar = useMemo(() => {
     const days: { date: string; label: string; sugar: number }[] = [];
     for (let i = 6; i >= 0; i--) {
@@ -378,7 +373,6 @@ export default function ThinkEpicPage({
     ].some((k) => n.includes(k));
   });
 
-  // Compute today's stats
   const todayFried = todayLog.filter((e) => isFried(e.foodName));
   const todayProtein = todayLog.reduce((s, e) => s + (e.protein || 0), 0);
   const todayCarbs = todayLog.reduce((s, e) => s + (e.carbs || 0), 0);
@@ -388,11 +382,8 @@ export default function ThinkEpicPage({
     totalMacroCalories > 0
       ? Math.round((todayCarbs * 4 * 100) / totalMacroCalories)
       : 0;
-
   const hasFish = todayLog.some((e) => isFishItem(e.foodName));
   const hasRice = todayLog.some((e) => isRiceItem(e.foodName));
-
-  // Visual Scores
   const oilScore =
     todayFried.length === 0 ? 100 : todayFried.length === 1 ? 55 : 20;
   const oilLabel =
@@ -407,7 +398,6 @@ export default function ThinkEpicPage({
       : todayFried.length === 1
         ? "bg-amber-500"
         : "bg-red-500";
-
   const proteinScore = Math.min(100, Math.round((todayProtein / 60) * 100));
   const proteinLabel =
     todayProtein >= 60 ? "Good" : todayProtein >= 30 ? "Low" : "Very Low";
@@ -417,7 +407,6 @@ export default function ThinkEpicPage({
       : todayProtein >= 30
         ? "bg-amber-500"
         : "bg-red-500";
-
   const freshnessScore = hasFish || hasRice ? (hasFish ? 65 : 80) : -1;
   const freshnessLabel =
     freshnessScore === -1
@@ -425,8 +414,6 @@ export default function ThinkEpicPage({
       : hasFish
         ? "Check freshness before eating"
         : "Store within 2 hours";
-
-  // Habit insights from all logs
   const allFried = allLog.filter((e) => isFried(e.foodName));
   const allProtein = allLog.reduce((s, e) => s + (e.protein || 0), 0);
   const logDays = new Set(
@@ -434,8 +421,6 @@ export default function ThinkEpicPage({
   ).size;
   const avgProteinPerDay = logDays > 0 ? allProtein / logDays : 0;
   const avgFriedPerDay = logDays > 0 ? allFried.length / logDays : 0;
-
-  const goal = user?.goal ?? "";
   const safetyResult = selectedFood ? SAFETY_RESULTS[selectedFood] : null;
 
   const seasonalBannerCls =
@@ -444,7 +429,6 @@ export default function ThinkEpicPage({
       : seasonal.color === "blue"
         ? "bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:border-blue-800"
         : "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800";
-
   const seasonalTextCls =
     seasonal.color === "red"
       ? "text-red-800 dark:text-red-200"
@@ -452,240 +436,451 @@ export default function ThinkEpicPage({
         ? "text-blue-800 dark:text-blue-200"
         : "text-emerald-800 dark:text-emerald-200";
 
+  // silence unused variable warning
+  void user;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             type="button"
             data-ocid="thinkepic.close_button"
             onClick={onBack}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} />
           </button>
           <div className="flex items-center gap-2">
-            <Brain className="w-6 h-6 text-primary" />
-            <div>
-              <h1 className="text-lg font-bold text-foreground leading-tight">
-                ThinkEpic 🧠
-              </h1>
-              <p className="text-xs text-muted-foreground leading-none">
-                Real-time food safety & smart health guidance
-              </p>
-            </div>
+            <Brain className="w-5 h-5 text-primary" />
+            <h1 className="text-base font-bold text-foreground">
+              ThinkEpic 🧠
+            </h1>
+          </div>
+        </div>
+        {/* Tab bar — sticky below header */}
+        <div className="max-w-3xl mx-auto px-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                data-ocid={`thinkepic.${tab.id}_tab`}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
+                  activeTab === tab.id
+                    ? "bg-primary text-white"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 flex-1 pb-20">
-        {/* 1. Seasonal Alert Banner */}
-        <AnimatePresence>
-          {!bannerDismissed && (
-            <motion.div
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className={`relative rounded-xl border px-4 py-3 pr-10 ${seasonalBannerCls}`}
-              data-ocid="thinkepic.panel"
-            >
-              <p className={`font-bold text-sm mb-0.5 ${seasonalTextCls}`}>
-                {seasonal.title}
-              </p>
-              <p className={`text-xs leading-relaxed ${seasonalTextCls}`}>
-                {seasonal.text}
-              </p>
-              <button
-                type="button"
-                onClick={() => setBannerDismissed(true)}
-                data-ocid="thinkepic.close_button"
-                className={`absolute top-2.5 right-3 ${seasonalTextCls} opacity-60 hover:opacity-100`}
-              >
-                <X size={14} />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <main className="max-w-3xl mx-auto w-full px-4 py-4 space-y-3 flex-1 pb-24">
+        {/* TAB: Alerts */}
+        {activeTab === "alerts" && (
+          <motion.div
+            key="alerts"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
+          >
+            {/* Seasonal Banner */}
+            <AnimatePresence>
+              {!bannerDismissed && (
+                <motion.div
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className={`relative rounded-xl border px-4 py-3 pr-10 ${seasonalBannerCls}`}
+                  data-ocid="thinkepic.panel"
+                >
+                  <p className={`font-bold text-sm mb-0.5 ${seasonalTextCls}`}>
+                    {seasonal.title}
+                  </p>
+                  <p className={`text-xs leading-relaxed ${seasonalTextCls}`}>
+                    {seasonal.text}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setBannerDismissed(true)}
+                    data-ocid="thinkepic.close_button"
+                    className={`absolute top-2.5 right-3 ${seasonalTextCls} opacity-60 hover:opacity-100`}
+                  >
+                    <X size={14} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-        {/* 2. Smart Alerts Panel */}
-        <section data-ocid="thinkepic.section">
-          <h2 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
-            ⚡ Smart Alerts
-          </h2>
-          <div className="space-y-2">
-            {todayLog.length === 0 ? (
-              <div
-                data-ocid="thinkepic.empty_state"
-                className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground text-center"
-              >
-                No food logged today. Start logging to get real-time alerts!
+            {/* Smart Alerts */}
+            <section data-ocid="thinkepic.section">
+              <h2 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
+                ⚡ Smart Alerts
+              </h2>
+              <div className="space-y-2">
+                {todayLog.length === 0 ? (
+                  <div
+                    data-ocid="thinkepic.empty_state"
+                    className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground text-center"
+                  >
+                    No food logged today. Start logging to get real-time alerts!
+                  </div>
+                ) : (
+                  <>
+                    {todayFried.length >= 2 && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex gap-3 items-start rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-3"
+                        data-ocid="thinkepic.card"
+                      >
+                        <span className="text-xl">🔴</span>
+                        <div>
+                          <p className="text-sm font-semibold text-red-800 dark:text-red-200">
+                            High oil intake today
+                          </p>
+                          <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
+                            You've had {todayFried.length} fried items (
+                            {todayFried.map((e) => e.foodName).join(", ")}). Try
+                            steamed or boiled options for the rest of the day.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                    {todayProtein < 50 && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="flex gap-3 items-start rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3"
+                        data-ocid="thinkepic.card"
+                      >
+                        <span className="text-xl">🟡</span>
+                        <div>
+                          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                            Protein is low today
+                          </p>
+                          <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                            Only {Math.round(todayProtein)}g so far. Add eggs,
+                            chicken, or kadala to boost your intake.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                    {carbPercent > 60 && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="flex gap-3 items-start rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3"
+                        data-ocid="thinkepic.card"
+                      >
+                        <span className="text-xl">🟡</span>
+                        <div>
+                          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                            Carb-heavy day ({carbPercent}% carbs)
+                          </p>
+                          <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                            Balance with protein-rich foods like dal, eggs, or
+                            grilled fish.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                    {todayFried.length < 2 &&
+                      todayProtein >= 50 &&
+                      carbPercent <= 60 && (
+                        <div
+                          className="flex gap-3 items-start rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-3"
+                          data-ocid="thinkepic.card"
+                        >
+                          <span className="text-xl">🟢</span>
+                          <div>
+                            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+                              Looking good today!
+                            </p>
+                            <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
+                              Your food choices are balanced. Keep it up!
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                  </>
+                )}
               </div>
-            ) : (
-              <>
-                {todayFried.length >= 2 && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex gap-3 items-start rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-3"
-                    data-ocid="thinkepic.card"
-                  >
-                    <span className="text-xl">🔴</span>
-                    <div>
-                      <p className="text-sm font-semibold text-red-800 dark:text-red-200">
-                        High oil intake today
-                      </p>
-                      <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
-                        You've had {todayFried.length} fried items (
-                        {todayFried.map((e) => e.foodName).join(", ")}). Try
-                        steamed or boiled options for the rest of the day.
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-                {todayProtein < 50 && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.05 }}
-                    className="flex gap-3 items-start rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3"
-                    data-ocid="thinkepic.card"
-                  >
-                    <span className="text-xl">🟡</span>
-                    <div>
-                      <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-                        Protein is low today
-                      </p>
-                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                        Only {Math.round(todayProtein)}g so far. Add eggs,
-                        chicken, or kadala to boost your intake.
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-                {carbPercent > 60 && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="flex gap-3 items-start rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3"
-                    data-ocid="thinkepic.card"
-                  >
-                    <span className="text-xl">🟡</span>
-                    <div>
-                      <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-                        Carb-heavy day ({carbPercent}% carbs)
-                      </p>
-                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                        Balance with protein-rich foods like dal, eggs, or
-                        grilled fish.
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-                {todayFried.length < 2 &&
-                  todayProtein >= 50 &&
-                  carbPercent <= 60 && (
-                    <div
-                      className="flex gap-3 items-start rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-3"
+            </section>
+
+            {/* Food Safety Timer */}
+            <section data-ocid="thinkepic.section">
+              <h2 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
+                ⏱️ Food Safety Timer
+              </h2>
+              {safetyTimers.length === 0 ? (
+                <div
+                  data-ocid="thinkepic.empty_state"
+                  className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground text-center"
+                >
+                  No rice or coconut curry logged today. Log a meal to start a
+                  safety timer.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {safetyTimers.map((timer) => (
+                    <motion.div
+                      key={timer.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`rounded-xl border p-4 ${timer.status === "green" ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800" : timer.status === "amber" ? "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800" : "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800"}`}
                       data-ocid="thinkepic.card"
                     >
-                      <span className="text-xl">🟢</span>
-                      <div>
-                        <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
-                          Looking good today!
-                        </p>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
-                          Your food choices are balanced. Keep it up!
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p
+                            className={`text-sm font-bold ${timer.status === "green" ? "text-emerald-800 dark:text-emerald-200" : timer.status === "amber" ? "text-amber-800 dark:text-amber-200" : "text-red-800 dark:text-red-200"}`}
+                          >
+                            {timer.status === "green"
+                              ? "🟢"
+                              : timer.status === "amber"
+                                ? "🟡"
+                                : "🔴"}{" "}
+                            {timer.foodName}
+                          </p>
+                          <p
+                            className={`text-xs mt-0.5 ${timer.status === "green" ? "text-emerald-700 dark:text-emerald-300" : timer.status === "amber" ? "text-amber-700 dark:text-amber-300" : "text-red-700 dark:text-red-300"}`}
+                          >
+                            {timer.limitLabel} food safety limit
+                          </p>
+                        </div>
+                        <p
+                          className={`text-sm font-bold ${timer.status === "red" ? "text-red-700 dark:text-red-300" : "text-foreground"}`}
+                        >
+                          {timer.expired ? "Expired" : timer.timeLeft}
                         </p>
                       </div>
-                    </div>
-                  )}
-              </>
-            )}
-          </div>
-        </section>
+                      <div className="h-2 rounded-full bg-white/60 dark:bg-black/20 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${timer.status === "green" ? "bg-emerald-500" : timer.status === "amber" ? "bg-amber-500" : "bg-red-500"}`}
+                          style={{ width: `${timer.pct}%` }}
+                        />
+                      </div>
+                      {timer.status === "red" && (
+                        <p className="text-xs font-semibold text-red-800 dark:text-red-200 mt-2">
+                          ⚠️ Time's up! Refrigerate or discard this food
+                          immediately.
+                        </p>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </section>
 
-        {/* FOOD SAFETY TIMER */}
-        <section data-ocid="thinkepic.section">
-          <h2 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
-            ⏱️ Food Safety Timer
-          </h2>
-          {safetyTimers.length === 0 ? (
-            <div
-              data-ocid="thinkepic.empty_state"
-              className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground text-center"
-            >
-              No rice or coconut curry logged today. Log a meal to start a
-              safety timer.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {safetyTimers.map((timer) => (
-                <motion.div
-                  key={timer.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`rounded-xl border p-4 ${
-                    timer.status === "green"
-                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800"
-                      : timer.status === "amber"
-                        ? "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800"
-                        : "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800"
-                  }`}
-                  data-ocid="thinkepic.card"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p
-                        className={`text-sm font-bold ${timer.status === "green" ? "text-emerald-800 dark:text-emerald-200" : timer.status === "amber" ? "text-amber-800 dark:text-amber-200" : "text-red-800 dark:text-red-200"}`}
+            {/* Visual Scores */}
+            <section data-ocid="thinkepic.section">
+              <h2 className="text-base font-bold text-foreground mb-3">
+                📊 Visual Scores
+              </h2>
+              <Card className="border border-border">
+                <CardContent className="p-4 space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-foreground">
+                        🍳 Oil Score
+                      </span>
+                      <Badge
+                        className={
+                          oilLabel === "Clean"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-0"
+                            : oilLabel === "Moderate"
+                              ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-0"
+                              : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-0"
+                        }
                       >
-                        {timer.status === "green"
-                          ? "🟢"
-                          : timer.status === "amber"
-                            ? "🟡"
-                            : "🔴"}{" "}
-                        {timer.foodName}
-                      </p>
-                      <p
-                        className={`text-xs mt-0.5 ${timer.status === "green" ? "text-emerald-700 dark:text-emerald-300" : timer.status === "amber" ? "text-amber-700 dark:text-amber-300" : "text-red-700 dark:text-red-300"}`}
-                      >
-                        {timer.limitLabel} food safety limit
-                      </p>
+                        {oilLabel}
+                      </Badge>
                     </div>
-                    <div className="text-right">
-                      <p
-                        className={`text-sm font-bold ${timer.status === "red" ? "text-red-700 dark:text-red-300" : "text-foreground"}`}
-                      >
-                        {timer.expired ? "Expired" : timer.timeLeft}
-                      </p>
+                    <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${oilColor}`}
+                        style={{ width: `${oilScore}%` }}
+                      />
                     </div>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/60 dark:bg-black/20 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${timer.status === "green" ? "bg-emerald-500" : timer.status === "amber" ? "bg-amber-500" : "bg-red-500"}`}
-                      style={{ width: `${timer.pct}%` }}
-                    />
-                  </div>
-                  {timer.status === "red" && (
-                    <p className="text-xs font-semibold text-red-800 dark:text-red-200 mt-2">
-                      ⚠️ Time&apos;s up! Refrigerate or discard this food
-                      immediately.
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {todayFried.length === 0
+                        ? "No fried foods logged today — great!"
+                        : `${todayFried.length} fried item(s) logged.`}
                     </p>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </section>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-foreground">
+                        💪 Protein Score
+                      </span>
+                      <Badge
+                        className={
+                          proteinLabel === "Good"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-0"
+                            : proteinLabel === "Low"
+                              ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-0"
+                              : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-0"
+                        }
+                      >
+                        {proteinLabel}
+                      </Badge>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${proteinColor}`}
+                        style={{ width: `${Math.max(4, proteinScore)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {Math.round(todayProtein)}g of recommended 60g+ today.
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-foreground">
+                        🐟 Freshness Score
+                      </span>
+                      <Badge className="bg-muted text-muted-foreground border-0">
+                        {freshnessScore === -1
+                          ? "No data"
+                          : hasFish
+                            ? "Check"
+                            : "Store safely"}
+                      </Badge>
+                    </div>
+                    {freshnessScore === -1 ? (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Log fish, seafood, or rice to see freshness guidance.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700 bg-amber-500"
+                            style={{ width: `${freshnessScore}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {freshnessLabel}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
 
-        {/* SUGAR AWARENESS SYSTEM */}
-        <section data-ocid="thinkepic.section">
-          <h2 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
-            🍬 Sugar Awareness
-          </h2>
-          <div className="space-y-3">
+            {/* AI-style habit suggestions */}
+            <section data-ocid="thinkepic.section">
+              <h2 className="text-base font-bold text-foreground mb-3">
+                🤖 AI Habit Suggestions
+              </h2>
+              <div className="space-y-2">
+                {allLog.length === 0 ? (
+                  <div
+                    data-ocid="thinkepic.empty_state"
+                    className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground text-center"
+                  >
+                    Log meals over a few days to get personalised habit
+                    insights.
+                  </div>
+                ) : (
+                  <>
+                    {avgProteinPerDay < 40 && (
+                      <Card
+                        className="border border-amber-200 dark:border-amber-800"
+                        data-ocid="thinkepic.card"
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex gap-3 items-start">
+                            <span className="text-2xl">🤖</span>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">
+                                Your protein intake is consistently low
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Add 2 eggs or 100g of chicken/fish daily. Even
+                                kadala curry with puttu adds significant
+                                protein. Aim for at least 60g protein every day.
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {carbPercent > 55 && totalMacroCalories > 0 && (
+                      <Card
+                        className="border border-amber-200 dark:border-amber-800"
+                        data-ocid="thinkepic.card"
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex gap-3 items-start">
+                            <span className="text-2xl">🤖</span>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">
+                                Your diet is carb-heavy today
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Kerala tip: replace 1 serving of rice with more
+                                vegetable sabzi or protein. Avial, thoran, or
+                                fish curry are excellent low-carb additions.
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {avgFriedPerDay < 1.5 &&
+                      avgProteinPerDay >= 40 &&
+                      carbPercent <= 55 && (
+                        <Card
+                          className="border border-emerald-200 dark:border-emerald-800"
+                          data-ocid="thinkepic.card"
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex gap-3 items-start">
+                              <span className="text-2xl">🤖</span>
+                              <div>
+                                <p className="text-sm font-semibold text-foreground">
+                                  Great eating habits!
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  Your logged data shows balanced eating
+                                  patterns. Keep maintaining this consistency
+                                  for long-term health benefits.
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                  </>
+                )}
+              </div>
+            </section>
+          </motion.div>
+        )}
+
+        {/* TAB: Sugar */}
+        {activeTab === "sugar" && (
+          <motion.div
+            key="sugar"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
+          >
             {/* Daily Sugar Tracker */}
             <Card className="border border-border">
               <CardContent className="p-4 space-y-3">
@@ -776,45 +971,13 @@ export default function ThinkEpicPage({
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-2.5 h-2.5 rounded-sm bg-red-500 inline-block" />
-                    Over 25g (limit)
+                    Over 25g
                   </span>
                 </div>
-                {(() => {
-                  const daysOver = weeklySugar.filter(
-                    (d) => d.sugar > 25,
-                  ).length;
-                  const avg = weeklySugar.reduce((s, d) => s + d.sugar, 0) / 7;
-                  if (daysOver === 0 && avg < 15)
-                    return (
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                        Great week! Sugar intake was well within limits every
-                        day.
-                      </p>
-                    );
-                  if (daysOver >= 4)
-                    return (
-                      <p className="text-xs text-red-600 dark:text-red-400 font-medium">
-                        High sugar intake on {daysOver} of the last 7 days. Try
-                        cutting sugary drinks and snacks.
-                      </p>
-                    );
-                  if (daysOver > 0)
-                    return (
-                      <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                        Sugar exceeded the daily limit on {daysOver} day
-                        {daysOver > 1 ? "s" : ""} this week. Keep reducing!
-                      </p>
-                    );
-                  return (
-                    <p className="text-xs text-muted-foreground">
-                      Avg {Math.round(avg)}g/day this week — WHO limit is 25g.
-                    </p>
-                  );
-                })()}
               </CardContent>
             </Card>
 
-            {/* Sugar Score Quick Reference */}
+            {/* Sugar Score Labels */}
             <Card className="border border-border">
               <CardContent className="p-4">
                 <p className="text-sm font-bold text-foreground mb-3">
@@ -847,9 +1010,6 @@ export default function ThinkEpicPage({
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Low: &lt;5g/100ml · Moderate: 5–15g · High: &gt;15g sugar
-                </p>
               </CardContent>
             </Card>
 
@@ -869,8 +1029,7 @@ export default function ThinkEpicPage({
                         High sugar drink detected
                       </p>
                       <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
-                        High sugar + no nutritional value. Frequent intake
-                        increases fat gain risk.
+                        High sugar + no nutritional value.
                         <br />
                         <strong>Try instead:</strong> 🥥 Coconut water, 🍋 Lemon
                         water, or 🥛 Buttermilk
@@ -891,754 +1050,384 @@ export default function ThinkEpicPage({
                         Daily sugar limit exceeded!
                       </p>
                       <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
-                        You&apos;ve consumed {Math.round(todaySugar)}g sugar
-                        today (WHO limit: 25g). Try reducing sugary foods
-                        tomorrow.
+                        You've consumed {Math.round(todaySugar)}g sugar today
+                        (WHO limit: 25g).
                       </p>
                     </div>
                   </motion.div>
                 )}
               </div>
             )}
-          </div>
-        </section>
 
-        {/* SUGAR DETOX MODE */}
-        <section data-ocid="thinkepic.section">
-          <h2 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
-            🔥 Sugar Detox Mode
-          </h2>
-          <Card className="border border-border">
-            <CardContent className="p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-foreground">
-                    Sugar Detox Tracker
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {sugarDetoxMode
-                      ? "Daily sugar limit: 25g (strict mode)"
-                      : "Enable to track your sugar-free streak"}
-                  </p>
+            {/* Sugar Detox Mode */}
+            <Card className="border border-border">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-foreground">
+                      🔥 Sugar Detox Mode
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {sugarDetoxMode
+                        ? "Daily sugar limit: 25g (strict mode)"
+                        : "Enable to track your sugar-free streak"}
+                    </p>
+                  </div>
+                  <Switch
+                    data-ocid="thinkepic.switch"
+                    checked={sugarDetoxMode}
+                    onCheckedChange={(v) => {
+                      setSugarDetoxMode(v);
+                      localStorage.setItem(
+                        "doitepic_sugar_detox_mode",
+                        String(v),
+                      );
+                      if (v && !sugarDetoxStart) {
+                        const now = new Date().toISOString().slice(0, 10);
+                        setSugarDetoxStart(now);
+                        localStorage.setItem("doitepic_sugar_detox_start", now);
+                      }
+                      if (!v) {
+                        setSugarDetoxStart("");
+                        localStorage.removeItem("doitepic_sugar_detox_start");
+                      }
+                    }}
+                  />
                 </div>
-                <Switch
-                  data-ocid="thinkepic.switch"
-                  checked={sugarDetoxMode}
-                  onCheckedChange={(v) => {
-                    setSugarDetoxMode(v);
-                    localStorage.setItem(
-                      "doitepic_sugar_detox_mode",
-                      String(v),
-                    );
-                    if (v && !sugarDetoxStart) {
-                      const now = new Date().toISOString().slice(0, 10);
-                      setSugarDetoxStart(now);
-                      localStorage.setItem("doitepic_sugar_detox_start", now);
-                    }
-                    if (!v) {
-                      setSugarDetoxStart("");
-                      localStorage.removeItem("doitepic_sugar_detox_start");
-                    }
-                  }}
-                />
-              </div>
-              {sugarDetoxMode && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="space-y-3"
-                >
-                  <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3 text-center">
-                    <p className="text-3xl font-black text-amber-800 dark:text-amber-200">
-                      {sugarDetoxStreak}
-                    </p>
-                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-                      day streak 🔥
-                    </p>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    {[
-                      {
-                        days: 3,
-                        badge: "🥉 3-Day Streak",
-                        active: sugarDetoxStreak >= 3,
-                      },
-                      {
-                        days: 7,
-                        badge: "🥈 7-Day Streak",
-                        active: sugarDetoxStreak >= 7,
-                      },
-                      {
-                        days: 30,
-                        badge: "🥇 30-Day Streak",
-                        active: sugarDetoxStreak >= 30,
-                      },
-                    ].map((b) => (
-                      <span
-                        key={b.days}
-                        className={`flex-1 text-center text-xs py-2 px-3 rounded-lg font-semibold border ${
-                          b.active
-                            ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700"
-                            : "bg-muted text-muted-foreground border-border opacity-50"
-                        }`}
-                      >
-                        {b.badge}
-                      </span>
-                    ))}
-                  </div>
-                  {todaySugar > 25 && (
-                    <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-2.5">
-                      <p className="text-xs text-red-800 dark:text-red-200 font-medium">
-                        ⚠️ You&apos;ve exceeded 25g sugar today. Streak at risk —
-                        avoid more sugary foods.
+                {sugarDetoxMode && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="space-y-3"
+                  >
+                    <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3 text-center">
+                      <p className="text-3xl font-black text-amber-800 dark:text-amber-200">
+                        {sugarDetoxStreak}
+                      </p>
+                      <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                        day streak 🔥
                       </p>
                     </div>
-                  )}
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* 3. Visual Scores Panel */}
-        <section data-ocid="thinkepic.section">
-          <h2 className="text-base font-bold text-foreground mb-3">
-            📊 Visual Scores
-          </h2>
-          <Card className="border border-border">
-            <CardContent className="p-4 space-y-4">
-              {/* Oil Score */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-semibold text-foreground">
-                    🍳 Oil Score
-                  </span>
-                  <Badge
-                    className={
-                      oilLabel === "Clean"
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-0"
-                        : oilLabel === "Moderate"
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-0"
-                          : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-0"
-                    }
-                  >
-                    {oilLabel}
-                  </Badge>
-                </div>
-                <div className="h-2.5 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${oilColor}`}
-                    style={{ width: `${oilScore}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {todayFried.length === 0
-                    ? "No fried foods logged today — great!"
-                    : `${todayFried.length} fried item(s) logged. Each adds trans fats and empty calories.`}
-                </p>
-              </div>
-
-              {/* Protein Score */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-semibold text-foreground">
-                    💪 Protein Score
-                  </span>
-                  <Badge
-                    className={
-                      proteinLabel === "Good"
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-0"
-                        : proteinLabel === "Low"
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-0"
-                          : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-0"
-                    }
-                  >
-                    {proteinLabel}
-                  </Badge>
-                </div>
-                <div className="h-2.5 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${proteinColor}`}
-                    style={{ width: `${Math.max(4, proteinScore)}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {Math.round(todayProtein)}g of recommended 60g+ today.
-                </p>
-              </div>
-
-              {/* Freshness Score */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-semibold text-foreground">
-                    🐟 Freshness Score
-                  </span>
-                  <Badge className="bg-muted text-muted-foreground border-0">
-                    {freshnessScore === -1
-                      ? "No data"
-                      : hasFish
-                        ? "Check"
-                        : "Store safely"}
-                  </Badge>
-                </div>
-                {freshnessScore === -1 ? (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Log fish, seafood, or rice to see freshness guidance.
-                  </p>
-                ) : (
-                  <>
-                    <div className="h-2.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-700 bg-amber-500"
-                        style={{ width: `${freshnessScore}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {freshnessLabel}
-                    </p>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* 4. Kerala Food Safety Hub */}
-        <section data-ocid="thinkepic.section">
-          <h2 className="text-base font-bold text-foreground mb-3">
-            🛡️ Kerala Food Safety Hub
-          </h2>
-          <div className="space-y-2">
-            {[
-              {
-                id: "rice",
-                emoji: "🍚",
-                title: "Cooked Rice",
-                risk: "high" as const,
-                riskLabel: "High Risk",
-                summary:
-                  "Bacterial growth risk in Kerala's humidity. Don't leave cooked rice outside for more than 2 hours.",
-                detail:
-                  "Bacillus cereus spores survive cooking and multiply rapidly at room temperature. In Kerala's humid climate, cooked rice should be refrigerated within 2 hours. Never leave rice in the rice cooker overnight without refrigerating.",
-              },
-              {
-                id: "fish",
-                emoji: "🐟",
-                title: "Fish & Seafood",
-                risk: "high" as const,
-                riskLabel: "High Risk",
-                summary:
-                  "Check before cooking: no strong smell, firm texture. Buy from busy shops with high turnover.",
-                detail:
-                  "Fish spoils rapidly in hot weather. Histamine poisoning from spoiled fish causes severe reactions. Always buy from a busy market (high turnover = fresher stock). Refrigerate immediately when you get home. Cook within 24 hours of purchase.",
-                checklist: FRESHNESS_CHECKLIST,
-              },
-              {
-                id: "oil",
-                emoji: "🍗",
-                title: "Reused Cooking Oil",
-                risk: "moderate" as const,
-                riskLabel: "Moderate Risk",
-                summary:
-                  "Common in fried snacks. Reused oil forms toxic compounds. Avoid frequent fried snacks.",
-                detail:
-                  "Oil reheated multiple times forms acrolein, trans fats, and other toxic compounds. Commercial fried snacks (vada, chips, pazham pori) are often made with repeatedly reused oil. Limit to 2–3 times a week maximum.",
-              },
-              {
-                id: "coconut",
-                emoji: "🥥",
-                title: "Coconut-Based Curries",
-                risk: "moderate" as const,
-                riskLabel: "Moderate Risk",
-                summary:
-                  "Spoils quickly. Refrigerate within 4–6 hours. Never reheat more than once.",
-                detail:
-                  "The high fat content in coconut milk provides a perfect environment for bacterial growth. Curries like fish molee, stew, or avial with coconut milk should be refrigerated within 4 hours of cooking and consumed within 24 hours.",
-              },
-              {
-                id: "street",
-                emoji: "🧊",
-                title: "Street Food",
-                risk: "moderate" as const,
-                riskLabel: "Moderate Risk",
-                summary:
-                  "Choose busy stalls (high turnover = fresher food). Avoid cut fruits from roadside.",
-                detail:
-                  "Street food risk varies widely. Busy stalls with high customer turnover prepare fresh batches more frequently. Avoid cut fruits and pre-prepared salads exposed to air and insects. Prefer cooked-to-order items and avoid reheated foods.",
-              },
-            ].map((item) => (
-              <Card
-                key={item.id}
-                className="border border-border cursor-pointer hover:shadow-sm transition-shadow"
-                data-ocid="thinkepic.card"
-              >
-                <button
-                  type="button"
-                  className="w-full text-left"
-                  onClick={() =>
-                    setExpandedCard(expandedCard === item.id ? null : item.id)
-                  }
-                >
-                  <CardHeader className="p-4 pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{item.emoji}</span>
-                        <CardTitle className="text-sm font-bold text-foreground">
-                          {item.title}
-                        </CardTitle>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          className={
-                            item.risk === "high"
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 border-0 text-xs"
-                              : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-0 text-xs"
-                          }
+                    <div className="flex gap-2 flex-wrap">
+                      {[
+                        {
+                          days: 3,
+                          badge: "🥉 3-Day Streak",
+                          active: sugarDetoxStreak >= 3,
+                        },
+                        {
+                          days: 7,
+                          badge: "🥈 7-Day Streak",
+                          active: sugarDetoxStreak >= 7,
+                        },
+                        {
+                          days: 30,
+                          badge: "🥇 30-Day Streak",
+                          active: sugarDetoxStreak >= 30,
+                        },
+                      ].map((b) => (
+                        <span
+                          key={b.days}
+                          className={`flex-1 text-center text-xs py-2 px-3 rounded-lg font-semibold border ${b.active ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700" : "bg-muted text-muted-foreground border-border opacity-50"}`}
                         >
-                          {item.riskLabel}
-                        </Badge>
-                        <span className="text-muted-foreground text-xs">
-                          {expandedCard === item.id ? "▲" : "▼"}
+                          {b.badge}
                         </span>
-                      </div>
+                      ))}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1 ml-8">
-                      {item.summary}
-                    </p>
-                  </CardHeader>
-                </button>
-                <AnimatePresence>
-                  {expandedCard === item.id && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="overflow-hidden"
-                    >
-                      <CardContent className="px-4 pb-4 pt-0">
-                        <div className="ml-8">
-                          <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                            {item.detail}
-                          </p>
-                          {item.checklist && (
-                            <div>
-                              <p className="text-xs font-semibold text-foreground mb-2">
-                                ✅ Freshness Checklist
-                              </p>
-                              <ul className="space-y-1.5">
-                                {item.checklist.map((check) => (
-                                  <li
-                                    key={check}
-                                    className="flex items-center gap-2 text-xs text-muted-foreground"
-                                  >
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                                    {check}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Card>
-            ))}
-          </div>
-        </section>
+                    {todaySugar > 25 && (
+                      <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-2.5">
+                        <p className="text-xs text-red-800 dark:text-red-200 font-medium">
+                          ⚠️ You've exceeded 25g sugar today. Streak at risk!
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
-        {/* 5. Is This Safe? Tool */}
-        <section data-ocid="thinkepic.section">
-          <h2 className="text-base font-bold text-foreground mb-3">
-            🧪 Is This Safe?
-          </h2>
-          <Card className="border border-border">
-            <CardContent className="p-4 space-y-4">
-              <p className="text-xs text-muted-foreground">
-                Select a food item to get an instant safety assessment.
-              </p>
-              <Select
-                value={selectedFood}
-                onValueChange={(v) => setSelectedFood(v as FoodType)}
-              >
-                <SelectTrigger data-ocid="thinkepic.select" className="w-full">
-                  <SelectValue placeholder="Choose a food type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="leftover_rice">
-                    🍚 Leftover Rice
-                  </SelectItem>
-                  <SelectItem value="street_food">🛒 Street Food</SelectItem>
-                  <SelectItem value="fish_today">
-                    🐟 Fish (Bought Today)
-                  </SelectItem>
-                  <SelectItem value="packaged_snack">
-                    📦 Packaged Snack
-                  </SelectItem>
-                  <SelectItem value="coconut_curry">
-                    🥥 Coconut Curry
-                  </SelectItem>
-                  <SelectItem value="fried_snack">🍗 Fried Snack</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <AnimatePresence mode="wait">
-                {safetyResult && (
-                  <motion.div
-                    key={selectedFood}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    className={
-                      safetyResult.risk === "safe"
-                        ? "rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-4"
-                        : safetyResult.risk === "moderate"
-                          ? "rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-4"
-                          : "rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-4"
-                    }
+        {/* TAB: Safety */}
+        {activeTab === "safety" && (
+          <motion.div
+            key="safety"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
+          >
+            <section data-ocid="thinkepic.section">
+              <h2 className="text-base font-bold text-foreground mb-3">
+                🛡️ Kerala Food Safety Hub
+              </h2>
+              <div className="space-y-2">
+                {[
+                  {
+                    id: "rice",
+                    emoji: "🍚",
+                    title: "Cooked Rice",
+                    risk: "high" as const,
+                    riskLabel: "High Risk",
+                    summary:
+                      "Bacterial growth risk in Kerala's humidity. Don't leave cooked rice outside for more than 2 hours.",
+                    detail:
+                      "Bacillus cereus spores survive cooking and multiply rapidly at room temperature. In Kerala's humid climate, cooked rice should be refrigerated within 2 hours. Never leave rice in the rice cooker overnight without refrigerating.",
+                    checklist: undefined,
+                  },
+                  {
+                    id: "fish",
+                    emoji: "🐟",
+                    title: "Fish & Seafood",
+                    risk: "high" as const,
+                    riskLabel: "High Risk",
+                    summary:
+                      "Check before cooking: no strong smell, firm texture. Buy from busy shops with high turnover.",
+                    detail:
+                      "Fish spoils rapidly in hot weather. Histamine poisoning from spoiled fish causes severe reactions. Always buy from a busy market. Refrigerate immediately. Cook within 24 hours.",
+                    checklist: FRESHNESS_CHECKLIST,
+                  },
+                  {
+                    id: "oil",
+                    emoji: "🍗",
+                    title: "Reused Cooking Oil",
+                    risk: "moderate" as const,
+                    riskLabel: "Moderate Risk",
+                    summary:
+                      "Common in fried snacks. Reused oil forms toxic compounds. Avoid frequent fried snacks.",
+                    detail:
+                      "Oil reheated multiple times forms acrolein, trans fats, and other toxic compounds. Commercial fried snacks are often made with repeatedly reused oil. Limit to 2–3 times a week maximum.",
+                    checklist: undefined,
+                  },
+                  {
+                    id: "coconut",
+                    emoji: "🥥",
+                    title: "Coconut-Based Curries",
+                    risk: "moderate" as const,
+                    riskLabel: "Moderate Risk",
+                    summary:
+                      "Spoils quickly. Refrigerate within 4–6 hours. Never reheat more than once.",
+                    detail:
+                      "The high fat content in coconut milk provides a perfect environment for bacterial growth. Curries like fish molee, stew, or avial should be refrigerated within 4 hours and consumed within 24 hours.",
+                    checklist: undefined,
+                  },
+                  {
+                    id: "street",
+                    emoji: "🧊",
+                    title: "Street Food",
+                    risk: "moderate" as const,
+                    riskLabel: "Moderate Risk",
+                    summary:
+                      "Choose busy stalls (high turnover = fresher food). Avoid cut fruits from roadside.",
+                    detail:
+                      "Street food risk varies widely. Busy stalls with high customer turnover prepare fresh batches more frequently. Avoid cut fruits and pre-prepared salads exposed to air and insects.",
+                    checklist: undefined,
+                  },
+                ].map((item) => (
+                  <Card
+                    key={item.id}
+                    className="border border-border cursor-pointer hover:shadow-sm transition-shadow"
                     data-ocid="thinkepic.card"
                   >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">
-                        {safetyResult.risk === "safe"
-                          ? "🟢"
-                          : safetyResult.risk === "moderate"
-                            ? "🟡"
-                            : "🔴"}
-                      </span>
-                      <div>
-                        <p
-                          className={
-                            safetyResult.risk === "safe"
-                              ? "text-sm font-bold text-emerald-800 dark:text-emerald-200"
-                              : safetyResult.risk === "moderate"
-                                ? "text-sm font-bold text-amber-800 dark:text-amber-200"
-                                : "text-sm font-bold text-red-800 dark:text-red-200"
-                          }
-                        >
-                          {safetyResult.title}
-                        </p>
-                        <p
-                          className={
-                            safetyResult.risk === "safe"
-                              ? "text-xs text-emerald-700 dark:text-emerald-300"
-                              : safetyResult.risk === "moderate"
-                                ? "text-xs text-amber-700 dark:text-amber-300"
-                                : "text-xs text-red-700 dark:text-red-300"
-                          }
-                        >
-                          Risk Level:{" "}
-                          <span className="font-semibold capitalize">
-                            {safetyResult.risk}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <p
-                      className={
-                        safetyResult.risk === "safe"
-                          ? "text-xs leading-relaxed text-emerald-800 dark:text-emerald-200"
-                          : safetyResult.risk === "moderate"
-                            ? "text-xs leading-relaxed text-amber-800 dark:text-amber-200"
-                            : "text-xs leading-relaxed text-red-800 dark:text-red-200"
+                    <button
+                      type="button"
+                      className="w-full text-left"
+                      onClick={() =>
+                        setExpandedCard(
+                          expandedCard === item.id ? null : item.id,
+                        )
                       }
                     >
-                      {safetyResult.advice}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* 6. Health Education by Goal */}
-        <section data-ocid="thinkepic.section">
-          <h2 className="text-base font-bold text-foreground mb-3">
-            💪 Health Education
-          </h2>
-          <Card className="border border-border">
-            <CardContent className="p-4">
-              {goal === "muscleGain" && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-2xl">💪</span>
-                    <h3 className="font-bold text-foreground text-sm">
-                      Muscle Gain Mode
-                    </h3>
-                  </div>
-                  <div className="rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3">
-                    <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
-                      <strong>Power Combos:</strong> Puttu + Kadala = complete
-                      protein (complementary amino acids). Add eggs or chicken
-                      to breakfast. Aim for <strong>1.8g protein per kg</strong>{" "}
-                      of body weight daily.
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3">
-                    <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
-                      <strong>Low protein alert:</strong> If you log rice or
-                      tapioca without protein, add eggs, dal, or grilled chicken
-                      to the same meal.
-                    </p>
-                  </div>
-                  <p className="text-xs font-semibold text-foreground mt-2 mb-1">
-                    Quick Tips:
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      "🥚 3 eggs daily",
-                      "🍗 100g chicken = 30g protein",
-                      "🫘 Kadala = 19g per 100g",
-                      "🥛 Milk post-workout",
-                    ].map((tip) => (
-                      <span
-                        key={tip}
-                        className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 px-3 py-1.5 rounded-full font-medium"
-                      >
-                        {tip}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {goal === "weightLoss" && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-2xl">🔥</span>
-                    <h3 className="font-bold text-foreground text-sm">
-                      Weight Loss Mode
-                    </h3>
-                  </div>
-                  <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3">
-                    <p className="text-xs text-amber-800 dark:text-amber-200 font-semibold mb-1">
-                      Smart Swaps (Save 100–200 kcal per meal):
-                    </p>
-                    <ul className="space-y-1 text-xs text-amber-700 dark:text-amber-300">
-                      <li>🔄 Porotta → Chapati (saves ~150 kcal)</li>
-                      <li>🔄 Banana chips → Fresh banana (saves ~100 kcal)</li>
-                      <li>🔄 Fried snacks → Boiled tapioca (saves ~80 kcal)</li>
-                      <li>
-                        🔄 Full coconut milk → Light coconut milk (saves ~60
-                        kcal)
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 p-3">
-                    <p className="text-xs text-red-800 dark:text-red-200 font-semibold mb-1">
-                      High-calorie foods to limit:
-                    </p>
-                    <p className="text-xs text-red-700 dark:text-red-300">
-                      Pazham pori (daily), porotta, banana chips, full-fat
-                      coconut curries, fried fish
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {[
-                      "🥗 More sabzi",
-                      "🍵 Kanji > rice",
-                      "🚶 30 min walk",
-                      "💧 3L water",
-                    ].map((tip) => (
-                      <span
-                        key={tip}
-                        className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 px-3 py-1.5 rounded-full font-medium"
-                      >
-                        {tip}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {(goal === "maintenance" || !goal) && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-2xl">⚖️</span>
-                    <h3 className="font-bold text-foreground text-sm">
-                      {goal ? "Maintenance Mode" : "General Guidance"}
-                    </h3>
-                  </div>
-                  <div className="rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3">
-                    <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
-                      <strong>Balance is key.</strong> 1 plate rice + curry +
-                      salad = ideal meal. Keep oil use moderate. Include
-                      seasonal vegetables. A typical Kerala sadya is actually a
-                      very balanced meal!
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {[
-                      "🥬 Seasonal veg daily",
-                      "🐟 Fish 3x/week",
-                      "🫀 30 min exercise",
-                      "🌿 Turmeric in cooking",
-                    ].map((tip) => (
-                      <span
-                        key={tip}
-                        className="text-xs bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 px-3 py-1.5 rounded-full font-medium"
-                      >
-                        {tip}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* 7. AI-Style Habit Insights */}
-        <section data-ocid="thinkepic.section">
-          <h2 className="text-base font-bold text-foreground mb-3">
-            🤖 Habit Insights
-          </h2>
-          <div className="space-y-2">
-            {allLog.length === 0 ? (
-              <Card
-                className="border border-border"
-                data-ocid="thinkepic.empty_state"
-              >
-                <CardContent className="p-4">
-                  <div className="flex gap-3 items-start">
-                    <span className="text-2xl">🤖</span>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        No data yet
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Start logging your meals to get personalized habit
-                        insights based on your eating patterns!
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                {avgFriedPerDay >= 1.5 && (
-                  <Card
-                    className="border border-amber-200 dark:border-amber-800"
-                    data-ocid="thinkepic.card"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex gap-3 items-start">
-                        <span className="text-2xl">🤖</span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            You eat fried snacks frequently
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Try replacing fried snacks with steamed or baked
-                            options at least 3 days a week. Boiled kappa,
-                            steamed idli, or grilled fish are great Kerala
-                            alternatives.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                {avgProteinPerDay < 40 && logDays > 0 && (
-                  <Card
-                    className="border border-amber-200 dark:border-amber-800"
-                    data-ocid="thinkepic.card"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex gap-3 items-start">
-                        <span className="text-2xl">🤖</span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            Your protein intake is consistently low
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Add 2 eggs or 100g of chicken/fish daily. Even
-                            kadala curry with puttu adds significant protein.
-                            Aim for at least 60g protein every day.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                {carbPercent > 55 && totalMacroCalories > 0 && (
-                  <Card
-                    className="border border-amber-200 dark:border-amber-800"
-                    data-ocid="thinkepic.card"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex gap-3 items-start">
-                        <span className="text-2xl">🤖</span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            Your diet is carb-heavy today
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Kerala tip: replace 1 serving of rice with more
-                            vegetable sabzi or protein. Avial, thoran, or fish
-                            curry are excellent low-carb additions.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                {avgFriedPerDay < 1.5 &&
-                  avgProteinPerDay >= 40 &&
-                  carbPercent <= 55 && (
-                    <Card
-                      className="border border-emerald-200 dark:border-emerald-800"
-                      data-ocid="thinkepic.card"
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex gap-3 items-start">
-                          <span className="text-2xl">🤖</span>
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">
-                              Great eating habits!
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Your logged data shows balanced eating patterns.
-                              Keep maintaining this consistency for long-term
-                              health benefits.
-                            </p>
+                      <CardHeader className="p-4 pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{item.emoji}</span>
+                            <CardTitle className="text-sm font-bold text-foreground">
+                              {item.title}
+                            </CardTitle>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              className={
+                                item.risk === "high"
+                                  ? "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 border-0 text-xs"
+                                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-0 text-xs"
+                              }
+                            >
+                              {item.riskLabel}
+                            </Badge>
+                            <span className="text-muted-foreground text-xs">
+                              {expandedCard === item.id ? "▲" : "▼"}
+                            </span>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
-              </>
-            )}
-          </div>
-        </section>
+                        <p className="text-xs text-muted-foreground mt-1 ml-8">
+                          {item.summary}
+                        </p>
+                      </CardHeader>
+                    </button>
+                    <AnimatePresence>
+                      {expandedCard === item.id && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="overflow-hidden"
+                        >
+                          <CardContent className="px-4 pb-4 pt-0">
+                            <div className="ml-8">
+                              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                                {item.detail}
+                              </p>
+                              {item.checklist && (
+                                <div>
+                                  <p className="text-xs font-semibold text-foreground mb-2">
+                                    ✅ Freshness Checklist
+                                  </p>
+                                  <ul className="space-y-1.5">
+                                    {item.checklist.map((check) => (
+                                      <li
+                                        key={check}
+                                        className="flex items-center gap-2 text-xs text-muted-foreground"
+                                      >
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                                        {check}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </Card>
+                ))}
+              </div>
+            </section>
 
-        {/* Back button at bottom */}
-        {/* Health Quiz of the Day */}
-        <section data-ocid="thinkepic.section" className="space-y-3">
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-            🧩 Health Quiz of the Day
-          </h2>
-          <HealthQuizCard />
-        </section>
+            {/* Is This Safe? */}
+            <section data-ocid="thinkepic.section">
+              <h2 className="text-base font-bold text-foreground mb-3">
+                🧪 Is This Safe?
+              </h2>
+              <Card className="border border-border">
+                <CardContent className="p-4 space-y-4">
+                  <p className="text-xs text-muted-foreground">
+                    Select a food item to get an instant safety assessment.
+                  </p>
+                  <Select
+                    value={selectedFood}
+                    onValueChange={(v) => setSelectedFood(v as FoodType)}
+                  >
+                    <SelectTrigger
+                      data-ocid="thinkepic.select"
+                      className="w-full"
+                    >
+                      <SelectValue placeholder="Choose a food type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="leftover_rice">
+                        🍚 Leftover Rice
+                      </SelectItem>
+                      <SelectItem value="street_food">
+                        🍢 Street Food
+                      </SelectItem>
+                      <SelectItem value="fish_today">
+                        🐟 Fish (Bought Today)
+                      </SelectItem>
+                      <SelectItem value="packaged_snack">
+                        📦 Packaged Snack
+                      </SelectItem>
+                      <SelectItem value="coconut_curry">
+                        🥥 Coconut Curry
+                      </SelectItem>
+                      <SelectItem value="fried_snack">
+                        🍗 Fried Snack
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <AnimatePresence>
+                    {safetyResult && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className={`rounded-xl border p-4 ${safetyResult.risk === "high" ? "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800" : safetyResult.risk === "moderate" ? "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800" : "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800"}`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-2xl">
+                            {safetyResult.risk === "high"
+                              ? "🔴"
+                              : safetyResult.risk === "moderate"
+                                ? "🟡"
+                                : "🟢"}
+                          </span>
+                          <div>
+                            <p
+                              className={`text-sm font-bold ${safetyResult.risk === "high" ? "text-red-800 dark:text-red-200" : safetyResult.risk === "moderate" ? "text-amber-800 dark:text-amber-200" : "text-emerald-800 dark:text-emerald-200"}`}
+                            >
+                              {safetyResult.title}
+                            </p>
+                            <Badge
+                              className={`text-xs border-0 ${safetyResult.risk === "high" ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" : safetyResult.risk === "moderate" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"}`}
+                            >
+                              {safetyResult.risk === "high"
+                                ? "High Risk"
+                                : safetyResult.risk === "moderate"
+                                  ? "Moderate Risk"
+                                  : "Safe"}
+                            </Badge>
+                          </div>
+                        </div>
+                        <p
+                          className={`text-xs leading-relaxed ${safetyResult.risk === "high" ? "text-red-700 dark:text-red-300" : safetyResult.risk === "moderate" ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"}`}
+                        >
+                          {safetyResult.advice}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            </section>
+          </motion.div>
+        )}
 
-        {/* Food Myth Busters */}
-        <section data-ocid="thinkepic.section" className="space-y-3">
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-            💥 Food Myth Busters
-          </h2>
-          <FoodMythBustersCard />
-        </section>
+        {/* TAB: Learn */}
+        {activeTab === "learn" && (
+          <motion.div
+            key="learn"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
+          >
+            <section data-ocid="thinkepic.section" className="space-y-3">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                🧩 Health Quiz of the Day
+              </h2>
+              <HealthQuizCard />
+            </section>
+            <section data-ocid="thinkepic.section" className="space-y-3">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                💥 Food Myth Busters
+              </h2>
+              <FoodMythBustersCard />
+            </section>
+            <section data-ocid="thinkepic.section" className="space-y-3">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                🌟 Kerala Food Facts
+              </h2>
+              <DidYouKnowCard />
+            </section>
+          </motion.div>
+        )}
 
-        {/* Did You Know */}
-        <section data-ocid="thinkepic.section" className="space-y-3">
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-            🌟 Kerala Food Facts
-          </h2>
-          <DidYouKnowCard />
-        </section>
-        <div className="pb-6 pt-2">
+        <div className="pb-2 pt-2">
           <Button
             variant="outline"
             onClick={onBack}
@@ -1650,6 +1439,7 @@ export default function ThinkEpicPage({
           </Button>
         </div>
       </main>
+
       <BottomNav
         activePage="think"
         onHome={onHome ?? onBack}

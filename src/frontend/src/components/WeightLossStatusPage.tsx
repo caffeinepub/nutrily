@@ -236,6 +236,14 @@ function BodyTypeWorkoutAdvisor() {
   );
 }
 
+type LossTab = "overview" | "meal" | "tips";
+
+const LOSS_TABS: { id: LossTab; label: string }[] = [
+  { id: "overview", label: "📊 Overview" },
+  { id: "meal", label: "🥗 Meal Plan" },
+  { id: "tips", label: "💡 Tips" },
+];
+
 export default function WeightLossStatusPage({
   onBack,
   userProfile,
@@ -246,6 +254,7 @@ export default function WeightLossStatusPage({
   onHistory,
   onLeaderboard,
 }: Props) {
+  const [activeTab, setActiveTab] = useState<LossTab>("overview");
   const [logs, setLogs] = useState<LossLog[]>(loadLogs);
   const [currentWeight, setCurrentWeight] = useState(
     String(userProfile?.weightKg ?? ""),
@@ -296,507 +305,529 @@ export default function WeightLossStatusPage({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="bg-primary px-4 py-4 flex items-center gap-3">
-        <button
-          type="button"
-          data-ocid="weight_loss.back_button"
-          onClick={onBack}
-          className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <TrendingDown className="text-white" size={22} />
-        <h1 className="text-xl font-bold text-white">Weight Loss Status</h1>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Today's Smart Plan */}
-        <div
-          className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl border border-sky-200 p-5"
-          data-ocid="weight_loss.smart_plan.card"
-        >
-          <h2 className="font-bold text-sky-800 mb-3 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-sky-200 flex items-center justify-center text-sky-700">
-              <Zap size={14} />
-            </span>
-            Today's Smart Plan
-          </h2>
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <div className="bg-white/70 rounded-xl p-3 border border-sky-100">
-              <p className="text-xs text-sky-600 font-semibold uppercase tracking-wide">
-                Calorie Target
-              </p>
-              <p className="text-2xl font-extrabold text-sky-800">
-                {dailyCalorieGoal}
-              </p>
-              <p className="text-xs text-sky-600">kcal/day (BMR − 500)</p>
-            </div>
-            <div className="bg-white/70 rounded-xl p-3 border border-sky-100">
-              <p className="text-xs text-sky-600 font-semibold uppercase tracking-wide">
-                Top 3 Foods Today
-              </p>
-              <p className="text-sm font-bold text-sky-800 leading-snug mt-1">
-                Grilled Chicken · Broccoli · Green Tea
-              </p>
-            </div>
-          </div>
-          <div className="bg-sky-100/60 rounded-xl px-3 py-2 text-sm text-sky-800 font-medium">
-            {logs.length > 0
-              ? `🔥 You've logged ${logs.length} day${logs.length !== 1 ? "s" : ""}. Keep it up!`
-              : "📝 Start logging to track your progress"}
+      <header className="sticky top-0 z-50 bg-primary">
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
+          <button
+            type="button"
+            data-ocid="weight_loss.back_button"
+            onClick={onBack}
+            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <TrendingDown className="text-white" size={20} />
+          <h1 className="text-base font-bold text-white">Weight Loss Status</h1>
+        </div>
+        {/* Tab bar */}
+        <div className="max-w-2xl mx-auto px-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+            {LOSS_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                data-ocid={`weight_loss.${tab.id}_tab`}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${activeTab === tab.id ? "bg-white text-primary" : "bg-white/20 text-white/90 hover:bg-white/30"}`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
+      </header>
 
-        {/* Calorie Deficit Tracker */}
-        <div className="bg-card rounded-2xl border border-border shadow-card p-5">
-          <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 text-sm">
-              📊
-            </span>
-            Calorie Deficit Tracker
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-sky-50 rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">
-                Current Weight
-              </p>
-              <p className="text-xl font-extrabold text-sky-700">
-                {userProfile?.weightKg ?? "—"}
-                <span className="text-xs font-normal ml-0.5">kg</span>
-              </p>
-            </div>
-            <div className="bg-sky-50 rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">BMR</p>
-              <p className="text-xl font-extrabold text-sky-700">
-                {bmr}
-                <span className="text-xs font-normal ml-0.5">kcal</span>
-              </p>
-            </div>
-            <div className="bg-sky-50 rounded-xl p-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Daily Goal</p>
-              <p className="text-xl font-extrabold text-sky-700">
-                {dailyCalorieGoal}
-                <span className="text-xs font-normal ml-0.5">kcal</span>
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs">Target Weight (kg)</Label>
-              <Input
-                data-ocid="weight_loss.target_input"
-                type="number"
-                placeholder="e.g. 65"
-                value={targetWeight}
-                onChange={(e) => setTargetWeight(e.target.value)}
-                className="mt-1 h-9"
-              />
-            </div>
-            <div className="bg-sky-50 rounded-xl p-3 flex flex-col justify-center">
-              <p className="text-xs text-muted-foreground">To Lose</p>
-              <p className="text-sm font-bold text-sky-700">
-                {targetWeight && userProfile
-                  ? `${(userProfile.weightKg - Number(targetWeight)).toFixed(1)} kg to lose`
-                  : "Set target weight"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Log Today */}
-        <div className="bg-card rounded-2xl border border-border shadow-card p-5">
-          <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 text-sm">
-              📝
-            </span>
-            Log Today's Progress
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Current Weight (kg)</Label>
-                <Input
-                  data-ocid="weight_loss.weight_input"
-                  type="number"
-                  step="0.1"
-                  placeholder="e.g. 70.5"
-                  value={currentWeight}
-                  onChange={(e) => setCurrentWeight(e.target.value)}
-                  className="mt-1 h-9"
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Sleep Hours</Label>
-                <Input
-                  data-ocid="weight_loss.sleep_input"
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={sleepHours}
-                  onChange={(e) => setSleepHours(e.target.value)}
-                  className="mt-1 h-9"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs">Meals eaten today</Label>
-              <Textarea
-                data-ocid="weight_loss.meals_textarea"
-                placeholder="e.g. Oats for breakfast, grilled chicken salad for lunch..."
-                value={meals}
-                onChange={(e) => setMeals(e.target.value)}
-                className="mt-1 text-sm resize-none"
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs mb-2 block">Cardio Done Today</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {CARDIO_OPTIONS.map((ex) => (
-                  <div
-                    key={ex}
-                    className="flex items-center gap-2 cursor-pointer"
-                    data-ocid="weight_loss.cardio_checkbox"
-                    onClick={() => toggleCardio(ex)}
-                    onKeyDown={(e) => e.key === " " && toggleCardio(ex)}
-                  >
-                    <Checkbox
-                      checked={selectedCardio.includes(ex)}
-                      onCheckedChange={() => toggleCardio(ex)}
-                    />
-                    <span className="text-sm">{ex}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs">Water Glasses</Label>
-              <Input
-                data-ocid="weight_loss.water_input"
-                type="number"
-                min="0"
-                max="20"
-                value={waterGlasses}
-                onChange={(e) => setWaterGlasses(e.target.value)}
-                className="mt-1 h-9"
-              />
-            </div>
-
-            <Button
-              data-ocid="weight_loss.submit_button"
-              type="submit"
-              className="w-full bg-primary hover:bg-primary/90 text-white"
+      <div className="max-w-2xl mx-auto px-4 py-4 space-y-3 flex-1 pb-24 w-full">
+        {/* TAB: Overview */}
+        {activeTab === "overview" && (
+          <div className="space-y-3">
+            {/* Today's Smart Plan */}
+            <div
+              className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl border border-sky-200 p-4"
+              data-ocid="weight_loss.smart_plan.card"
             >
-              🔥 Save Today's Progress
-            </Button>
-          </form>
-        </div>
-
-        {/* Age-Based Exercise Recommendations */}
-        {(() => {
-          const age = getUserAge();
-          const group = getAgeGroup(age);
-          const exerciseMap = {
-            teen: {
-              title: "Teen Exercise Plan",
-              emoji: "🧒",
-              color: "bg-pink-600",
-              lightColor: "bg-pink-50 border-pink-100",
-              exercises: [
-                {
-                  icon: "🤸",
-                  name: "Bodyweight Training",
-                  desc: "Push-ups, squats, lunges",
-                },
-                {
-                  icon: "🏃",
-                  name: "Running & Jogging",
-                  desc: "20–30 min cardio, fun pace",
-                },
-                {
-                  icon: "⚽",
-                  name: "Team Sports",
-                  desc: "Football, basketball, badminton",
-                },
-                {
-                  icon: "🚴",
-                  name: "Cycling",
-                  desc: "Leisure rides, 30–40 min",
-                },
-              ],
-              tip: "60 min/day activity. Make it fun — sports, dance, outdoor play.",
-            },
-            youngAdult: {
-              title: "Young Adult Training",
-              emoji: "🔥",
-              color: "bg-primary",
-              lightColor: "bg-sky-50 border-sky-100",
-              exercises: [
-                {
-                  icon: "⚡",
-                  name: "HIIT Workouts",
-                  desc: "20–30 min, maximum fat burn",
-                },
-                { icon: "🏃", name: "Running", desc: "5–10km, 3–4×/week" },
-                {
-                  icon: "🏋️",
-                  name: "Compound Lifts",
-                  desc: "Squats, deadlifts for metabolism",
-                },
-                {
-                  icon: "🚴",
-                  name: "Cycling",
-                  desc: "45 min moderate intensity",
-                },
-              ],
-              tip: "45–60 min cardio + strength. HIIT burns fat fast at this age!",
-            },
-            middleAge: {
-              title: "Middle Age Fitness",
-              emoji: "🧘",
-              color: "bg-accent",
-              lightColor: "bg-status-warning border-warning/20",
-              exercises: [
-                {
-                  icon: "🚶",
-                  name: "Brisk Walking",
-                  desc: "40–45 min daily, good pace",
-                },
-                { icon: "🚴", name: "Cycling", desc: "Low-impact, 30–45 min" },
-                {
-                  icon: "🧘",
-                  name: "Yoga",
-                  desc: "Stress reduction + fat loss",
-                },
-                {
-                  icon: "🏊",
-                  name: "Swimming",
-                  desc: "Joint-friendly full body",
-                },
-              ],
-              tip: "30–45 min moderate exercise. Yoga reduces cortisol which aids fat loss.",
-            },
-            senior: {
-              title: "Senior Wellness Exercise",
-              emoji: "🌟",
-              color: "bg-teal-600",
-              lightColor: "bg-teal-50 border-teal-100",
-              exercises: [
-                {
-                  icon: "🚶",
-                  name: "Light Walking",
-                  desc: "20–30 min, gentle daily walk",
-                },
-                {
-                  icon: "🪑",
-                  name: "Chair Exercises",
-                  desc: "Seated cardio and stretches",
-                },
-                {
-                  icon: "🧘",
-                  name: "Gentle Yoga",
-                  desc: "Balance and flexibility",
-                },
-                {
-                  icon: "🏊",
-                  name: "Water Aerobics",
-                  desc: "Pool exercises, easy joints",
-                },
-              ],
-              tip: "30 min light daily activity. Consistency matters more than intensity.",
-            },
-          };
-          const plan = exerciseMap[group];
-          return (
-            <div className="bg-card rounded-2xl border border-border shadow-card p-5">
-              <h2 className="font-bold text-foreground mb-1 flex items-center gap-2">
-                <span
-                  className={`w-7 h-7 rounded-lg ${plan.color} flex items-center justify-center text-white text-sm`}
-                >
-                  {plan.emoji}
+              <h2 className="font-bold text-sky-800 mb-3 flex items-center gap-2 text-base">
+                <span className="w-7 h-7 rounded-lg bg-sky-200 flex items-center justify-center text-sky-700">
+                  <Zap size={14} />
                 </span>
-                {plan.title}
+                Today's Smart Plan
               </h2>
-              <p className="text-xs text-muted-foreground mb-4">
-                Age {age} · {plan.tip}
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {plan.exercises.map((ex) => (
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="bg-white/70 rounded-xl p-3 border border-sky-100">
+                  <p className="text-xs text-sky-600 font-semibold uppercase tracking-wide">
+                    Calorie Target
+                  </p>
+                  <p className="text-2xl font-extrabold text-sky-800">
+                    {dailyCalorieGoal}
+                  </p>
+                  <p className="text-xs text-sky-600">kcal/day (BMR − 500)</p>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3 border border-sky-100">
+                  <p className="text-xs text-sky-600 font-semibold uppercase tracking-wide">
+                    Top 3 Foods
+                  </p>
+                  <p className="text-sm font-bold text-sky-800 leading-snug mt-1">
+                    Grilled Chicken · Broccoli · Green Tea
+                  </p>
+                </div>
+              </div>
+              <div className="bg-sky-100/60 rounded-xl px-3 py-2 text-sm text-sky-800 font-medium">
+                {logs.length > 0
+                  ? `🔥 You've logged ${logs.length} day${logs.length !== 1 ? "s" : ""}. Keep it up!`
+                  : "📝 Start logging to track your progress"}
+              </div>
+            </div>
+
+            {/* Calorie Deficit Tracker */}
+            <div className="bg-card rounded-2xl border border-border shadow-card p-4">
+              <h2 className="font-bold text-foreground mb-3 flex items-center gap-2 text-base">
+                <span className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 text-sm">
+                  📊
+                </span>
+                Calorie Deficit Tracker
+              </h2>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-sky-50 rounded-xl p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Weight</p>
+                  <p className="text-lg font-extrabold text-sky-700">
+                    {userProfile?.weightKg ?? "—"}
+                    <span className="text-xs font-normal ml-0.5">kg</span>
+                  </p>
+                </div>
+                <div className="bg-sky-50 rounded-xl p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">BMR</p>
+                  <p className="text-lg font-extrabold text-sky-700">
+                    {bmr}
+                    <span className="text-xs font-normal ml-0.5">kcal</span>
+                  </p>
+                </div>
+                <div className="bg-sky-50 rounded-xl p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Daily Goal
+                  </p>
+                  <p className="text-lg font-extrabold text-sky-700">
+                    {dailyCalorieGoal}
+                    <span className="text-xs font-normal ml-0.5">kcal</span>
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Target Weight (kg)</Label>
+                  <Input
+                    data-ocid="weight_loss.target_input"
+                    type="number"
+                    placeholder="e.g. 65"
+                    value={targetWeight}
+                    onChange={(e) => setTargetWeight(e.target.value)}
+                    className="mt-1 h-9"
+                  />
+                </div>
+                <div className="bg-sky-50 rounded-xl p-3 flex flex-col justify-center">
+                  <p className="text-xs text-muted-foreground">To Lose</p>
+                  <p className="text-sm font-bold text-sky-700">
+                    {targetWeight && userProfile
+                      ? `${(userProfile.weightKg - Number(targetWeight)).toFixed(1)} kg to lose`
+                      : "Set target"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Log Today */}
+            <div className="bg-card rounded-2xl border border-border shadow-card p-4">
+              <h2 className="font-bold text-foreground mb-3 flex items-center gap-2 text-base">
+                <span className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 text-sm">
+                  📝
+                </span>
+                Log Today's Progress
+              </h2>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Current Weight (kg)</Label>
+                    <Input
+                      data-ocid="weight_loss.weight_input"
+                      type="number"
+                      step="0.1"
+                      placeholder="e.g. 70.5"
+                      value={currentWeight}
+                      onChange={(e) => setCurrentWeight(e.target.value)}
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Sleep Hours</Label>
+                    <Input
+                      data-ocid="weight_loss.sleep_input"
+                      type="number"
+                      min="1"
+                      max="12"
+                      value={sleepHours}
+                      onChange={(e) => setSleepHours(e.target.value)}
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Meals eaten today</Label>
+                  <Textarea
+                    data-ocid="weight_loss.meals_textarea"
+                    placeholder="e.g. Oats for breakfast, grilled chicken salad for lunch..."
+                    value={meals}
+                    onChange={(e) => setMeals(e.target.value)}
+                    className="mt-1 text-sm resize-none"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs mb-2 block">
+                    Cardio Done Today
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {CARDIO_OPTIONS.map((ex) => (
+                      <div
+                        key={ex}
+                        className="flex items-center gap-2 cursor-pointer"
+                        data-ocid="weight_loss.cardio_checkbox"
+                        onClick={() => toggleCardio(ex)}
+                        onKeyDown={(e) => e.key === " " && toggleCardio(ex)}
+                      >
+                        <Checkbox
+                          checked={selectedCardio.includes(ex)}
+                          onCheckedChange={() => toggleCardio(ex)}
+                        />
+                        <span className="text-sm">{ex}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Water Glasses</Label>
+                  <Input
+                    data-ocid="weight_loss.water_input"
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={waterGlasses}
+                    onChange={(e) => setWaterGlasses(e.target.value)}
+                    className="mt-1 h-9"
+                  />
+                </div>
+                <Button
+                  data-ocid="weight_loss.submit_button"
+                  type="submit"
+                  className="w-full bg-primary hover:bg-primary/90 text-white"
+                >
+                  🔥 Save Today's Progress
+                </Button>
+              </form>
+            </div>
+
+            {/* Age Exercise Recommendations */}
+            {(() => {
+              const age = getUserAge();
+              const group = getAgeGroup(age);
+              const exerciseMap = {
+                teen: {
+                  title: "Teen Exercise Plan",
+                  emoji: "🧒",
+                  color: "bg-pink-600",
+                  lightColor: "bg-pink-50 border-pink-100",
+                  exercises: [
+                    {
+                      icon: "🤸",
+                      name: "Bodyweight Training",
+                      desc: "Push-ups, squats, lunges",
+                    },
+                    {
+                      icon: "🏃",
+                      name: "Running & Jogging",
+                      desc: "20–30 min cardio",
+                    },
+                    {
+                      icon: "⚽",
+                      name: "Team Sports",
+                      desc: "Football, basketball",
+                    },
+                    {
+                      icon: "🚴",
+                      name: "Cycling",
+                      desc: "Leisure rides, 30–40 min",
+                    },
+                  ],
+                  tip: "60 min/day activity. Make it fun!",
+                },
+                youngAdult: {
+                  title: "Young Adult Training",
+                  emoji: "🔥",
+                  color: "bg-primary",
+                  lightColor: "bg-sky-50 border-sky-100",
+                  exercises: [
+                    {
+                      icon: "⚡",
+                      name: "HIIT Workouts",
+                      desc: "20–30 min, fat burn",
+                    },
+                    { icon: "🏃", name: "Running", desc: "5–10km, 3–4×/week" },
+                    {
+                      icon: "🏋️",
+                      name: "Compound Lifts",
+                      desc: "Squats, deadlifts",
+                    },
+                    { icon: "🚴", name: "Cycling", desc: "45 min moderate" },
+                  ],
+                  tip: "45–60 min cardio + strength. HIIT burns fat fast!",
+                },
+                middleAge: {
+                  title: "Middle Age Fitness",
+                  emoji: "🧘",
+                  color: "bg-accent",
+                  lightColor: "bg-status-warning border-warning/20",
+                  exercises: [
+                    {
+                      icon: "🚶",
+                      name: "Brisk Walking",
+                      desc: "40–45 min daily",
+                    },
+                    {
+                      icon: "🚴",
+                      name: "Cycling",
+                      desc: "Low-impact, 30–45 min",
+                    },
+                    {
+                      icon: "🧘",
+                      name: "Yoga",
+                      desc: "Stress reduction + fat loss",
+                    },
+                    { icon: "🏊", name: "Swimming", desc: "Joint-friendly" },
+                  ],
+                  tip: "30–45 min moderate exercise.",
+                },
+                senior: {
+                  title: "Senior Wellness Exercise",
+                  emoji: "🌟",
+                  color: "bg-teal-600",
+                  lightColor: "bg-teal-50 border-teal-100",
+                  exercises: [
+                    {
+                      icon: "🚶",
+                      name: "Light Walking",
+                      desc: "20–30 min gentle",
+                    },
+                    {
+                      icon: "🪑",
+                      name: "Chair Exercises",
+                      desc: "Seated cardio",
+                    },
+                    {
+                      icon: "🧘",
+                      name: "Gentle Yoga",
+                      desc: "Balance and flexibility",
+                    },
+                    {
+                      icon: "🏊",
+                      name: "Water Aerobics",
+                      desc: "Pool exercises",
+                    },
+                  ],
+                  tip: "30 min light daily activity.",
+                },
+              };
+              const agePlan = exerciseMap[group];
+              return (
+                <div className="bg-card rounded-2xl border border-border shadow-card p-4">
+                  <h2 className="font-bold text-foreground mb-1 flex items-center gap-2 text-base">
+                    <span
+                      className={`w-7 h-7 rounded-lg ${agePlan.color} flex items-center justify-center text-white text-sm`}
+                    >
+                      {agePlan.emoji}
+                    </span>
+                    {agePlan.title}
+                  </h2>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Age {age} · {agePlan.tip}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {agePlan.exercises.map((ex) => (
+                      <div
+                        key={ex.name}
+                        className={`rounded-xl p-3 border ${agePlan.lightColor}`}
+                      >
+                        <div className="text-xl mb-1">{ex.icon}</div>
+                        <p className="text-xs font-semibold text-foreground">
+                          {ex.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {ex.desc}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Progress History */}
+            {logs.length > 0 && (
+              <div className="bg-card rounded-2xl border border-border shadow-card p-4">
+                <h2 className="font-bold text-foreground mb-3 flex items-center gap-2 text-base">
+                  <span className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 text-sm">
+                    📈
+                  </span>
+                  Progress History
+                </h2>
+                <ScrollArea className="max-h-72">
+                  <div className="space-y-2">
+                    {logs.map((log, i) => (
+                      <div
+                        key={log.date + String(i)}
+                        data-ocid={`weight_loss.item.${i + 1}`}
+                        className="bg-muted/50 rounded-xl p-3 border border-border"
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs text-muted-foreground">
+                            {log.date}
+                          </span>
+                          <span className="text-sm font-bold text-sky-700">
+                            {log.weight} kg
+                          </span>
+                        </div>
+                        {log.cardio.length > 0 && (
+                          <p className="text-xs text-foreground">
+                            <span className="font-medium">Cardio:</span>{" "}
+                            {log.cardio.join(", ")}
+                          </p>
+                        )}
+                        <div className="flex gap-3 mt-1">
+                          <span className="text-xs text-muted-foreground">
+                            💤 {log.sleepHours}h
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            💧 {log.waterGlasses} glasses
+                          </span>
+                        </div>
+                        {log.meals && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {log.meals}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+
+            {/* Loss Shake Recipes */}
+            <div>
+              <h2 className="text-base font-bold text-foreground mb-3">
+                🥤 Weight Loss Shake Recipes
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {LOSS_SHAKES.map((shake) => (
                   <div
-                    key={ex.name}
-                    className={`rounded-xl p-3 border ${plan.lightColor}`}
+                    key={shake.name}
+                    className="bg-card rounded-xl border border-border p-4"
                   >
-                    <div className="text-xl mb-1">{ex.icon}</div>
-                    <p className="text-xs font-semibold text-foreground">
-                      {ex.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {ex.desc}
-                    </p>
+                    <div className="text-2xl mb-2">{shake.emoji}</div>
+                    <h3 className="font-semibold text-foreground mb-1 text-sm">
+                      {shake.name}
+                    </h3>
+                    <div className="flex gap-2 mb-3">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-status-healthy text-success font-medium">
+                        {shake.kcal} kcal
+                      </span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-status-info text-primary font-medium">
+                        {shake.protein}g protein
+                      </span>
+                    </div>
+                    <ul className="space-y-1">
+                      {shake.ingredients.map((ing) => (
+                        <li
+                          key={ing}
+                          className="text-xs text-muted-foreground flex items-center gap-1.5"
+                        >
+                          <span className="text-success">•</span>
+                          {ing}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ))}
               </div>
             </div>
-          );
-        })()}
-
-        {/* Progress History */}
-        {logs.length > 0 && (
-          <div className="bg-card rounded-2xl border border-border shadow-card p-5">
-            <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 text-sm">
-                📈
-              </span>
-              Progress History
-            </h2>
-            <ScrollArea className="max-h-72">
-              <div className="space-y-3">
-                {logs.map((log, i) => (
-                  <div
-                    key={log.date + String(i)}
-                    data-ocid={`weight_loss.item.${i + 1}`}
-                    className="bg-muted/50 rounded-xl p-3 border border-border"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-muted-foreground">
-                        {log.date}
-                      </span>
-                      <span className="text-sm font-bold text-sky-700">
-                        {log.weight} kg
-                      </span>
-                    </div>
-                    {log.cardio.length > 0 && (
-                      <p className="text-xs text-foreground">
-                        <span className="font-medium">Cardio:</span>{" "}
-                        {log.cardio.join(", ")}
-                      </p>
-                    )}
-                    <div className="flex gap-3 mt-1">
-                      <span className="text-xs text-muted-foreground">
-                        💤 {log.sleepHours}h
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        💧 {log.waterGlasses} glasses
-                      </span>
-                    </div>
-                    {log.meals && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                        {log.meals}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
           </div>
         )}
 
-        {/* Foods to Eat */}
-        <div className="bg-card rounded-2xl border border-border shadow-card p-5">
-          <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
-              ✅
-            </span>
-            Foods to Eat
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {FOODS_EAT.map((f) => (
-              <div
-                key={f.name}
-                className="bg-status-healthy rounded-xl p-2.5 text-center border border-success/20"
-              >
-                <div className="text-2xl mb-1">{f.emoji}</div>
-                <p className="text-xs font-medium text-foreground leading-tight">
-                  {f.name}
-                </p>
-                <p className="text-xs font-bold text-success mt-0.5">
-                  {f.kcal} kcal
-                </p>
+        {/* TAB: Meal Plan */}
+        {activeTab === "meal" && (
+          <div className="space-y-3">
+            {/* Foods to Eat */}
+            <div className="bg-card rounded-2xl border border-border shadow-card p-4">
+              <h2 className="font-bold text-foreground mb-3 flex items-center gap-2 text-base">
+                <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
+                  ✅
+                </span>
+                Foods to Eat
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {FOODS_EAT.map((f) => (
+                  <div
+                    key={f.name}
+                    className="bg-status-healthy rounded-xl p-2 text-center border border-success/20"
+                  >
+                    <div className="text-xl mb-1">{f.emoji}</div>
+                    <p className="text-xs font-medium text-foreground leading-tight">
+                      {f.name}
+                    </p>
+                    <p className="text-xs font-bold text-success mt-0.5">
+                      {f.kcal} kcal
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Foods to Avoid */}
-        <div className="bg-card rounded-2xl border border-border shadow-card p-5">
-          <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-status-danger flex items-center justify-center text-destructive text-sm">
-              🚫
-            </span>
-            Foods to Avoid
-          </h2>
-          <div className="grid grid-cols-2 gap-2">
-            {FOODS_AVOID.map((f) => (
-              <div
-                key={f.name}
-                className="bg-status-danger rounded-xl p-2.5 text-center border border-destructive/20"
-              >
-                <div className="text-2xl mb-1">{f.emoji}</div>
-                <p className="text-xs font-medium text-foreground leading-tight">
-                  {f.name}
-                </p>
-                <p className="text-xs font-bold text-destructive mt-0.5">
-                  {f.kcal} kcal
-                </p>
+            {/* Foods to Avoid */}
+            <div className="bg-card rounded-2xl border border-border shadow-card p-4">
+              <h2 className="font-bold text-foreground mb-3 flex items-center gap-2 text-base">
+                <span className="w-7 h-7 rounded-lg bg-status-danger flex items-center justify-center text-destructive text-sm">
+                  🚫
+                </span>
+                Foods to Avoid
+              </h2>
+              <div className="grid grid-cols-2 gap-2">
+                {FOODS_AVOID.map((f) => (
+                  <div
+                    key={f.name}
+                    className="bg-status-danger rounded-xl p-2 text-center border border-destructive/20"
+                  >
+                    <div className="text-xl mb-1">{f.emoji}</div>
+                    <p className="text-xs font-medium text-foreground leading-tight">
+                      {f.name}
+                    </p>
+                    <p className="text-xs font-bold text-destructive mt-0.5">
+                      {f.kcal} kcal
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Success Habits Checklist */}
-        <SuccessHabitsChecklist goalType="loss" />
-        <CalorieSwapCard goalType="loss" />
-
-        {/* Body Type & Workout Finder */}
-        <BodyTypeWorkoutAdvisor />
-
-        {/* Weight Loss Shake Recipes */}
-        <div className="mt-8">
-          <h2 className="text-xl font-bold text-foreground mb-1">
-            Weight Loss Shake Recipes
-          </h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Low-calorie, metabolism-boosting shakes
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {LOSS_SHAKES.map((shake) => (
-              <div
-                key={shake.name}
-                className="bg-card rounded-xl border border-border shadow-card p-4"
-              >
-                <div className="text-2xl mb-2">{shake.emoji}</div>
-                <h3 className="font-semibold text-foreground mb-1">
-                  {shake.name}
-                </h3>
-                <div className="flex gap-2 mb-3">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-status-healthy text-success font-medium">
-                    {shake.kcal} kcal
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-status-info text-primary font-medium">
-                    {shake.protein}g protein
-                  </span>
-                </div>
-                <ul className="space-y-1">
-                  {shake.ingredients.map((ing) => (
-                    <li
-                      key={ing}
-                      className="text-xs text-muted-foreground flex items-center gap-1.5"
-                    >
-                      <span className="text-success">•</span>
-                      {ing}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+        {/* TAB: Tips */}
+        {activeTab === "tips" && (
+          <div className="space-y-3">
+            <SuccessHabitsChecklist goalType="loss" />
+            <CalorieSwapCard goalType="loss" />
+            <BodyTypeWorkoutAdvisor />
           </div>
-        </div>
+        )}
       </div>
+
       <BottomNav
         activePage="home"
         onHome={onHome ?? onBack}

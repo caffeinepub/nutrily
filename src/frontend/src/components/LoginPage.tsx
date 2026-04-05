@@ -5,6 +5,7 @@ import {
   Check,
   Copy,
   Flame,
+  Phone,
   ShieldAlert,
   Sparkles,
   X,
@@ -29,6 +30,10 @@ const GOALS = [
   { value: ProfileGoal.maintenance, label: "Maintenance", emoji: "⚖️" },
 ];
 
+function normalizePhone(p: string): string {
+  return p.replace(/\D/g, "");
+}
+
 export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
   const { login: localLogin } = useLocalAuth();
   const login = onLogin ?? localLogin;
@@ -51,7 +56,7 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
       (actor as any)
         .savePublicUser(deviceId, {
           name: profile.name,
-          phone: profile.username, // backend still uses 'phone' field, pass username
+          phone: profile.phone ?? profile.username,
           age: BigInt(profile.age),
           weightKg: profile.weightKg,
           heightCm: profile.heightCm,
@@ -83,6 +88,7 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
   const [height, setHeight] = useState("");
   const [gender, setGender] = useState("");
   const [goal, setGoal] = useState<ProfileGoal | "">("");
+  const [phone, setPhone] = useState("");
   const [step2Error, setStep2Error] = useState("");
 
   // Pending profile to log in after code reveal
@@ -129,36 +135,41 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
       return;
     }
 
-    // If user code is blank → new user, expand Step 2
     if (!userCode.trim()) {
       setShowStep2(true);
       return;
     }
 
-    // Validate against saved profile
     const stored = localStorage.getItem("doitepic_user");
-    if (!stored) {
-      setStep1Error(
-        "No saved profile found. Leave the code blank to register.",
-      );
-      return;
+    if (stored) {
+      const profile: LocalUser = JSON.parse(stored);
+      const storedUsername =
+        (profile as any).username ?? (profile as any).phone ?? "";
+      const nameMatch =
+        profile.name.trim().toLowerCase() === name.trim().toLowerCase();
+      const codeMatch =
+        storedUsername.trim().toUpperCase() === userCode.trim().toUpperCase();
+
+      if (nameMatch && codeMatch) {
+        login({ ...profile, username: storedUsername });
+        syncUserToBackend({ ...profile, username: storedUsername });
+        return;
+      }
+
+      if (profile.phone) {
+        const phoneMatch =
+          normalizePhone(profile.phone) === normalizePhone(userCode);
+        if (nameMatch && phoneMatch) {
+          login(profile);
+          syncUserToBackend(profile);
+          return;
+        }
+      }
     }
 
-    const profile: LocalUser = JSON.parse(stored);
-    // Migrate legacy phone field
-    const storedUsername =
-      (profile as any).username ?? (profile as any).phone ?? "";
-    const nameMatch =
-      profile.name.trim().toLowerCase() === name.trim().toLowerCase();
-    const codeMatch =
-      storedUsername.trim().toUpperCase() === userCode.trim().toUpperCase();
-
-    if (nameMatch && codeMatch) {
-      login({ ...profile, username: storedUsername });
-      syncUserToBackend({ ...profile, username: storedUsername });
-    } else {
-      setStep1Error("Name or User Code doesn't match. Check your saved code.");
-    }
+    setStep1Error(
+      "Name or User Code / Phone Number doesn't match. Check your saved code.",
+    );
   };
 
   const handleGetStarted = (e: React.FormEvent) => {
@@ -192,11 +203,16 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
       setStep2Error("Please select your health goal.");
       return;
     }
+    if (phone.trim() && normalizePhone(phone).length < 10) {
+      setStep2Error("Enter a valid phone number (at least 10 digits).");
+      return;
+    }
 
     const username = generateUsername();
     const profile: LocalUser = {
       name: name.trim(),
       username,
+      phone: phone.trim() ? normalizePhone(phone) : undefined,
       age: ageNum,
       weightKg: wt,
       heightCm: ht,
@@ -223,51 +239,37 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
       setCodeCopied(true);
       setTimeout(() => setCodeCopied(false), 2500);
     } catch {
-      // fallback: select text
+      // fallback
     }
   };
 
   const features = [
-    {
-      icon: Flame,
-      title: "EatEpic",
-      desc: "Fuel your body with the right nutrition every day",
-    },
-    {
-      icon: Brain,
-      title: "ThinkEpic",
-      desc: "Build healthy habits and a powerful mindset",
-    },
-    {
-      icon: Sparkles,
-      title: "BeEpic",
-      desc: "Become the best version of yourself",
-    },
+    { icon: Flame, title: "EatEpic" },
+    { icon: Brain, title: "ThinkEpic" },
+    { icon: Sparkles, title: "BeEpic" },
   ];
 
   return (
-    <div className="min-h-screen hero-gradient flex items-center justify-center p-6">
+    <div className="min-h-screen hero-gradient flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+        className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6"
       >
         {/* Logo */}
         <button
           type="button"
           onClick={handleLogoClick}
-          className="flex items-center justify-center mb-6 mx-auto focus:outline-none select-none"
+          className="flex items-center justify-center mb-4 mx-auto focus:outline-none select-none"
           aria-label="App logo"
         >
           <img
             src="/assets/uploads/file_0000000091b4720b8ab0302490c69f98-1.png"
             alt="DoitEpic"
-            className="h-16 w-auto object-contain"
+            className="h-12 w-auto object-contain"
           />
         </button>
-
-        <HealthFactBanner showStep2={showStep2} />
 
         {/* Code Reveal Screen */}
         <AnimatePresence mode="wait">
@@ -280,11 +282,11 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
               transition={{ duration: 0.3 }}
               className="text-center"
             >
-              <div className="mb-4">
-                <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-400 flex items-center justify-center mx-auto mb-3">
-                  <Check className="w-8 h-8 text-green-600" />
+              <div className="mb-3">
+                <div className="w-12 h-12 rounded-full bg-green-100 border-2 border-green-400 flex items-center justify-center mx-auto mb-2">
+                  <Check className="w-6 h-6 text-green-600" />
                 </div>
-                <h2 className="text-xl font-bold text-foreground mb-1">
+                <h2 className="text-lg font-bold text-foreground mb-0.5">
                   Profile Created! 🎉
                 </h2>
                 <p className="text-muted-foreground text-sm">
@@ -292,40 +294,44 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                 </p>
               </div>
 
-              <div className="bg-blue-50 border-2 border-blue-400 rounded-xl p-5 mb-4 text-left">
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">
+              <div className="bg-blue-50 border-2 border-blue-400 rounded-xl p-4 mb-3 text-left">
+                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1.5">
                   Your User Code
                 </p>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-2xl font-bold font-mono text-blue-800 tracking-widest">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xl font-bold font-mono text-blue-800 tracking-widest">
                     {generatedCode}
                   </span>
                   <button
                     type="button"
                     data-ocid="login.primary_button"
                     onClick={handleCopyCode}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors flex-shrink-0"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors flex-shrink-0"
                   >
                     {codeCopied ? (
                       <>
-                        <Check className="w-3.5 h-3.5" /> Copied!
+                        <Check className="w-3 h-3" /> Copied!
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3.5 h-3.5" /> Copy
+                        <Copy className="w-3 h-3" /> Copy
                       </>
                     )}
                   </button>
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 mb-6 text-left">
+              {pendingProfile?.phone ? (
+                <div className="bg-green-50 border border-green-300 rounded-lg p-2.5 mb-3 text-left">
+                  <p className="text-green-800 text-xs font-semibold flex items-center gap-1">
+                    <Phone className="w-3 h-3" /> Phone saved for login
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="bg-amber-50 border border-amber-300 rounded-lg p-2.5 mb-4 text-left">
                 <p className="text-amber-800 text-xs font-semibold">
-                  ⚠️ Save this code — you'll need it to log in next time!
-                </p>
-                <p className="text-amber-700 text-xs mt-1">
-                  Enter your name + this code to access your profile on any
-                  device.
+                  ⚠️ Save this code to log in next time!
                 </p>
               </div>
 
@@ -333,7 +339,7 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                 data-ocid="login.primary_button"
                 type="button"
                 onClick={handleGoToDashboard}
-                className="w-full h-11 rounded-full hero-gradient text-white font-semibold text-base border-0 hover:opacity-90 transition-opacity"
+                className="w-full h-10 rounded-full hero-gradient text-white font-semibold text-sm border-0 hover:opacity-90 transition-opacity"
               >
                 Go to Dashboard →
               </Button>
@@ -348,12 +354,13 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
+                    className="text-center mb-4"
                   >
-                    <h1 className="text-2xl font-bold text-foreground mb-1">
+                    <h1 className="text-xl font-bold text-foreground mb-1">
                       Welcome back!
                     </h1>
-                    <p className="text-muted-foreground mb-6 text-sm">
-                      Your personal health and nutrition dashboard
+                    <p className="text-muted-foreground text-sm">
+                      Your personal health dashboard
                     </p>
                   </motion.div>
                 ) : (
@@ -363,12 +370,13 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.25 }}
+                    className="text-center mb-4"
                   >
-                    <h1 className="text-2xl font-bold text-foreground mb-1">
-                      Let's set up your profile!
+                    <h1 className="text-xl font-bold text-foreground mb-1">
+                      Set up your profile
                     </h1>
-                    <p className="text-muted-foreground mb-6 text-sm">
-                      Just a few details to personalise your experience
+                    <p className="text-muted-foreground text-sm">
+                      A few details to personalise your experience
                     </p>
                   </motion.div>
                 )}
@@ -376,9 +384,9 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
 
               <form
                 onSubmit={showStep2 ? handleGetStarted : handleContinue}
-                className="space-y-4 text-left"
+                className="space-y-3 text-left"
               >
-                {/* Step 1 fields — always visible */}
+                {/* Step 1 fields */}
                 <div>
                   <label
                     htmlFor="login-name"
@@ -405,17 +413,17 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                       htmlFor="login-code"
                       className="text-xs font-medium text-foreground block mb-1"
                     >
-                      User Code
+                      User Code or Phone Number
                     </label>
                     <Input
                       id="login-code"
                       data-ocid="login.input"
                       value={userCode}
                       onChange={(e) => {
-                        setUserCode(e.target.value.toUpperCase());
+                        setUserCode(e.target.value);
                         setStep1Error("");
                       }}
-                      placeholder="e.g. EPIC-A3X9KZ"
+                      placeholder="e.g. EPIC-A3X9KZ or 9876543210"
                       autoComplete="off"
                       className="font-mono tracking-wide"
                     />
@@ -443,10 +451,9 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="overflow-hidden space-y-4"
+                      className="overflow-hidden space-y-3"
                     >
-                      {/* Age / Weight / Height */}
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-2">
                         <div>
                           <label
                             htmlFor="reg-age"
@@ -513,12 +520,39 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                         </div>
                       </div>
 
-                      {/* Gender */}
                       <div>
-                        <p className="text-xs font-medium text-foreground block mb-2">
+                        <label
+                          htmlFor="reg-phone"
+                          className="text-xs font-medium text-foreground block mb-1"
+                        >
+                          Phone Number{" "}
+                          <span className="text-muted-foreground font-normal">
+                            (optional, for login)
+                          </span>
+                        </label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                          <Input
+                            id="reg-phone"
+                            data-ocid="register.input"
+                            value={phone}
+                            onChange={(e) => {
+                              setPhone(e.target.value);
+                              setStep2Error("");
+                            }}
+                            placeholder="9876543210"
+                            type="tel"
+                            className="pl-8"
+                            autoComplete="tel"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium text-foreground block mb-1.5">
                           Gender
                         </p>
-                        <div className="flex gap-3">
+                        <div className="flex gap-2">
                           {["male", "female"].map((g) => (
                             <button
                               key={g}
@@ -540,12 +574,11 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                         </div>
                       </div>
 
-                      {/* Health Goal */}
                       <div>
-                        <p className="text-xs font-medium text-foreground block mb-2">
+                        <p className="text-xs font-medium text-foreground block mb-1.5">
                           Health Goal
                         </p>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           {GOALS.map((g) => (
                             <button
                               key={String(g.value)}
@@ -555,13 +588,13 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                                 setGoal(g.value);
                                 setStep2Error("");
                               }}
-                              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-all ${
+                              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${
                                 goal === g.value
                                   ? "border-primary bg-primary/10 text-primary"
                                   : "border-border text-muted-foreground hover:border-primary/50"
                               }`}
                             >
-                              <span className="text-lg">{g.emoji}</span>
+                              <span className="text-base">{g.emoji}</span>
                               {g.label}
                             </button>
                           ))}
@@ -587,13 +620,13 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                 <Button
                   data-ocid="login.primary_button"
                   type="submit"
-                  className="w-full h-11 rounded-full hero-gradient text-white font-semibold text-base border-0 hover:opacity-90 transition-opacity"
+                  className="w-full h-10 rounded-full hero-gradient text-white font-semibold text-sm border-0 hover:opacity-90 transition-opacity"
                 >
                   {showStep2 ? "Get Started" : "Continue"}
                 </Button>
               </form>
 
-              {/* Features section — only shown in Step 1 */}
+              {/* Feature pills — compact horizontal row, only in Step 1 */}
               <AnimatePresence>
                 {!showStep2 && (
                   <motion.div
@@ -602,24 +635,25 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.25 }}
-                    className="mt-6 space-y-2 overflow-hidden"
+                    className="mt-4 overflow-hidden"
                   >
-                    {features.map((f) => (
-                      <div
-                        key={f.title}
-                        className="flex items-center gap-3 text-left p-3 rounded-xl bg-[#1E3A8A]"
-                      >
-                        <div className="w-8 h-8 rounded-lg hero-gradient flex items-center justify-center flex-shrink-0">
-                          <f.icon className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-white">
+                    <div className="flex gap-2 justify-center">
+                      {features.map((f) => (
+                        <div
+                          key={f.title}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1E3A8A] text-white"
+                        >
+                          <f.icon className="w-3 h-3" />
+                          <span className="text-xs font-semibold">
                             {f.title}
-                          </p>
-                          <p className="text-xs text-blue-200">{f.desc}</p>
+                          </span>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                    {/* Health Fact — subtle note below */}
+                    <div className="mt-3">
+                      <HealthFactBanner showStep2={false} compact />
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>

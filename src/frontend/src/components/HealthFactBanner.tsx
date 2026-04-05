@@ -1,4 +1,4 @@
-import { ArrowRight, Lightbulb } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
@@ -47,9 +47,10 @@ const HEALTH_FACTS = [
 
 interface Props {
   showStep2: boolean;
+  compact?: boolean;
 }
 
-export default function HealthFactBanner({ showStep2 }: Props) {
+export default function HealthFactBanner({ showStep2, compact }: Props) {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -64,9 +65,29 @@ export default function HealthFactBanner({ showStep2 }: Props) {
 
   const fact = HEALTH_FACTS[current];
 
+  // Compact mode: just a small subtle note
+  if (compact) {
+    return (
+      <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-blue-50/60 border border-blue-100">
+        <Lightbulb className="w-3 h-3 text-amber-500 mt-0.5 flex-shrink-0" />
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={current}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-xs text-muted-foreground leading-relaxed"
+          >
+            {fact.emoji} {fact.fact}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-5 space-y-2">
-      {/* Rotating health fact */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-950/40 dark:to-emerald-950/40 border border-blue-100 dark:border-blue-900/50 p-3">
         <div className="flex items-start gap-2">
           <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
@@ -89,28 +110,16 @@ export default function HealthFactBanner({ showStep2 }: Props) {
             </p>
           </motion.div>
         </AnimatePresence>
-        {/* Progress dots */}
         <div className="flex justify-center gap-1 mt-2">
           {HEALTH_FACTS.map((hf, i) => (
             <button
               key={hf.emoji}
               type="button"
               onClick={() => setCurrent(i)}
-              className={`w-1.5 h-1.5 rounded-full transition-all ${
-                i === current ? "bg-[#1E3A8A] w-3" : "bg-border"
-              }`}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${i === current ? "bg-[#1E3A8A] w-3" : "bg-border"}`}
             />
           ))}
         </div>
-      </div>
-
-      {/* BMI teaser */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1E3A8A]/10 border border-[#1E3A8A]/20">
-        <span className="text-sm">⚡</span>
-        <p className="text-xs text-[#1E3A8A] dark:text-blue-400 font-medium flex-1">
-          Know your BMI, calorie needs & health score instantly after signing up
-        </p>
-        <ArrowRight className="w-3.5 h-3.5 text-[#1E3A8A] dark:text-blue-400 flex-shrink-0" />
       </div>
     </div>
   );

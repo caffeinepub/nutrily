@@ -441,13 +441,6 @@ export default function Dashboard({ userName }: DashboardProps) {
           />
         </div>
 
-        {/* Always visible: My Stats */}
-        {userProfile && (
-          <div className="mb-3">
-            <MyStatsCard profile={userProfile} />
-          </div>
-        )}
-
         {/* Always visible: Calorie + Macro grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <CalorieTrackerCard calories={totals.calories} />
@@ -538,10 +531,13 @@ export default function Dashboard({ userName }: DashboardProps) {
             waterGlasses={waterGlasses}
           />
           <WeeklyMissionsCard />
+          <GoalsSection onNavigateToStatus={setGoalPage} />
+          <ReviewSection />
         </CollapsibleSection>
 
         {/* Collapsible: Health Tools */}
         <CollapsibleSection title="Health Tools" icon="🔧" defaultOpen={false}>
+          {userProfile && <MyStatsCard profile={userProfile} />}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <WaterIntakeCard glasses={waterGlasses} />
             <MealQualityCard score={score} grade={grade} />
@@ -599,16 +595,6 @@ export default function Dashboard({ userName }: DashboardProps) {
             </div>
           </div>
           <DailyCheckInCard recentCheckIns={checkIns} />
-        </CollapsibleSection>
-
-        {/* Collapsible: Goals & Community */}
-        <CollapsibleSection
-          title="Goals & Community"
-          icon="🎯"
-          defaultOpen={false}
-        >
-          <GoalsSection onNavigateToStatus={setGoalPage} />
-          <ReviewSection />
         </CollapsibleSection>
 
         <div className="flex justify-center py-2">
