@@ -98,6 +98,27 @@ export type MealType = { 'breakfast' : null } |
 export type ProfileGoal = { 'weightLoss' : null } |
   { 'muscleGain' : null } |
   { 'maintenance' : null };
+export interface PublicFoodWish {
+  'id' : bigint,
+  'submitterPhone' : string,
+  'submitterName' : string,
+  'submittedAt' : bigint,
+  'description' : string,
+  'category' : string,
+  'foodName' : string,
+  'reason' : string,
+}
+export interface PublicUserRecord {
+  'age' : bigint,
+  'lastSeenAt' : bigint,
+  'heightCm' : number,
+  'goal' : string,
+  'name' : string,
+  'joinedAt' : bigint,
+  'weightKg' : number,
+  'gender' : string,
+  'phone' : string,
+}
 export type ReportStatus = { 'resolved' : null } |
   { 'pending' : null } |
   { 'dismissed' : null };
@@ -129,6 +150,20 @@ export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
 export interface WaterIntakeEntry { 'glasses' : bigint, 'timestamp' : Time }
+export interface WeeklyMission {
+  'id' : bigint,
+  'title' : string,
+  'missionType' : string,
+  'xpReward' : bigint,
+  'description' : string,
+  'targetCount' : bigint,
+}
+export interface WeeklyMissionProgress {
+  'weekKey' : string,
+  'completed' : boolean,
+  'currentCount' : bigint,
+  'missionId' : bigint,
+}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addFoodItem' : ActorMethod<[FoodItem], undefined>,
@@ -137,6 +172,7 @@ export interface _SERVICE {
   'createAnnouncement' : ActorMethod<[Announcement], bigint>,
   'createArticle' : ActorMethod<[Article], bigint>,
   'createDietPlan' : ActorMethod<[DietPlan], bigint>,
+  'createWeeklyMission' : ActorMethod<[WeeklyMission], bigint>,
   'deleteAnnouncement' : ActorMethod<[bigint], undefined>,
   'deleteArticle' : ActorMethod<[bigint], undefined>,
   'deleteCallerUserProfile' : ActorMethod<[], undefined>,
@@ -156,6 +192,8 @@ export interface _SERVICE {
   'getAllFoodItems' : ActorMethod<[], Array<FoodItem>>,
   'getAllFoodLogs' : ActorMethod<[Principal], Array<DailyFoodLog>>,
   'getAllHealthMetrics' : ActorMethod<[Principal], Array<HealthMetrics>>,
+  'getAllPublicFoodWishes' : ActorMethod<[], Array<PublicFoodWish>>,
+  'getAllPublicUsers' : ActorMethod<[], Array<[string, PublicUserRecord]>>,
   'getAllReports' : ActorMethod<[], Array<UserReport>>,
   'getAllUsers' : ActorMethod<[], Array<[Principal, UserProfile]>>,
   'getAllUsersCheckIns' : ActorMethod<
@@ -163,6 +201,7 @@ export interface _SERVICE {
     Array<[Principal, Array<DailyCheckIn>]>
   >,
   'getAllWaterIntake' : ActorMethod<[Principal], Array<DailyWaterIntake>>,
+  'getAllWeeklyMissions' : ActorMethod<[], Array<WeeklyMission>>,
   'getArticlesByCategory' : ActorMethod<[string], Array<Article>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -179,8 +218,15 @@ export interface _SERVICE {
   'getFoodLogsForDate' : ActorMethod<[Time], Array<DailyFoodLog>>,
   'getHealthMetricsForDate' : ActorMethod<[Time], Array<HealthMetrics>>,
   'getPendingFoodSuggestions' : ActorMethod<[], Array<FoodSuggestion>>,
+  'getPublicFoodWishCount' : ActorMethod<[], bigint>,
   'getPublicReviews' : ActorMethod<[], Array<Review>>,
+  'getPublicUser' : ActorMethod<[string], [] | [PublicUserRecord]>,
+  'getPublicUserCount' : ActorMethod<[], bigint>,
   'getUserJoinTimes' : ActorMethod<[], Array<[Principal, Time]>>,
+  'getUserMissionProgress' : ActorMethod<
+    [string],
+    Array<WeeklyMissionProgress>
+  >,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getWaterIntakeForDate' : ActorMethod<[Time], Array<DailyWaterIntake>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
@@ -192,8 +238,13 @@ export interface _SERVICE {
   'resolveReport' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveDailyCheckIn' : ActorMethod<[DailyCheckIn], undefined>,
+  'savePublicUser' : ActorMethod<[string, PublicUserRecord], undefined>,
   'searchFoodByName' : ActorMethod<[string], Array<FoodItem>>,
   'submitFoodSuggestion' : ActorMethod<[FoodItem], bigint>,
+  'submitPublicFoodWish' : ActorMethod<
+    [string, string, string, string, string, string],
+    bigint
+  >,
   'submitReview' : ActorMethod<[string, string, string], undefined>,
   'submitUserReport' : ActorMethod<[string, string, [] | [string]], bigint>,
   'toggleAnnouncement' : ActorMethod<[bigint], undefined>,
@@ -202,6 +253,7 @@ export interface _SERVICE {
   'updateArticle' : ActorMethod<[Article], undefined>,
   'updateDietPlan' : ActorMethod<[DietPlan], undefined>,
   'updateFoodItem' : ActorMethod<[FoodItem], undefined>,
+  'updateMissionProgress' : ActorMethod<[bigint, string, bigint], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

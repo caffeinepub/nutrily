@@ -3,6 +3,7 @@ import type { DrinkEntry } from "../../hooks/useDrinksLog";
 import { MEAL_TYPES, calcEntryNutrition } from "../../types";
 import type { ExtendedFoodItem, LocalFoodEntry, MealType } from "../../types";
 import HonestyBadge from "../HonestyBadge";
+import SuggestFoodModal from "../SuggestFoodModal";
 
 function getSugarScore(carbs: number): { label: string; dot: string } {
   // Rough estimate: sugar ≈ carbs * 0.3 per 100g
@@ -14,7 +15,12 @@ function getSugarScore(carbs: number): { label: string; dot: string } {
 
 export interface FoodLogItem {
   id: string;
-  entry: LocalFoodEntry;
+  entry: LocalFoodEntry & {
+    _calories?: number;
+    _protein?: number;
+    _carbs?: number;
+    _fat?: number;
+  };
 }
 
 interface Props {
@@ -42,10 +48,15 @@ export default function FoodLogCard({
     items: entries.filter((e) => e.entry.mealType === value),
   }));
 
-  const totalFoodCalories = entries.reduce(
-    (sum, item) => sum + calcEntryNutrition(item.entry, foodMap).calories,
-    0,
-  );
+  const totalFoodCalories = entries.reduce((sum, item) => {
+    const sc = item.entry._calories;
+    return (
+      sum +
+      (sc != null && sc > 0
+        ? sc
+        : calcEntryNutrition(item.entry, foodMap).calories)
+    );
+  }, 0);
   const totalDrinkCalories = drinkEntries.reduce(
     (sum, d) => sum + d.calories,
     0,
@@ -89,7 +100,16 @@ export default function FoodLogCard({
             ) : (
               <div className="space-y-1">
                 {items.map((item, idx) => {
-                  const nutrition = calcEntryNutrition(item.entry, foodMap);
+                  const storedCals = item.entry._calories;
+                  const nutrition =
+                    storedCals != null && storedCals > 0
+                      ? {
+                          calories: item.entry._calories ?? 0,
+                          protein: item.entry._protein ?? 0,
+                          carbs: item.entry._carbs ?? 0,
+                          fat: item.entry._fat ?? 0,
+                        }
+                      : calcEntryNutrition(item.entry, foodMap);
                   const food = foodMap.get(item.entry.foodName);
                   return (
                     <div
@@ -230,6 +250,7 @@ export default function FoodLogCard({
           </span>
         </div>
       )}
+      <SuggestFoodModal />
     </div>
   );
 }

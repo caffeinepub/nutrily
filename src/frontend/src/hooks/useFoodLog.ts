@@ -79,13 +79,17 @@ export function useFoodLog() {
     });
   };
 
-  // Map to FoodLogItem shape for FoodLogCard compatibility
+  // Map to FoodLogItem shape for FoodLogCard compatibility, preserving stored nutrition
   const foodLogItems = entries.map((e) => ({
     id: e.id,
     entry: {
       foodName: e.foodName,
       quantity: e.quantity,
       mealType: e.mealType as MealType,
+      _calories: e.calories,
+      _protein: e.protein,
+      _carbs: e.carbs,
+      _fat: e.fat,
     },
   }));
 

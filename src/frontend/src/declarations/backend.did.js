@@ -66,6 +66,14 @@ export const DietPlan = IDL.Record({
   'dailyCalorieTarget' : IDL.Float64,
   'carbsTarget' : IDL.Float64,
 });
+export const WeeklyMission = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'missionType' : IDL.Text,
+  'xpReward' : IDL.Nat,
+  'description' : IDL.Text,
+  'targetCount' : IDL.Nat,
+});
 export const DailyCheckIn = IDL.Record({
   'waterGlasses' : IDL.Nat,
   'date' : IDL.Text,
@@ -94,6 +102,27 @@ export const HealthMetrics = IDL.Record({
   'steps' : IDL.Nat,
   'heartRate' : IDL.Float64,
   'timestamp' : Time,
+});
+export const PublicFoodWish = IDL.Record({
+  'id' : IDL.Nat,
+  'submitterPhone' : IDL.Text,
+  'submitterName' : IDL.Text,
+  'submittedAt' : IDL.Int,
+  'description' : IDL.Text,
+  'category' : IDL.Text,
+  'foodName' : IDL.Text,
+  'reason' : IDL.Text,
+});
+export const PublicUserRecord = IDL.Record({
+  'age' : IDL.Nat,
+  'lastSeenAt' : IDL.Int,
+  'heightCm' : IDL.Float64,
+  'goal' : IDL.Text,
+  'name' : IDL.Text,
+  'joinedAt' : IDL.Int,
+  'weightKg' : IDL.Float64,
+  'gender' : IDL.Text,
+  'phone' : IDL.Text,
 });
 export const ReportStatus = IDL.Variant({
   'resolved' : IDL.Null,
@@ -142,6 +171,12 @@ export const Review = IDL.Record({
   'reviewType' : IDL.Text,
   'timestamp' : Time,
 });
+export const WeeklyMissionProgress = IDL.Record({
+  'weekKey' : IDL.Text,
+  'completed' : IDL.Bool,
+  'currentCount' : IDL.Nat,
+  'missionId' : IDL.Nat,
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -151,6 +186,7 @@ export const idlService = IDL.Service({
   'createAnnouncement' : IDL.Func([Announcement], [IDL.Nat], []),
   'createArticle' : IDL.Func([Article], [IDL.Nat], []),
   'createDietPlan' : IDL.Func([DietPlan], [IDL.Nat], []),
+  'createWeeklyMission' : IDL.Func([WeeklyMission], [IDL.Nat], []),
   'deleteAnnouncement' : IDL.Func([IDL.Nat], [], []),
   'deleteArticle' : IDL.Func([IDL.Nat], [], []),
   'deleteCallerUserProfile' : IDL.Func([], [], []),
@@ -183,6 +219,12 @@ export const idlService = IDL.Service({
       [IDL.Vec(HealthMetrics)],
       ['query'],
     ),
+  'getAllPublicFoodWishes' : IDL.Func([], [IDL.Vec(PublicFoodWish)], ['query']),
+  'getAllPublicUsers' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Text, PublicUserRecord))],
+      ['query'],
+    ),
   'getAllReports' : IDL.Func([], [IDL.Vec(UserReport)], ['query']),
   'getAllUsers' : IDL.Func(
       [],
@@ -199,6 +241,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(DailyWaterIntake)],
       ['query'],
     ),
+  'getAllWeeklyMissions' : IDL.Func([], [IDL.Vec(WeeklyMission)], ['query']),
   'getArticlesByCategory' : IDL.Func([IDL.Text], [IDL.Vec(Article)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
@@ -236,10 +279,22 @@ export const idlService = IDL.Service({
       [IDL.Vec(FoodSuggestion)],
       ['query'],
     ),
+  'getPublicFoodWishCount' : IDL.Func([], [IDL.Nat], ['query']),
   'getPublicReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
+  'getPublicUser' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(PublicUserRecord)],
+      ['query'],
+    ),
+  'getPublicUserCount' : IDL.Func([], [IDL.Nat], ['query']),
   'getUserJoinTimes' : IDL.Func(
       [],
       [IDL.Vec(IDL.Tuple(IDL.Principal, Time))],
+      ['query'],
+    ),
+  'getUserMissionProgress' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(WeeklyMissionProgress)],
       ['query'],
     ),
   'getUserProfile' : IDL.Func(
@@ -261,8 +316,14 @@ export const idlService = IDL.Service({
   'resolveReport' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'saveDailyCheckIn' : IDL.Func([DailyCheckIn], [], []),
+  'savePublicUser' : IDL.Func([IDL.Text, PublicUserRecord], [], []),
   'searchFoodByName' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
   'submitFoodSuggestion' : IDL.Func([FoodItem], [IDL.Nat], []),
+  'submitPublicFoodWish' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
   'submitReview' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'submitUserReport' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
@@ -275,6 +336,7 @@ export const idlService = IDL.Service({
   'updateArticle' : IDL.Func([Article], [], []),
   'updateDietPlan' : IDL.Func([DietPlan], [], []),
   'updateFoodItem' : IDL.Func([FoodItem], [], []),
+  'updateMissionProgress' : IDL.Func([IDL.Nat, IDL.Text, IDL.Nat], [], []),
 });
 
 export const idlInitArgs = [];
@@ -338,6 +400,14 @@ export const idlFactory = ({ IDL }) => {
     'dailyCalorieTarget' : IDL.Float64,
     'carbsTarget' : IDL.Float64,
   });
+  const WeeklyMission = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'missionType' : IDL.Text,
+    'xpReward' : IDL.Nat,
+    'description' : IDL.Text,
+    'targetCount' : IDL.Nat,
+  });
   const DailyCheckIn = IDL.Record({
     'waterGlasses' : IDL.Nat,
     'date' : IDL.Text,
@@ -366,6 +436,27 @@ export const idlFactory = ({ IDL }) => {
     'steps' : IDL.Nat,
     'heartRate' : IDL.Float64,
     'timestamp' : Time,
+  });
+  const PublicFoodWish = IDL.Record({
+    'id' : IDL.Nat,
+    'submitterPhone' : IDL.Text,
+    'submitterName' : IDL.Text,
+    'submittedAt' : IDL.Int,
+    'description' : IDL.Text,
+    'category' : IDL.Text,
+    'foodName' : IDL.Text,
+    'reason' : IDL.Text,
+  });
+  const PublicUserRecord = IDL.Record({
+    'age' : IDL.Nat,
+    'lastSeenAt' : IDL.Int,
+    'heightCm' : IDL.Float64,
+    'goal' : IDL.Text,
+    'name' : IDL.Text,
+    'joinedAt' : IDL.Int,
+    'weightKg' : IDL.Float64,
+    'gender' : IDL.Text,
+    'phone' : IDL.Text,
   });
   const ReportStatus = IDL.Variant({
     'resolved' : IDL.Null,
@@ -414,6 +505,12 @@ export const idlFactory = ({ IDL }) => {
     'reviewType' : IDL.Text,
     'timestamp' : Time,
   });
+  const WeeklyMissionProgress = IDL.Record({
+    'weekKey' : IDL.Text,
+    'completed' : IDL.Bool,
+    'currentCount' : IDL.Nat,
+    'missionId' : IDL.Nat,
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -423,6 +520,7 @@ export const idlFactory = ({ IDL }) => {
     'createAnnouncement' : IDL.Func([Announcement], [IDL.Nat], []),
     'createArticle' : IDL.Func([Article], [IDL.Nat], []),
     'createDietPlan' : IDL.Func([DietPlan], [IDL.Nat], []),
+    'createWeeklyMission' : IDL.Func([WeeklyMission], [IDL.Nat], []),
     'deleteAnnouncement' : IDL.Func([IDL.Nat], [], []),
     'deleteArticle' : IDL.Func([IDL.Nat], [], []),
     'deleteCallerUserProfile' : IDL.Func([], [], []),
@@ -455,6 +553,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(HealthMetrics)],
         ['query'],
       ),
+    'getAllPublicFoodWishes' : IDL.Func(
+        [],
+        [IDL.Vec(PublicFoodWish)],
+        ['query'],
+      ),
+    'getAllPublicUsers' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, PublicUserRecord))],
+        ['query'],
+      ),
     'getAllReports' : IDL.Func([], [IDL.Vec(UserReport)], ['query']),
     'getAllUsers' : IDL.Func(
         [],
@@ -471,6 +579,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(DailyWaterIntake)],
         ['query'],
       ),
+    'getAllWeeklyMissions' : IDL.Func([], [IDL.Vec(WeeklyMission)], ['query']),
     'getArticlesByCategory' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(Article)],
@@ -512,10 +621,22 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(FoodSuggestion)],
         ['query'],
       ),
+    'getPublicFoodWishCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getPublicReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
+    'getPublicUser' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(PublicUserRecord)],
+        ['query'],
+      ),
+    'getPublicUserCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserJoinTimes' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Principal, Time))],
+        ['query'],
+      ),
+    'getUserMissionProgress' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(WeeklyMissionProgress)],
         ['query'],
       ),
     'getUserProfile' : IDL.Func(
@@ -537,8 +658,14 @@ export const idlFactory = ({ IDL }) => {
     'resolveReport' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'saveDailyCheckIn' : IDL.Func([DailyCheckIn], [], []),
+    'savePublicUser' : IDL.Func([IDL.Text, PublicUserRecord], [], []),
     'searchFoodByName' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
     'submitFoodSuggestion' : IDL.Func([FoodItem], [IDL.Nat], []),
+    'submitPublicFoodWish' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
     'submitReview' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
     'submitUserReport' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
@@ -551,6 +678,7 @@ export const idlFactory = ({ IDL }) => {
     'updateArticle' : IDL.Func([Article], [], []),
     'updateDietPlan' : IDL.Func([DietPlan], [], []),
     'updateFoodItem' : IDL.Func([FoodItem], [], []),
+    'updateMissionProgress' : IDL.Func([IDL.Nat, IDL.Text, IDL.Nat], [], []),
   });
 };
 

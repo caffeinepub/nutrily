@@ -47,9 +47,9 @@ export default function MyStatsCard({ profile }: Props) {
           <div className="flex items-center gap-2.5 bg-muted/40 rounded-lg p-2.5">
             <Phone className="w-4 h-4 text-primary shrink-0" />
             <div className="min-w-0">
-              <p className="text-[10px] text-muted-foreground">Phone</p>
+              <p className="text-[10px] text-muted-foreground">User Code</p>
               <p className="text-sm font-semibold text-foreground truncate">
-                {profile.phone}
+                {(profile as any).username ?? (profile as any).phone}
               </p>
             </div>
           </div>

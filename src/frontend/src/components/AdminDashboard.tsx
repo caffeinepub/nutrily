@@ -79,6 +79,7 @@ import {
   useAllArticles,
   useAllDietPlans,
   useAllFoodItems,
+  useAllPublicFoodWishes,
   useAllPublicUsers,
   useAllReports,
   useAllUserStreaks,
@@ -481,10 +482,10 @@ function UserCard({
               {shortenPrincipal(pid)}
             </p>
             <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-              {profile?.phone && (
+              {((profile as any)?.username ?? (profile as any)?.phone) && (
                 <span className="flex items-center gap-1">
                   <Phone className="w-3 h-3" />
-                  {profile.phone}
+                  {(profile as any).username ?? (profile as any).phone}
                 </span>
               )}
               {profile?.weightKg && (
@@ -1033,6 +1034,8 @@ function FoodDatabaseTab() {
 
 function ApprovalsTab() {
   const { data: suggestions = [], isLoading } = usePendingFoodSuggestions();
+  const { data: wishes = [], isLoading: isLoadingWishes } =
+    useAllPublicFoodWishes();
   const { mutateAsync: approve, isPending: isApproving } =
     useApproveFoodSuggestion();
   const { mutateAsync: reject, isPending: isRejecting } =
@@ -1055,107 +1058,197 @@ function ApprovalsTab() {
     }
   };
 
-  if (isLoading)
+  if (isLoading || isLoadingWishes)
     return (
       <div className="space-y-3" data-ocid="admin.approvals.loading_state">
-        {[1, 2].map((i) => (
+        {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-24 w-full rounded-xl bg-gray-800" />
         ))}
       </div>
     );
 
-  if (suggestions.length === 0)
-    return (
-      <div
-        className="text-center py-16 text-muted-foreground"
-        data-ocid="admin.approvals.empty_state"
-      >
-        <CheckCircle className="w-10 h-10 mx-auto mb-3 opacity-30" />
-        <p className="text-sm font-medium">No pending suggestions</p>
-        <p className="text-xs mt-1">
-          User-submitted food items will appear here for review.
-        </p>
-      </div>
-    );
-
   return (
-    <div className="space-y-4">
-      {(suggestions as FoodSuggestion[]).map((suggestion, i) => (
-        <motion.div
-          key={`${suggestion.foodItem.name}-${i}`}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.05 }}
-          data-ocid={`admin.approvals.item.${i + 1}`}
-        >
-          <Card className="bg-gray-900 border-gray-700">
-            <CardContent className="pt-4">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-white font-semibold text-sm">
-                      {suggestion.foodItem.name}
-                    </h3>
-                    <Badge
-                      variant="outline"
-                      className="text-xs border-yellow-600/40 text-yellow-400"
-                    >
-                      Pending
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-2">
-                    <span>{suggestion.foodItem.category}</span>
-                    <span className="text-muted-foreground">•</span>
-                    <span>{suggestion.foodItem.region}</span>
-                    <span className="text-muted-foreground">•</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formatTimestamp(suggestion.timestamp)}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-xs">
-                    <span className="text-gray-300">
-                      {suggestion.foodItem.caloriesPer100g} kcal
-                    </span>
-                    <span className="text-primary">
-                      P: {suggestion.foodItem.protein}g
-                    </span>
-                    <span className="text-yellow-300">
-                      C: {suggestion.foodItem.carbs}g
-                    </span>
-                    <span className="text-red-300">
-                      F: {suggestion.foodItem.fat}g
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    data-ocid={`admin.approvals.confirm_button.${i + 1}`}
-                    size="sm"
-                    onClick={() => handleApprove(i)}
-                    disabled={isApproving || isRejecting}
-                    className="bg-green-600 hover:bg-green-700 text-white text-xs h-8"
-                  >
-                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                    Approve
-                  </Button>
-                  <Button
-                    data-ocid={`admin.approvals.delete_button.${i + 1}`}
-                    size="sm"
-                    onClick={() => handleReject(i)}
-                    disabled={isApproving || isRejecting}
-                    className="bg-red-600/20 hover:bg-red-600/40 text-destructive border border-red-600/40 text-xs h-8"
-                    variant="outline"
-                  >
-                    <XCircle className="w-3.5 h-3.5 mr-1" />
-                    Reject
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))}
+    <div className="space-y-8">
+      {/* ── Pending Approvals ── */}
+      <div>
+        <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+          <Globe className="w-4 h-4 text-yellow-400" />
+          Pending Approvals
+          {suggestions.length > 0 && (
+            <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+              {suggestions.length}
+            </Badge>
+          )}
+        </h3>
+        {suggestions.length === 0 ? (
+          <div
+            className="text-center py-10 text-muted-foreground rounded-xl border border-gray-800"
+            data-ocid="admin.approvals.empty_state"
+          >
+            <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+            <p className="text-sm font-medium">No pending suggestions</p>
+            <p className="text-xs mt-1">
+              User-submitted food items will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {(suggestions as FoodSuggestion[]).map((suggestion, i) => (
+              <motion.div
+                key={`${suggestion.foodItem.name}-${i}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                data-ocid={`admin.approvals.item.${i + 1}`}
+              >
+                <Card className="bg-gray-900 border-gray-700">
+                  <CardContent className="pt-4">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-white font-semibold text-sm">
+                            {suggestion.foodItem.name}
+                          </h3>
+                          <Badge
+                            variant="outline"
+                            className="text-xs border-yellow-600/40 text-yellow-400"
+                          >
+                            Pending
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-2">
+                          <span>{suggestion.foodItem.category}</span>
+                          <span className="text-muted-foreground">•</span>
+                          <span>{suggestion.foodItem.region}</span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {formatTimestamp(suggestion.timestamp)}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-xs">
+                          <span className="text-gray-300">
+                            {suggestion.foodItem.caloriesPer100g} kcal
+                          </span>
+                          <span className="text-primary">
+                            P: {suggestion.foodItem.protein}g
+                          </span>
+                          <span className="text-yellow-300">
+                            C: {suggestion.foodItem.carbs}g
+                          </span>
+                          <span className="text-red-300">
+                            F: {suggestion.foodItem.fat}g
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          data-ocid={`admin.approvals.confirm_button.${i + 1}`}
+                          size="sm"
+                          onClick={() => handleApprove(i)}
+                          disabled={isApproving || isRejecting}
+                          className="bg-green-600 hover:bg-green-700 text-white text-xs h-8 px-3"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          data-ocid={`admin.approvals.delete_button.${i + 1}`}
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleReject(i)}
+                          disabled={isApproving || isRejecting}
+                          className="text-xs h-8 px-3"
+                        >
+                          <XCircle className="w-3.5 h-3.5 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Food Wishes ── */}
+      <div>
+        <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+          <span className="text-lg">💡</span>
+          Food Wishes from Users
+          {wishes.length > 0 && (
+            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">
+              {wishes.length}
+            </Badge>
+          )}
+        </h3>
+        {wishes.length === 0 ? (
+          <div
+            className="text-center py-10 text-muted-foreground rounded-xl border border-gray-800"
+            data-ocid="admin.food_wishes.empty_state"
+          >
+            <span className="text-3xl block mb-2 opacity-40">💡</span>
+            <p className="text-sm font-medium">No food wishes yet</p>
+            <p className="text-xs mt-1">
+              User food suggestions will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {wishes.map((wish, i) => (
+              <motion.div
+                key={`wish-${wish.id}-${i}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                data-ocid={`admin.food_wishes.item.${i + 1}`}
+              >
+                <Card className="bg-gray-900 border-gray-700 border-l-4 border-l-blue-500">
+                  <CardContent className="pt-4 pb-3">
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl flex-shrink-0">💡</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-white font-semibold text-sm">
+                            {wish.foodName}
+                          </span>
+                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
+                            {wish.category}
+                          </Badge>
+                        </div>
+                        {wish.description && (
+                          <p className="text-xs text-muted-foreground mb-1">
+                            {wish.description}
+                          </p>
+                        )}
+                        {wish.reason && (
+                          <p className="text-xs text-gray-400 italic mb-2">
+                            "{wish.reason}"
+                          </p>
+                        )}
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {wish.submitterName} · {wish.submitterPhone}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(
+                              Number(wish.submittedAt / 1000000n),
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -2826,6 +2919,7 @@ export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
     useAllPublicUsers();
   const { data: foods = [] } = useAllFoodItems();
   const { data: pending = [] } = usePendingFoodSuggestions();
+  const { data: allWishes = [] } = useAllPublicFoodWishes();
   const { data: joinTimes = [] } = useUserJoinTimes();
   const { data: allUserStreaks = [] } = useAllUserStreaks();
 
@@ -3003,9 +3097,9 @@ export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
               >
                 <Globe className="w-3.5 h-3.5" />
                 Approvals
-                {pending.length > 0 && (
+                {pending.length + allWishes.length > 0 && (
                   <Badge className="bg-status-warning0 text-black text-xs px-1.5 py-0 ml-1 h-4">
-                    {pending.length}
+                    {pending.length + allWishes.length}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -3104,7 +3198,8 @@ export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
                                     {user.name}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    {user.phone}
+                                    {(user as any).username ??
+                                      (user as any).phone}
                                   </p>
                                 </div>
                               </div>

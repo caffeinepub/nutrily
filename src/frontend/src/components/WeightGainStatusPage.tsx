@@ -8,6 +8,7 @@ import { ArrowLeft, TrendingUp, Zap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { getAgeGroup, getUserAge } from "../utils/ageUtils";
+import BottomNav from "./BottomNav";
 import CalorieSwapCard from "./CalorieSwapCard";
 import SuccessHabitsChecklist from "./SuccessHabitsChecklist";
 
@@ -23,6 +24,12 @@ interface GainLog {
 interface Props {
   onBack: () => void;
   userProfile?: { weightKg: number; heightCm: number; name: string };
+  onHome?: () => void;
+  onEat?: () => void;
+  onThink?: () => void;
+  onMove?: () => void;
+  onHistory?: () => void;
+  onLeaderboard?: () => void;
 }
 
 const EXERCISES = [
@@ -178,7 +185,11 @@ function BodyTypeWorkoutAdvisor() {
                 key={v}
                 type="button"
                 onClick={() => setBodyType(v)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${bodyType === v ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border hover:border-primary"}`}
+                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                  bodyType === v
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted text-muted-foreground border-border hover:border-primary"
+                }`}
               >
                 {e} {l}
               </button>
@@ -199,7 +210,11 @@ function BodyTypeWorkoutAdvisor() {
                 key={v}
                 type="button"
                 onClick={() => setWorkoutType(v)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${workoutType === v ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-muted-foreground border-border hover:border-primary"}`}
+                className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                  workoutType === v
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted text-muted-foreground border-border hover:border-primary"
+                }`}
               >
                 {e} {l}
               </button>
@@ -224,7 +239,538 @@ function BodyTypeWorkoutAdvisor() {
   );
 }
 
-export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
+// ─── Muscle Gain Diet Plan ────────────────────────────────────────────────────
+
+const MUSCLE_MEALS = [
+  {
+    time: "🌅 Morning",
+    slot: "6–8 AM",
+    items: [
+      "2–4 whole eggs",
+      "1 banana",
+      "50–100g oats (with milk)",
+      "Tea/coffee (less sugar)",
+    ],
+    why: "Protein + carbs to start metabolism",
+    color: "from-amber-50 to-yellow-50 border-amber-200",
+    dot: "bg-amber-400",
+  },
+  {
+    time: "🕙 Mid-Morning Snack",
+    slot: "~10 AM",
+    items: ["Handful of peanuts or cashews", "1 fruit (banana/apple)"],
+    why: "Cheap + calorie-dense",
+    color: "from-orange-50 to-amber-50 border-orange-200",
+    dot: "bg-orange-400",
+  },
+  {
+    time: "🍛 Lunch",
+    slot: "1–2 PM",
+    items: [
+      "Rice (white/red Kerala rice)",
+      "Chicken / fish / 3–4 eggs / dal",
+      "Vegetables (thoran, curry, salad)",
+      "1 tsp ghee (optional)",
+    ],
+    why: "This is your main calorie meal",
+    color: "from-emerald-50 to-green-50 border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  {
+    time: "☕ Evening Snack",
+    slot: "4–5 PM",
+    items: ["Banana + peanuts", "OR 2 boiled eggs", "OR Peanut butter bread"],
+    why: "Pre-workout fuel",
+    color: "from-sky-50 to-blue-50 border-sky-200",
+    dot: "bg-sky-500",
+  },
+  {
+    time: "🏋️ Post-Workout",
+    slot: "After gym",
+    items: ["1 banana", "2–4 eggs OR milk"],
+    why: "Fast recovery",
+    color: "from-violet-50 to-purple-50 border-violet-200",
+    dot: "bg-violet-500",
+  },
+  {
+    time: "🌙 Dinner",
+    slot: "8–9 PM",
+    items: [
+      "Chapati or rice",
+      "Chicken / fish / egg curry / dal",
+      "Vegetables",
+    ],
+    why: "Balanced evening fuel",
+    color: "from-indigo-50 to-blue-50 border-indigo-200",
+    dot: "bg-indigo-500",
+  },
+  {
+    time: "🌌 Before Bed",
+    slot: "~10 PM",
+    items: ["1 glass milk", "OR handful of nuts"],
+    why: "Prevents muscle breakdown overnight",
+    color: "from-slate-50 to-gray-50 border-slate-200",
+    dot: "bg-slate-500",
+  },
+];
+
+function MealTimeline({ meals }: { meals: typeof MUSCLE_MEALS }) {
+  return (
+    <div className="relative pl-4">
+      <div className="absolute left-1.5 top-2 bottom-2 w-0.5 bg-border rounded-full" />
+      <div className="space-y-3">
+        {meals.map((meal) => (
+          <div key={meal.time} className="relative">
+            <div
+              className={`absolute -left-4 top-3 w-2.5 h-2.5 rounded-full border-2 border-white ${meal.dot}`}
+            />
+            <div
+              className={`ml-1 rounded-xl border bg-gradient-to-br ${meal.color} p-3`}
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-foreground">
+                  {meal.time}
+                </span>
+                <span className="text-xs text-muted-foreground bg-white/60 rounded-full px-2 py-0.5">
+                  {meal.slot}
+                </span>
+              </div>
+              <ul className="space-y-0.5 mb-1.5">
+                {meal.items.map((item) => (
+                  <li
+                    key={item}
+                    className="text-xs text-foreground flex items-start gap-1.5"
+                  >
+                    <span className="text-success mt-0.5 flex-shrink-0">•</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-muted-foreground italic">
+                👉 {meal.why}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MuscleDietPlan() {
+  return (
+    <div className="space-y-4">
+      {/* Core Principles */}
+      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 p-4">
+        <h3 className="font-bold text-emerald-800 mb-3 flex items-center gap-2 text-sm">
+          <span className="text-base">⚙️</span> Core Principles
+        </h3>
+        <div className="grid grid-cols-1 gap-2">
+          {[
+            {
+              icon: "🔥",
+              text: "Calorie surplus: eat ~300–500 kcal extra daily",
+            },
+            {
+              icon: "💪",
+              text: "Protein: 1.6–2.2g per kg body weight (~100–140g/day)",
+            },
+            { icon: "⏰", text: "Eat every 3–4 hours to fuel muscle growth" },
+            {
+              icon: "🥗",
+              text: "Focus on whole foods — avoid junk/ultra-processed",
+            },
+          ].map((p) => (
+            <div
+              key={p.text}
+              className="flex items-start gap-2.5 bg-white/70 rounded-xl p-2.5 border border-emerald-100"
+            >
+              <span className="text-base flex-shrink-0 mt-0.5">{p.icon}</span>
+              <p className="text-xs text-emerald-900 font-medium leading-snug">
+                {p.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Meal Timeline */}
+      <div>
+        <h3 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
+          <span className="text-base">🥗</span> Daily Diet Structure
+        </h3>
+        <MealTimeline meals={MUSCLE_MEALS} />
+      </div>
+
+      {/* Bulking Shake */}
+      <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl border border-blue-200 p-4">
+        <h3 className="font-bold text-blue-900 mb-1 text-sm flex items-center gap-2">
+          <span className="text-base">🥤</span> High-Calorie Bulking Shake
+        </h3>
+        <p className="text-xs text-blue-700 mb-3">
+          Drink once daily — Easy + 400–700 calories
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            "Milk (300 ml)",
+            "1 banana",
+            "2 tbsp peanut butter",
+            "Oats (30g)",
+            "Honey",
+          ].map((ing) => (
+            <div
+              key={ing}
+              className="flex items-center gap-2 bg-white/70 rounded-lg px-2.5 py-2 border border-blue-100"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+              <span className="text-xs text-blue-900 font-medium">{ing}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Avoid These */}
+      <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl border border-red-200 p-4">
+        <h3 className="font-bold text-red-800 mb-3 text-sm flex items-center gap-2">
+          <span className="text-base">🚫</span> Avoid These
+        </h3>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            "Sugary drinks & sodas",
+            "Packaged snacks (chips, biscuits)",
+            "Deep fried foods daily",
+            "Excess bakery items",
+          ].map((item) => (
+            <div
+              key={item}
+              className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5 border border-red-100"
+            >
+              <span className="text-red-500 flex-shrink-0 mt-0.5">✗</span>
+              <span className="text-xs text-red-900 font-medium leading-snug">
+                {item}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Extra Tips */}
+      <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl border border-violet-200 p-4">
+        <h3 className="font-bold text-violet-800 mb-3 text-sm flex items-center gap-2">
+          <span className="text-base">🧠</span> Extra Optimization Tips
+        </h3>
+        <div className="space-y-2">
+          {[
+            { icon: "🏋️", tip: "Train 4–5 days/week (progressive overload)" },
+            { icon: "😴", tip: "Sleep 7–8 hours for maximum muscle recovery" },
+            { icon: "💧", tip: "Drink enough water throughout the day" },
+            { icon: "⚖️", tip: "Track weight weekly (aim: +0.5 kg/week)" },
+          ].map((t) => (
+            <div
+              key={t.tip}
+              className="flex items-center gap-2.5 bg-white/70 rounded-lg px-2.5 py-2 border border-violet-100"
+            >
+              <span className="text-base flex-shrink-0">{t.icon}</span>
+              <span className="text-xs text-violet-900">{t.tip}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Reality Check */}
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-300 p-4">
+        <h3 className="font-bold text-amber-900 mb-2 text-sm flex items-center gap-2">
+          <span className="text-base">⚡</span> Reality Check
+        </h3>
+        <div className="space-y-1.5">
+          <p className="text-xs text-amber-800">
+            ⚠️ Gaining 10 kg in 2–3 months is <strong>aggressive</strong>
+          </p>
+          <p className="text-xs text-amber-800">
+            ✅ Realistic lean gain: <strong>4–6 kg in 3 months</strong>
+          </p>
+          <p className="text-xs text-amber-800">
+            📈 Faster gains = more fat stored alongside muscle
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Vegetarian Muscle Gain Diet Plan ────────────────────────────────────────
+
+const VEG_MEALS = [
+  {
+    time: "🌅 Morning",
+    slot: "6–8 AM",
+    items: ["50–100g oats + milk", "1 banana", "10 almonds or peanuts"],
+    why: "Add 1 tbsp peanut butter if you need more calories",
+    color: "from-amber-50 to-yellow-50 border-amber-200",
+    dot: "bg-amber-400",
+  },
+  {
+    time: "🕙 Mid-Morning Snack",
+    slot: "~10 AM",
+    items: ["1 fruit (banana/apple)", "Handful roasted peanuts / chana"],
+    why: "Cheap + protein + calories",
+    color: "from-orange-50 to-amber-50 border-orange-200",
+    dot: "bg-orange-400",
+  },
+  {
+    time: "🍛 Lunch",
+    slot: "1–2 PM",
+    items: [
+      "Rice (Kerala red rice preferred)",
+      "1–2 cups dal (very important)",
+      "Vegetable curry + thoran",
+      "Curd (for protein + digestion)",
+    ],
+    why: "Dal + rice = better protein quality (complete amino acids)",
+    color: "from-emerald-50 to-green-50 border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  {
+    time: "☕ Evening Snack",
+    slot: "4–5 PM (Pre-workout)",
+    items: [
+      "Peanut butter bread",
+      "OR Banana + handful peanuts",
+      "OR Sprouts salad (green gram)",
+    ],
+    why: "Pre-workout fuel — pick what's available",
+    color: "from-sky-50 to-blue-50 border-sky-200",
+    dot: "bg-sky-500",
+  },
+  {
+    time: "🏋️ Post-Workout",
+    slot: "After gym",
+    items: ["Milk (250–300 ml)", "1 banana"],
+    why: "Quick recovery carbs + protein",
+    color: "from-violet-50 to-purple-50 border-violet-200",
+    dot: "bg-violet-500",
+  },
+  {
+    time: "🌙 Dinner",
+    slot: "8–9 PM",
+    items: [
+      "2–4 chapati",
+      "Paneer curry / soya chunks curry / dal",
+      "Vegetables",
+    ],
+    why: "Paneer & soya = your main protein weapons",
+    color: "from-indigo-50 to-blue-50 border-indigo-200",
+    dot: "bg-indigo-500",
+  },
+  {
+    time: "🌌 Before Bed",
+    slot: "~10 PM",
+    items: ["1 glass milk", "OR handful of nuts"],
+    why: "Slow protein release — prevents muscle breakdown",
+    color: "from-slate-50 to-gray-50 border-slate-200",
+    dot: "bg-slate-500",
+  },
+];
+
+function VegetarianMuscleDietPlan() {
+  return (
+    <div className="space-y-4">
+      {/* Targets */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          {
+            label: "Calories",
+            value: "2500–3000",
+            unit: "kcal/day",
+            color: "bg-emerald-50 border-emerald-200 text-emerald-800",
+          },
+          {
+            label: "Protein",
+            value: "90–120g",
+            unit: "minimum/day",
+            color: "bg-blue-50 border-blue-200 text-blue-800",
+          },
+          {
+            label: "Meals",
+            value: "5–6",
+            unit: "per day",
+            color: "bg-violet-50 border-violet-200 text-violet-800",
+          },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className={`rounded-xl border p-2.5 text-center ${s.color}`}
+          >
+            <p className="text-xs font-semibold opacity-70 mb-0.5">{s.label}</p>
+            <p className="text-sm font-extrabold leading-tight">{s.value}</p>
+            <p className="text-xs opacity-60 mt-0.5">{s.unit}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Meal Timeline */}
+      <div>
+        <h3 className="font-bold text-foreground text-sm mb-3 flex items-center gap-2">
+          <span className="text-base">🌿</span> Daily Diet Structure
+        </h3>
+        <MealTimeline meals={VEG_MEALS} />
+      </div>
+
+      {/* Veg Bulking Shake */}
+      <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl border border-blue-200 p-4">
+        <h3 className="font-bold text-blue-900 mb-1 text-sm flex items-center gap-2">
+          <span className="text-base">🥤</span> High-Calorie Veg Bulking Shake
+        </h3>
+        <p className="text-xs text-blue-700 mb-3">
+          ~500–800 kcal bomb — drink once daily
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            "Milk (300ml)",
+            "Banana",
+            "Peanut butter (2 tbsp)",
+            "Oats (30–50g)",
+            "Honey",
+          ].map((ing) => (
+            <div
+              key={ing}
+              className="flex items-center gap-2 bg-white/70 rounded-lg px-2.5 py-2 border border-blue-100"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+              <span className="text-xs text-blue-900 font-medium">{ing}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Best Veg Protein Sources */}
+      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 p-4">
+        <h3 className="font-bold text-emerald-800 mb-1 text-sm flex items-center gap-2">
+          <span className="text-base">💪</span> Best Vegetarian Protein Sources
+        </h3>
+        <p className="text-xs text-emerald-600 mb-3">
+          Use daily — combine sources for complete amino acids
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { name: "Soya Chunks", note: "~52g protein/100g" },
+            { name: "Paneer", note: "~18g protein/100g" },
+            { name: "Milk & Curd", note: "~3–5g per serving" },
+            { name: "Dal (all types)", note: "~9g protein/100g" },
+            { name: "Chickpeas (Kadala)", note: "~19g protein/100g" },
+            { name: "Green Gram (Moong)", note: "~24g protein/100g" },
+            { name: "Peanuts", note: "~26g protein/100g" },
+          ].map((src) => (
+            <div
+              key={src.name}
+              className="bg-white/70 rounded-xl p-2.5 border border-emerald-100"
+            >
+              <p className="text-xs font-semibold text-emerald-900">
+                {src.name}
+              </p>
+              <p className="text-xs text-emerald-600">{src.note}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-emerald-700 mt-3 bg-white/60 rounded-lg p-2 border border-emerald-100">
+          💡 <strong>Tip:</strong> Combine different sources → better amino acid
+          profile
+        </p>
+      </div>
+
+      {/* Common Mistakes */}
+      <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl border border-red-200 p-4">
+        <h3 className="font-bold text-red-800 mb-3 text-sm flex items-center gap-2">
+          <span className="text-base">⚠️</span> Common Mistakes
+        </h3>
+        <div className="grid grid-cols-1 gap-2">
+          {[
+            "Only eating rice + curry (low protein)",
+            "Skipping protein-rich foods like soya/paneer",
+            "Not eating enough total calories",
+            "Relying on junk food for weight gain",
+          ].map((item) => (
+            <div
+              key={item}
+              className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5 border border-red-100"
+            >
+              <span className="text-red-500 flex-shrink-0 mt-0.5">✗</span>
+              <span className="text-xs text-red-900 font-medium leading-snug">
+                {item}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Reality Check */}
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-300 p-4">
+        <h3 className="font-bold text-amber-900 mb-2 text-sm flex items-center gap-2">
+          <span className="text-base">⚡</span> Reality Check
+        </h3>
+        <div className="space-y-1.5">
+          <p className="text-xs text-amber-800">
+            🌿 Vegetarian muscle gain is slightly slower if protein isn't
+            optimized
+          </p>
+          <p className="text-xs text-amber-800">
+            💡 Struggling to hit protein targets? Consider{" "}
+            <strong>whey protein</strong> (veg-friendly supplement)
+          </p>
+          <p className="text-xs text-amber-800">
+            ✅ With good planning: <strong>4–5 kg lean gain in 3 months</strong>{" "}
+            is achievable
+          </p>
+        </div>
+      </div>
+
+      {/* Smart Upgrade */}
+      <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-2xl border border-indigo-200 p-4">
+        <h3 className="font-bold text-indigo-800 mb-3 text-sm flex items-center gap-2">
+          <span className="text-base">🚀</span> Smart Upgrade (if budget allows)
+        </h3>
+        <div className="space-y-2">
+          {[
+            {
+              icon: "🥛",
+              name: "Whey Protein Isolate",
+              desc: "1 scoop/day — easiest way to hit protein target",
+            },
+            {
+              icon: "⚗️",
+              name: "Creatine Monohydrate",
+              desc: "3–5g/day — proven muscle strength booster",
+            },
+          ].map((sup) => (
+            <div
+              key={sup.name}
+              className="flex items-start gap-3 bg-white/70 rounded-xl p-3 border border-indigo-100"
+            >
+              <span className="text-xl flex-shrink-0">{sup.icon}</span>
+              <div>
+                <p className="text-xs font-bold text-indigo-900">{sup.name}</p>
+                <p className="text-xs text-indigo-600 mt-0.5">{sup.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+export default function WeightGainStatusPage({
+  onBack,
+  userProfile,
+  onHome,
+  onEat,
+  onThink,
+  onMove,
+  onHistory,
+  onLeaderboard,
+}: Props) {
   const [logs, setLogs] = useState<GainLog[]>(loadLogs);
   const [currentWeight, setCurrentWeight] = useState(
     String(userProfile?.weightKg ?? ""),
@@ -234,6 +780,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [sleepHours, setSleepHours] = useState("8");
   const [waterGlasses, setWaterGlasses] = useState("8");
+  const [activeDietPlan, setActiveDietPlan] = useState("muscle");
 
   const bmr = userProfile
     ? calcBMR(userProfile.weightKg, userProfile.heightCm)
@@ -273,6 +820,11 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
     setSelectedExercises([]);
     toast.success("Today's progress saved! 💪");
   };
+
+  const DIET_TABS = [
+    { id: "muscle", label: "💪 Muscle Gain" },
+    { id: "veg", label: "🥦 Vegetarian" },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -424,7 +976,7 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
               <Label className="text-xs">Meals eaten today</Label>
               <Textarea
                 data-ocid="weight_gain.meals_textarea"
-                placeholder="e.g. Oats + milk for breakfast, rice + chicken + dal for lunch..."
+                placeholder="e.g. Oats + milk for breakfast, rice + dal + paneer for lunch..."
                 value={meals}
                 onChange={(e) => setMeals(e.target.value)}
                 className="mt-1 text-sm resize-none"
@@ -709,78 +1261,64 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
           </div>
         </div>
 
-        {/* Meal Plan Guide */}
-        <div className="bg-card rounded-2xl border border-border shadow-card p-5">
+        {/* ─── Diet Plans Section ─────────────────────────────────────────── */}
+        <div
+          className="bg-card rounded-2xl border border-border shadow-card p-5"
+          data-ocid="weight_gain.diet_plans.card"
+        >
           <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
-              🗓️
+            <span className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-white text-sm">
+              🍽️
             </span>
-            Daily Meal Plan Guide
+            Diet Plans
           </h2>
-          <div className="space-y-3">
-            {[
-              {
-                time: "🌅 Morning (7–8 AM)",
-                items: [
-                  "3–5 eggs scrambled",
-                  "Oats + milk + banana",
-                  "1 glass whole milk",
-                ],
-              },
-              {
-                time: "🍱 Lunch (12–1 PM)",
-                items: [
-                  "Rice + dal + chicken/fish",
-                  "Vegetables on the side",
-                  "Curd / buttermilk",
-                ],
-              },
-              {
-                time: "🥤 Post-Workout (4–5 PM)",
-                items: [
-                  "Banana + peanut butter shake",
-                  "Or: eggs + fruit",
-                  "Protein-rich snack",
-                ],
-              },
-              {
-                time: "🌙 Dinner (7–8 PM)",
-                items: [
-                  "Chapati + paneer / chicken",
-                  "Mixed vegetables",
-                  "Salad on the side",
-                ],
-              },
-              {
-                time: "🌜 Before Bed (9–10 PM)",
-                items: [
-                  "Glass of warm milk",
-                  "Or: curd + honey",
-                  "Optional: a few almonds",
-                ],
-              },
-            ].map((meal) => (
-              <div
-                key={meal.time}
-                className="rounded-xl border border-success/20 bg-status-healthy/50 p-3"
+
+          {/* Plan tab switcher */}
+          <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
+            {DIET_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                data-ocid="weight_gain.diet_plans.tab"
+                onClick={() => setActiveDietPlan(tab.id)}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all ${
+                  activeDietPlan === tab.id
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-muted text-muted-foreground border-border hover:border-primary"
+                }`}
               >
-                <p className="text-sm font-semibold status-healthy mb-1">
-                  {meal.time}
-                </p>
-                <ul className="space-y-0.5">
-                  {meal.items.map((item) => (
-                    <li
-                      key={item}
-                      className="text-xs text-foreground flex items-center gap-1.5"
-                    >
-                      <span className="text-success">•</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                {tab.label}
+              </button>
             ))}
           </div>
+
+          {activeDietPlan === "muscle" && (
+            <div>
+              <div className="mb-4 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl p-4 text-white">
+                <h3 className="font-extrabold text-base mb-0.5">
+                  Muscle Gain Diet Plan
+                </h3>
+                <p className="text-xs text-emerald-100">
+                  Science-backed nutrition for lean muscle growth
+                </p>
+              </div>
+              <MuscleDietPlan />
+            </div>
+          )}
+
+          {activeDietPlan === "veg" && (
+            <div>
+              <div className="mb-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-4 text-white">
+                <h3 className="font-extrabold text-base mb-0.5">
+                  🥦 Vegetarian Muscle Gain Diet Plan
+                </h3>
+                <p className="text-xs text-green-100">
+                  Plant-powered nutrition for building lean muscle
+                </p>
+              </div>
+              <VegetarianMuscleDietPlan />
+            </div>
+          )}
         </div>
 
         {/* Success Habits Checklist */}
@@ -832,6 +1370,15 @@ export default function WeightGainStatusPage({ onBack, userProfile }: Props) {
           </div>
         </div>
       </div>
+      <BottomNav
+        activePage="home"
+        onHome={onHome ?? onBack}
+        onEat={onEat ?? onBack}
+        onThink={onThink ?? onBack}
+        onMove={onMove ?? onBack}
+        onHistory={onHistory}
+        onLeaderboard={onLeaderboard}
+      />
     </div>
   );
 }

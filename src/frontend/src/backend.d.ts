@@ -7,11 +7,23 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface Review {
-    text: string;
-    authorName: string;
-    reviewType: string;
-    timestamp: Time;
+export interface PublicFoodWish {
+    id: bigint;
+    submitterPhone: string;
+    submitterName: string;
+    submittedAt: bigint;
+    description: string;
+    category: string;
+    foodName: string;
+    reason: string;
+}
+export interface UserProfile {
+    heightCm: number;
+    goal?: ProfileGoal;
+    name: string;
+    weightKg: number;
+    gender?: string;
+    phone: string;
 }
 export interface UserReport {
     id: bigint;
@@ -22,11 +34,17 @@ export interface UserReport {
     reportType: string;
     reportedBy: Principal;
 }
+export type Time = bigint;
+export interface FoodLogEntry {
+    date: Time;
+    quantity: number;
+    mealType: MealType;
+    foodName: string;
+}
 export interface DailyWaterIntake {
     entries: Array<WaterIntakeEntry>;
     timestamp: Time;
 }
-export type Time = bigint;
 export interface Article {
     id: bigint;
     title: string;
@@ -41,9 +59,36 @@ export interface HealthMetrics {
     heartRate: number;
     timestamp: Time;
 }
+export interface PublicUserRecord {
+    age: bigint;
+    lastSeenAt: bigint;
+    heightCm: number;
+    goal: string;
+    name: string;
+    joinedAt: bigint;
+    weightKg: number;
+    gender: string;
+    phone: string;
+}
+export interface Announcement {
+    id: bigint;
+    title: string;
+    createdAt: Time;
+    isActive: boolean;
+    message: string;
+    targetGoal: AnnouncementTarget;
+}
 export interface WaterIntakeEntry {
     glasses: bigint;
     timestamp: Time;
+}
+export interface WeeklyMission {
+    id: bigint;
+    title: string;
+    missionType: string;
+    xpReward: bigint;
+    description: string;
+    targetCount: bigint;
 }
 export interface FoodSuggestion {
     status: FoodSuggestionStatus;
@@ -87,27 +132,17 @@ export interface DailyCheckIn {
     dietNotes: string;
     sleepHours: number;
 }
-export interface Announcement {
-    id: bigint;
-    title: string;
-    createdAt: Time;
-    isActive: boolean;
-    message: string;
-    targetGoal: AnnouncementTarget;
+export interface Review {
+    text: string;
+    authorName: string;
+    reviewType: string;
+    timestamp: Time;
 }
-export interface UserProfile {
-    heightCm: number;
-    goal?: ProfileGoal;
-    name: string;
-    weightKg: number;
-    gender?: string;
-    phone: string;
-}
-export interface FoodLogEntry {
-    date: Time;
-    quantity: number;
-    mealType: MealType;
-    foodName: string;
+export interface WeeklyMissionProgress {
+    weekKey: string;
+    completed: boolean;
+    currentCount: bigint;
+    missionId: bigint;
 }
 export enum AnnouncementTarget {
     all = "all",
@@ -148,6 +183,7 @@ export interface backendInterface {
     createAnnouncement(announcement: Announcement): Promise<bigint>;
     createArticle(article: Article): Promise<bigint>;
     createDietPlan(plan: DietPlan): Promise<bigint>;
+    createWeeklyMission(mission: WeeklyMission): Promise<bigint>;
     deleteAnnouncement(id: bigint): Promise<void>;
     deleteArticle(id: bigint): Promise<void>;
     deleteCallerUserProfile(): Promise<void>;
@@ -164,10 +200,13 @@ export interface backendInterface {
     getAllFoodItems(): Promise<Array<FoodItem>>;
     getAllFoodLogs(user: Principal): Promise<Array<DailyFoodLog>>;
     getAllHealthMetrics(user: Principal): Promise<Array<HealthMetrics>>;
+    getAllPublicFoodWishes(): Promise<Array<PublicFoodWish>>;
+    getAllPublicUsers(): Promise<Array<[string, PublicUserRecord]>>;
     getAllReports(): Promise<Array<UserReport>>;
     getAllUsers(): Promise<Array<[Principal, UserProfile]>>;
     getAllUsersCheckIns(): Promise<Array<[Principal, Array<DailyCheckIn>]>>;
     getAllWaterIntake(user: Principal): Promise<Array<DailyWaterIntake>>;
+    getAllWeeklyMissions(): Promise<Array<WeeklyMission>>;
     getArticlesByCategory(category: string): Promise<Array<Article>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -181,8 +220,12 @@ export interface backendInterface {
     getFoodLogsForDate(date: Time): Promise<Array<DailyFoodLog>>;
     getHealthMetricsForDate(date: Time): Promise<Array<HealthMetrics>>;
     getPendingFoodSuggestions(): Promise<Array<FoodSuggestion>>;
+    getPublicFoodWishCount(): Promise<bigint>;
     getPublicReviews(): Promise<Array<Review>>;
+    getPublicUser(deviceId: string): Promise<PublicUserRecord | null>;
+    getPublicUserCount(): Promise<bigint>;
     getUserJoinTimes(): Promise<Array<[Principal, Time]>>;
+    getUserMissionProgress(weekKey: string): Promise<Array<WeeklyMissionProgress>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWaterIntakeForDate(date: Time): Promise<Array<DailyWaterIntake>>;
     isCallerAdmin(): Promise<boolean>;
@@ -194,8 +237,10 @@ export interface backendInterface {
     resolveReport(id: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveDailyCheckIn(checkIn: DailyCheckIn): Promise<void>;
+    savePublicUser(deviceId: string, record: PublicUserRecord): Promise<void>;
     searchFoodByName(name: string): Promise<Array<FoodItem>>;
     submitFoodSuggestion(food: FoodItem): Promise<bigint>;
+    submitPublicFoodWish(submitterName: string, submitterPhone: string, foodName: string, category: string, description: string, reason: string): Promise<bigint>;
     submitReview(authorName: string, text: string, reviewType: string): Promise<void>;
     submitUserReport(reportType: string, description: string, targetFoodName: string | null): Promise<bigint>;
     toggleAnnouncement(id: bigint): Promise<void>;
@@ -204,4 +249,5 @@ export interface backendInterface {
     updateArticle(article: Article): Promise<void>;
     updateDietPlan(plan: DietPlan): Promise<void>;
     updateFoodItem(food: FoodItem): Promise<void>;
+    updateMissionProgress(missionId: bigint, weekKey: string, increment: bigint): Promise<void>;
 }

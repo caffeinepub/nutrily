@@ -9,6 +9,7 @@ import type { DrinkEntry } from "../hooks/useDrinksLog";
 import type { ExtendedFoodItem } from "../types";
 import { calcEntryNutrition } from "../types";
 import BestDayCard from "./BestDayCard";
+import BottomNav from "./BottomNav";
 import Footer from "./Footer";
 import MealTimingCard from "./MealTimingCard";
 import NutrientGapCard from "./NutrientGapCard";
@@ -19,6 +20,12 @@ interface Props {
   foodMap: Map<string, ExtendedFoodItem>;
   onBack: () => void;
   drinkEntries?: DrinkEntry[];
+  onHome?: () => void;
+  onEat?: () => void;
+  onThink?: () => void;
+  onMove?: () => void;
+  onHistory?: () => void;
+  onLeaderboard?: () => void;
 }
 
 function getHealthBadge(food: ExtendedFoodItem | undefined) {
@@ -109,6 +116,12 @@ export default function NutritionSummaryPage({
   foodMap,
   onBack,
   drinkEntries = [],
+  onHome,
+  onEat,
+  onThink,
+  onMove,
+  onHistory,
+  onLeaderboard,
 }: Props) {
   const foodTotals = entries.reduce(
     (acc, item) => {
@@ -182,7 +195,7 @@ export default function NutritionSummaryPage({
         </div>
       </div>
 
-      <main className="max-w-4xl mx-auto w-full px-4 md:px-6 py-8 flex-1 space-y-5">
+      <main className="max-w-4xl mx-auto w-full px-4 md:px-6 py-8 flex-1 space-y-5 pb-20">
         {totalItemCount === 0 ? (
           <div
             data-ocid="nutrition.empty_state"
@@ -523,6 +536,15 @@ export default function NutritionSummaryPage({
         </div>
       )}
       <Footer />
+      <BottomNav
+        activePage="eat"
+        onHome={onHome ?? onBack}
+        onEat={onEat ?? onBack}
+        onThink={onThink ?? onBack}
+        onMove={onMove ?? onBack}
+        onHistory={onHistory}
+        onLeaderboard={onLeaderboard}
+      />
     </div>
   );
 }

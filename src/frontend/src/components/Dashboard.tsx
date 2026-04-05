@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Brain, Dumbbell, History, Home, Trophy } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import type { DailyCheckIn } from "../backend";
@@ -17,6 +18,8 @@ import {
 } from "../hooks/useQueries";
 import { calcEntryNutrition, calcMealQualityScore } from "../types";
 import type { ExtendedFoodItem } from "../types";
+import BottomNav from "./BottomNav";
+import CollapsibleSection from "./CollapsibleSection";
 import DailyCheckInCard from "./DailyCheckInCard";
 import DailyHealthScore from "./DailyHealthScore";
 import EpicChallengeCard from "./EpicChallengeCard";
@@ -78,7 +81,6 @@ export default function Dashboard({ userName }: DashboardProps) {
   const [thinkEpicPage, setThinkEpicPage] = useState(false);
   const [workoutPage, setWorkoutPage] = useState(false);
   const [leaderboardPage, setLeaderboardPage] = useState(false);
-
   const { data: backendFoods = [] } = useGetAllFoodItems();
   const { data: waterGlasses = 0 } = useTodayWaterIntake();
   const { data: healthMetrics } = useTodayHealthMetrics();
@@ -192,6 +194,27 @@ export default function Dashboard({ userName }: DashboardProps) {
       <WeightGainStatusPage
         onBack={() => setGoalPage(null)}
         userProfile={userProfileForStatus}
+        onHome={() => setGoalPage(null)}
+        onEat={() => {
+          setGoalPage(null);
+          openLogFood();
+        }}
+        onThink={() => {
+          setGoalPage(null);
+          setThinkEpicPage(true);
+        }}
+        onMove={() => {
+          setGoalPage(null);
+          setWorkoutPage(true);
+        }}
+        onHistory={() => {
+          setGoalPage(null);
+          setHistoryPage(true);
+        }}
+        onLeaderboard={() => {
+          setGoalPage(null);
+          setLeaderboardPage(true);
+        }}
       />
     );
   }
@@ -200,6 +223,27 @@ export default function Dashboard({ userName }: DashboardProps) {
       <WeightLossStatusPage
         onBack={() => setGoalPage(null)}
         userProfile={userProfileForStatus}
+        onHome={() => setGoalPage(null)}
+        onEat={() => {
+          setGoalPage(null);
+          openLogFood();
+        }}
+        onThink={() => {
+          setGoalPage(null);
+          setThinkEpicPage(true);
+        }}
+        onMove={() => {
+          setGoalPage(null);
+          setWorkoutPage(true);
+        }}
+        onHistory={() => {
+          setGoalPage(null);
+          setHistoryPage(true);
+        }}
+        onLeaderboard={() => {
+          setGoalPage(null);
+          setLeaderboardPage(true);
+        }}
       />
     );
   }
@@ -210,29 +254,133 @@ export default function Dashboard({ userName }: DashboardProps) {
         foodMap={foodMap}
         onBack={() => setNutritionPage(false)}
         drinkEntries={drinks}
+        onHome={() => setNutritionPage(false)}
+        onEat={() => {
+          setNutritionPage(false);
+          openLogFood();
+        }}
+        onThink={() => {
+          setNutritionPage(false);
+          setThinkEpicPage(true);
+        }}
+        onMove={() => {
+          setNutritionPage(false);
+          setWorkoutPage(true);
+        }}
+        onHistory={() => {
+          setNutritionPage(false);
+          setHistoryPage(true);
+        }}
+        onLeaderboard={() => {
+          setNutritionPage(false);
+          setLeaderboardPage(true);
+        }}
       />
     );
   }
   if (historyPage) {
-    return <FoodLogHistory onBack={() => setHistoryPage(false)} />;
+    return (
+      <FoodLogHistory
+        onBack={() => setHistoryPage(false)}
+        onHome={() => setHistoryPage(false)}
+        onEat={() => {
+          setHistoryPage(false);
+          openLogFood();
+        }}
+        onThink={() => {
+          setHistoryPage(false);
+          setThinkEpicPage(true);
+        }}
+        onMove={() => {
+          setHistoryPage(false);
+          setWorkoutPage(true);
+        }}
+        onHistory={() => {}}
+        onLeaderboard={() => {
+          setHistoryPage(false);
+          setLeaderboardPage(true);
+        }}
+      />
+    );
   }
   if (workoutPage) {
-    return <WorkoutPage onBack={() => setWorkoutPage(false)} />;
+    return (
+      <WorkoutPage
+        onBack={() => setWorkoutPage(false)}
+        onHome={() => setWorkoutPage(false)}
+        onEat={() => {
+          setWorkoutPage(false);
+          openLogFood();
+        }}
+        onThink={() => {
+          setWorkoutPage(false);
+          setThinkEpicPage(true);
+        }}
+        onMove={() => {}}
+        onHistory={() => {
+          setWorkoutPage(false);
+          setHistoryPage(true);
+        }}
+        onLeaderboard={() => {
+          setWorkoutPage(false);
+          setLeaderboardPage(true);
+        }}
+      />
+    );
   }
   if (thinkEpicPage) {
-    return <ThinkEpicPage onBack={() => setThinkEpicPage(false)} />;
+    return (
+      <ThinkEpicPage
+        onBack={() => setThinkEpicPage(false)}
+        onHome={() => setThinkEpicPage(false)}
+        onEat={() => {
+          setThinkEpicPage(false);
+          openLogFood();
+        }}
+        onThink={() => {}}
+        onMove={() => {
+          setThinkEpicPage(false);
+          setWorkoutPage(true);
+        }}
+        onHistory={() => {
+          setThinkEpicPage(false);
+          setHistoryPage(true);
+        }}
+        onLeaderboard={() => {
+          setThinkEpicPage(false);
+          setLeaderboardPage(true);
+        }}
+      />
+    );
   }
   if (leaderboardPage) {
     return (
       <Leaderboard
         onBack={() => setLeaderboardPage(false)}
         currentUserName={userName}
+        onHome={() => setLeaderboardPage(false)}
+        onEat={() => {
+          setLeaderboardPage(false);
+          openLogFood();
+        }}
+        onThink={() => {
+          setLeaderboardPage(false);
+          setThinkEpicPage(true);
+        }}
+        onMove={() => {
+          setLeaderboardPage(false);
+          setWorkoutPage(true);
+        }}
+        onHistory={() => {
+          setLeaderboardPage(false);
+          setHistoryPage(true);
+        }}
+        onLeaderboard={() => {}}
       />
     );
   }
 
   const greeting = getGreeting();
-
   const userGoalType = (userProfile as any)?.goal ?? null;
   const currentWeightKg = userProfile
     ? Number(userProfile.weightKg)
@@ -251,13 +399,13 @@ export default function Dashboard({ userName }: DashboardProps) {
       <OfflineBanner />
 
       {/* Hero */}
-      <section className="hero-gradient py-10 px-6">
+      <section className="hero-gradient py-6 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-4xl md:text-5xl font-display font-extrabold text-white mb-3"
+            className="text-3xl md:text-4xl font-display font-extrabold text-white mb-2"
           >
             {greeting}, {userName}! 🌱
           </motion.h1>
@@ -265,28 +413,26 @@ export default function Dashboard({ userName }: DashboardProps) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xl md:text-2xl text-white/80 font-light"
+            className="text-base md:text-lg text-white/80 font-light"
           >
             Track your nutrition and stay on top of your health goals today.
           </motion.p>
         </div>
       </section>
 
-      <main className="max-w-7xl mx-auto w-full px-4 md:px-6 py-8 flex-1">
-        {/* 1. Streak Widget */}
+      <main className="max-w-7xl mx-auto w-full px-4 md:px-6 py-4 flex-1 pb-24">
+        {/* Always visible: Streak */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="mb-5"
+          className="mb-3"
         >
           <StreakWidget />
         </motion.div>
-        <EpicChallengeCard />
-        <MoodTrackerCard />
 
-        {/* 2. Daily Health Score */}
-        <div className="mb-5">
+        {/* Always visible: Daily Health Score */}
+        <div className="mb-3">
           <DailyHealthScore
             calories={totals.calories}
             protein={totals.protein}
@@ -295,81 +441,15 @@ export default function Dashboard({ userName }: DashboardProps) {
           />
         </div>
 
-        {/* 3. Micro Coaching Card */}
-        <div className="mb-5">
-          <MicroCoachingCard />
-        </div>
-
-        {/* ThinkEpic CTA Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.05 }}
-          className="mb-5"
-        >
-          <button
-            type="button"
-            data-ocid="thinkepic.open_modal_button"
-            onClick={() => setThinkEpicPage(true)}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white shadow-md hover:shadow-lg hover:opacity-95 transition-all text-left group"
-          >
-            <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
-              <span className="text-xl">🧠</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-base leading-tight">ThinkEpic</p>
-              <p className="text-xs text-white/80 mt-0.5">
-                Kerala food safety · Smart alerts · Health guidance
-              </p>
-            </div>
-            <span className="text-white/60 text-lg group-hover:translate-x-1 transition-transform">
-              →
-            </span>
-          </button>
-        </motion.div>
-
-        {/* Leaderboard CTA Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="mb-5"
-        >
-          <button
-            type="button"
-            data-ocid="leaderboard.open_modal_button"
-            onClick={() => setLeaderboardPage(true)}
-            className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-600 text-white shadow-md hover:shadow-lg hover:opacity-95 transition-all text-left group"
-          >
-            <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
-              <span className="text-xl">🏆</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-base leading-tight">Leaderboard</p>
-              <p className="text-xs text-white/80 mt-0.5">
-                See how you rank vs the community
-              </p>
-            </div>
-            <span className="text-white/60 text-lg group-hover:translate-x-1 transition-transform">
-              →
-            </span>
-          </button>
-        </motion.div>
-
-        {/* 4. My Stats */}
+        {/* Always visible: My Stats */}
         {userProfile && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-5"
-          >
+          <div className="mb-3">
             <MyStatsCard profile={userProfile} />
-          </motion.div>
+          </div>
         )}
 
-        {/* 5. Calorie + Macro grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+        {/* Always visible: Calorie + Macro grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <CalorieTrackerCard calories={totals.calories} />
           <MacroBreakdownCard
             protein={totals.protein}
@@ -378,32 +458,8 @@ export default function Dashboard({ userName }: DashboardProps) {
           />
         </div>
 
-        {/* 6. Smart Suggestions */}
-        <div className="mb-5">
-          <SmartSuggestionsCard
-            calories={totals.calories}
-            protein={totals.protein}
-            fiber={totals.fiber}
-            waterGlasses={waterGlasses}
-          />
-        </div>
-
-        {/* 7. Goal Visualization */}
-        <div className="mb-5">
-          <GoalVisualizationCard
-            currentWeight={currentWeightKg}
-            goalType={userGoalType}
-            caloriesConsumed={totals.calories}
-          />
-        </div>
-
-        {/* 8. Weekly Missions */}
-        <div className="mb-5">
-          <WeeklyMissionsCard />
-        </div>
-
-        {/* 9. Food Log */}
-        <div className="mb-5">
+        {/* Always visible: Food Log */}
+        <div className="mb-3">
           <FoodLogCard
             entries={foodLogItems}
             foodMap={foodMap}
@@ -422,90 +478,154 @@ export default function Dashboard({ userName }: DashboardProps) {
           </button>
         </div>
 
-        {/* 10. Water + Recent + Habit */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-          <WaterIntakeCard glasses={waterGlasses} />
-          <MealQualityCard score={score} grade={grade} />
-          <HabitRemindersCard />
+        {/* Compact 3-column nav grid */}
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <button
+            type="button"
+            data-ocid="thinkepic.open_modal_button"
+            onClick={() => setThinkEpicPage(true)}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] text-white shadow-sm hover:shadow-md hover:opacity-95 transition-all"
+          >
+            <span className="text-xl">🧠</span>
+            <span className="text-xs font-semibold">ThinkEpic</span>
+          </button>
+          <button
+            type="button"
+            data-ocid="moveepic.open_modal_button"
+            onClick={() => setWorkoutPage(true)}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] text-white shadow-sm hover:shadow-md hover:opacity-95 transition-all"
+          >
+            <span className="text-xl">💪</span>
+            <span className="text-xs font-semibold">MoveEpic</span>
+          </button>
+          <button
+            type="button"
+            data-ocid="leaderboard.open_modal_button"
+            onClick={() => setLeaderboardPage(true)}
+            className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] text-white shadow-sm hover:shadow-md hover:opacity-95 transition-all"
+          >
+            <span className="text-xl">🏆</span>
+            <span className="text-xs font-semibold">Leaderboard</span>
+          </button>
         </div>
 
-        {/* 11. Smart Coach + Metrics + Food Search */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-          <SmartCoachCard
-            caloriesConsumed={totals.calories}
-            protein={totals.protein}
-            carbs={totals.carbs}
-            fat={totals.fat}
-            userProfile={userProfileForStatus}
-            allFoods={allFoods}
-          />
-          <div className="space-y-5">
-            <MyMetricsCard
-              metrics={healthMetrics}
-              onEdit={() => setMetricsOpen(true)}
-            />
-            {recentEntry && (
-              <div className="bg-card rounded-xl border border-border shadow-card p-4">
-                <h3 className="text-sm font-semibold text-foreground mb-3">
-                  Recent Activity
-                </h3>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center text-sm">
-                    🥗
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {recentEntry.foodName}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {recentEntry.mealType} · {recentEntry.quantity}g
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-primary">
-                    {Math.round(
-                      calcEntryNutrition(recentEntry, foodMap).calories,
-                    )}{" "}
-                    kcal
-                  </span>
-                </div>
-              </div>
-            )}
-            <FoodSearchCard
-              allFoods={allFoods}
-              onFoodSelect={setSelectedFood}
-              onAddToLog={(food) => {
-                setSelectedFood(null);
-                setPreselectedMeal(food.name);
-                setLogFoodOpen(true);
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 12. Check-In */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mt-8"
+        {/* Collapsible: Daily Activities */}
+        <CollapsibleSection
+          title="Daily Activities"
+          icon="⚡"
+          defaultOpen={false}
         >
-          <h2 className="text-xl font-bold text-foreground mb-4">
-            Today's Check-In
-          </h2>
-          <div className="max-w-lg">
-            <DailyCheckInCard recentCheckIns={checkIns} />
-          </div>
-        </motion.div>
+          <EpicChallengeCard />
+          <MoodTrackerCard />
+          <MicroCoachingCard />
+        </CollapsibleSection>
 
-        {/* 13-15: Goals, Reviews, Privacy */}
-        <GoalsSection onNavigateToStatus={setGoalPage} />
-        <ReviewSection />
+        {/* Collapsible: Progress & Goals */}
+        <CollapsibleSection
+          title="Progress & Goals"
+          icon="📈"
+          defaultOpen={false}
+        >
+          <GoalVisualizationCard
+            currentWeight={currentWeightKg}
+            goalType={userGoalType}
+            caloriesConsumed={totals.calories}
+          />
+          <SmartSuggestionsCard
+            calories={totals.calories}
+            protein={totals.protein}
+            fiber={totals.fiber}
+            waterGlasses={waterGlasses}
+          />
+          <WeeklyMissionsCard />
+        </CollapsibleSection>
+
+        {/* Collapsible: Health Tools */}
+        <CollapsibleSection title="Health Tools" icon="🔧" defaultOpen={false}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <WaterIntakeCard glasses={waterGlasses} />
+            <MealQualityCard score={score} grade={grade} />
+            <HabitRemindersCard />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <SmartCoachCard
+              caloriesConsumed={totals.calories}
+              protein={totals.protein}
+              carbs={totals.carbs}
+              fat={totals.fat}
+              userProfile={userProfileForStatus}
+              allFoods={allFoods}
+            />
+            <div className="space-y-3">
+              <MyMetricsCard
+                metrics={healthMetrics}
+                onEdit={() => setMetricsOpen(true)}
+              />
+              {recentEntry && (
+                <div className="bg-card rounded-xl border border-border shadow-card p-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
+                    Recent Activity
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center text-sm">
+                      🥗
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {recentEntry.foodName}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {recentEntry.mealType} · {recentEntry.quantity}g
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-primary">
+                      {Math.round(
+                        calcEntryNutrition(recentEntry, foodMap).calories,
+                      )}{" "}
+                      kcal
+                    </span>
+                  </div>
+                </div>
+              )}
+              <FoodSearchCard
+                allFoods={allFoods}
+                onFoodSelect={setSelectedFood}
+                onAddToLog={(food) => {
+                  setSelectedFood(null);
+                  setPreselectedMeal(food.name);
+                  setLogFoodOpen(true);
+                }}
+              />
+            </div>
+          </div>
+          <DailyCheckInCard recentCheckIns={checkIns} />
+        </CollapsibleSection>
+
+        {/* Collapsible: Goals & Community */}
+        <CollapsibleSection
+          title="Goals & Community"
+          icon="🎯"
+          defaultOpen={false}
+        >
+          <GoalsSection onNavigateToStatus={setGoalPage} />
+          <ReviewSection />
+        </CollapsibleSection>
+
+        <div className="flex justify-center py-2">
+          <PrivacySettingsModal />
+        </div>
+        <Footer />
       </main>
 
-      <div className="max-w-7xl mx-auto w-full px-4 md:px-6 pb-2 flex justify-center">
-        <PrivacySettingsModal />
-      </div>
-      <Footer />
+      <BottomNav
+        activePage="home"
+        onHome={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        onEat={() => openLogFood()}
+        onThink={() => setThinkEpicPage(true)}
+        onMove={() => setWorkoutPage(true)}
+        onHistory={() => setHistoryPage(true)}
+        onLeaderboard={() => setLeaderboardPage(true)}
+      />
 
       <LogFoodModal
         open={logFoodOpen}

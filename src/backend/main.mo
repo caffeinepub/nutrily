@@ -12,8 +12,10 @@ import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
 
+
 import MixinAuthorization "authorization/MixinAuthorization";
 
+// Add migration module and entry
 
 actor {
   type Permissions = {
@@ -883,7 +885,7 @@ actor {
   };
 
   public query ({ caller }) func getUserMissionProgress(weekKey : Text) : async [WeeklyMissionProgress] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view mission progress");
     };
     switch (userMissionProgress.get(caller)) {
@@ -895,7 +897,7 @@ actor {
   };
 
   public shared ({ caller }) func updateMissionProgress(missionId : Nat, weekKey : Text, increment : Nat) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can update mission progress");
     };
     let mission = switch (weeklyMissions.get(missionId)) {
@@ -982,5 +984,55 @@ actor {
       case (null) { [] };
       case (?metrics) { metrics.toArray().sort() };
     };
+  };
+
+  // ======================== Public Food Wish System ========================
+
+  // NEW public food wish system to allow everyone to submit food or requests.
+
+  public type PublicFoodWish = {
+    id : Nat;
+    submitterName : Text;
+    submitterPhone : Text;
+    foodName : Text;
+    category : Text;
+    description : Text;
+    reason : Text;
+    submittedAt : Int;
+  };
+
+  let publicFoodWishes = Map.empty<Nat, PublicFoodWish>();
+  var nextFoodWishId = 1;
+
+  public func submitPublicFoodWish(
+    submitterName : Text,
+    submitterPhone : Text,
+    foodName : Text,
+    category : Text,
+    description : Text,
+    reason : Text,
+  ) : async Nat {
+    let id = nextFoodWishId;
+    let wish : PublicFoodWish = {
+      id;
+      submitterName;
+      submitterPhone;
+      foodName;
+      category;
+      description;
+      reason;
+      submittedAt = Time.now();
+    };
+    publicFoodWishes.add(id, wish);
+    nextFoodWishId += 1;
+    id;
+  };
+
+  public query func getAllPublicFoodWishes() : async [PublicFoodWish] {
+    publicFoodWishes.values().toArray();
+  };
+
+  public query func getPublicFoodWishCount() : async Nat {
+    publicFoodWishes.size();
   };
 };

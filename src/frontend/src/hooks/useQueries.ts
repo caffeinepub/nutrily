@@ -899,3 +899,45 @@ export function useAllPublicUsers() {
     enabled: !!actor && !isFetching,
   });
 }
+
+export function useAllPublicFoodWishes() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["publicFoodWishes"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getAllPublicFoodWishes();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSubmitPublicFoodWish() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      submitterName: string;
+      submitterPhone: string;
+      foodName: string;
+      category: string;
+      description: string;
+      reason: string;
+    }) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.submitPublicFoodWish(
+        params.submitterName,
+        params.submitterPhone,
+        params.foodName,
+        params.category,
+        params.description,
+        params.reason,
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["publicFoodWishes"] }),
+  });
+}

@@ -1,5 +1,15 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { ExerciseAnimation } from "./ExerciseAnimation";
+
+const HumanAnimation3D = lazy(() => import("./HumanAnimation3D"));
 
 interface Exercise {
   name: string;
@@ -121,6 +131,7 @@ export default function WorkoutTimer({
   const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [setsCompleted, setSetsCompleted] = useState(0);
+  const [view3D, setView3D] = useState(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -319,14 +330,46 @@ export default function WorkoutTimer({
             </p>
           )}
         </div>
-        <button
-          type="button"
-          data-ocid="workout_timer.close_button"
-          onClick={handleClose}
-          className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors text-lg"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-2">
+          {/* 2D/3D toggle for timer */}
+          {!isComplete && timerState === "exercise" && (
+            <div
+              className="flex items-center gap-0.5 bg-muted rounded-full p-0.5"
+              data-ocid="workout_timer.toggle"
+            >
+              <button
+                type="button"
+                onClick={() => setView3D(false)}
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                  !view3D
+                    ? "bg-[#1E3A8A] text-white"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                2D
+              </button>
+              <button
+                type="button"
+                onClick={() => setView3D(true)}
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                  view3D
+                    ? "bg-[#1E3A8A] text-white"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                3D
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            data-ocid="workout_timer.close_button"
+            onClick={handleClose}
+            className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors text-lg"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Main content */}
@@ -400,7 +443,7 @@ export default function WorkoutTimer({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.25 }}
-            className="flex-1 flex flex-col items-center justify-between px-6 py-6"
+            className="flex-1 flex flex-col items-center justify-between px-6 py-4 overflow-y-auto"
           >
             {/* State badge */}
             <div className="w-full flex justify-center">
@@ -416,7 +459,58 @@ export default function WorkoutTimer({
             </div>
 
             {/* Exercise demo area */}
-            <div className="flex flex-col items-center text-center gap-3 mt-2">
+            <div className="flex flex-col items-center text-center gap-3 mt-2 w-full">
+              {timerState === "exercise" &&
+                (view3D ? (
+                  <motion.div
+                    key={`${currentExercise.name}_3d`}
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                    style={{
+                      width: "100%",
+                      height: 240,
+                      borderRadius: 12,
+                      overflow: "hidden",
+                    }}
+                    data-ocid="workout_timer.canvas_target"
+                  >
+                    <Suspense
+                      fallback={
+                        <div
+                          style={{
+                            width: "100%",
+                            height: 240,
+                            background: "#0f172a",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#60A5FA",
+                            fontSize: 13,
+                            borderRadius: 12,
+                          }}
+                        >
+                          Loading 3D...
+                        </div>
+                      }
+                    >
+                      <HumanAnimation3D
+                        exerciseType={currentExercise.name}
+                        speed={1}
+                      />
+                    </Suspense>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={`${currentExercise.name}_anim`}
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                    className="flex justify-center"
+                  >
+                    <ExerciseAnimation name={currentExercise.name} size={120} />
+                  </motion.div>
+                ))}
               <motion.div
                 key={currentExercise.name}
                 initial={{ scale: 0.7, opacity: 0 }}
@@ -424,7 +518,11 @@ export default function WorkoutTimer({
                 transition={{ type: "spring", stiffness: 200 }}
                 className="text-7xl"
               >
-                {currentExercise.emoji}
+                {timerState === "rest" ? (
+                  currentExercise.emoji
+                ) : (
+                  <span className="text-4xl">{currentExercise.emoji}</span>
+                )}
               </motion.div>
               <h2 className="text-2xl font-bold text-foreground leading-tight">
                 {timerState === "rest"

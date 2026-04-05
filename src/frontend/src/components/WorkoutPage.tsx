@@ -1,14 +1,25 @@
 import { Badge } from "@/components/ui/badge";
+import { getExerciseDetail } from "@/data/exerciseDetails";
+import type { ExerciseCategory } from "@/data/exerciseDetails";
 import { ArrowLeft, Calendar, Dumbbell, Home } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import BottomNav from "./BottomNav";
 import CalorieBurnCalculator from "./CalorieBurnCalculator";
+import { ExerciseAnimation } from "./ExerciseAnimation";
+import ExerciseDetailModal from "./ExerciseDetailModal";
 import ExerciseOfDayCard from "./ExerciseOfDayCard";
 import WorkoutHistory, { saveWorkoutHistory } from "./WorkoutHistory";
 import WorkoutTimer from "./WorkoutTimer";
 
 interface WorkoutPageProps {
   onBack: () => void;
+  onHome?: () => void;
+  onEat?: () => void;
+  onThink?: () => void;
+  onMove?: () => void;
+  onHistory?: () => void;
+  onLeaderboard?: () => void;
 }
 
 type Audience = "male" | "female" | "kids" | "teens" | "adults" | "seniors";
@@ -1324,18 +1335,46 @@ function getAutoAudience(): Audience {
   }
 }
 
+const CATEGORY_BADGE: Record<string, { label: string; className: string }> = {
+  beginner: {
+    label: "Beginner",
+    className:
+      "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+  },
+  muscleGain: {
+    label: "Muscle Gain",
+    className:
+      "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300",
+  },
+  fatLoss: {
+    label: "Fat Loss",
+    className:
+      "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
+  },
+};
+
 function ExerciseCard({
   exercise,
   index,
-}: { exercise: Exercise; index: number }) {
+  onClick,
+}: { exercise: Exercise; index: number; onClick: () => void }) {
   const colors = difficultyColors[exercise.difficulty];
+  const detail = getExerciseDetail(exercise.name);
+  const catBadge = CATEGORY_BADGE[detail.category] ?? CATEGORY_BADGE.beginner;
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.3 }}
-      className={`bg-card border border-border border-l-4 ${colors.border} rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow`}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onClick();
+      }}
+      className={`bg-card border border-border border-l-4 ${colors.border} rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:ring-2 hover:ring-primary/30 active:scale-[0.98]`}
     >
+      <div className="flex justify-center mb-3">
+        <ExerciseAnimation name={exercise.name} size={72} />
+      </div>
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2">
           <span className="text-2xl">{exercise.emoji}</span>
@@ -1348,11 +1387,18 @@ function ExerciseCard({
             </p>
           </div>
         </div>
-        <span
-          className={`text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${colors.badge}`}
-        >
-          {exercise.difficulty}
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${colors.badge}`}
+          >
+            {exercise.difficulty}
+          </span>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${catBadge.className}`}
+          >
+            {catBadge.label}
+          </span>
+        </div>
       </div>
       <div className="flex gap-3 flex-wrap mt-3">
         <div className="flex items-center gap-1.5 bg-muted rounded-lg px-2.5 py-1">
@@ -1374,6 +1420,9 @@ function ExerciseCard({
           {exercise.tip}
         </p>
       </div>
+      <p className="mt-2 text-center text-xs text-muted-foreground/60">
+        Tap for steps, muscles &amp; mistakes
+      </p>
     </motion.div>
   );
 }
@@ -1416,7 +1465,15 @@ function WeeklySchedule({ schedule }: { schedule: DaySchedule[] }) {
   );
 }
 
-export default function WorkoutPage({ onBack }: WorkoutPageProps) {
+export default function WorkoutPage({
+  onBack,
+  onHome,
+  onEat,
+  onThink,
+  onMove,
+  onHistory,
+  onLeaderboard,
+}: WorkoutPageProps) {
   const [audience, setAudience] = useState<Audience>(getAutoAudience);
   const [env, setEnv] = useState<Environment>("home");
   const [showTimer, setShowTimer] = useState(false);
@@ -1424,6 +1481,10 @@ export default function WorkoutPage({ onBack }: WorkoutPageProps) {
   const [timerAudience, setTimerAudience] = useState<Audience>("adults");
   const [timerEnv, setTimerEnv] = useState<Environment>("home");
   const [bodyPartFilter, setBodyPartFilter] = useState<string>("All");
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const [selectedExercise, setSelectedExercise] = useState<
+    (typeof plan.exercises)[0] | null
+  >(null);
 
   const plan = workoutData[audience][env];
 
@@ -1558,6 +1619,44 @@ export default function WorkoutPage({ onBack }: WorkoutPageProps) {
           </div>
         </div>
 
+        {/* Category Filter */}
+        <div className="mb-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            Category
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(["All", "Beginner", "Muscle Gain", "Fat Loss"] as const).map(
+              (cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  data-ocid={`workout.category_${cat.toLowerCase().replace(/ /g, "_")}_tab`}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                    categoryFilter === cat
+                      ? cat === "All"
+                        ? "bg-[#1E3A8A] text-white border-[#1E3A8A]"
+                        : cat === "Beginner"
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : cat === "Muscle Gain"
+                            ? "bg-purple-600 text-white border-purple-600"
+                            : "bg-orange-500 text-white border-orange-500"
+                      : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {cat === "All"
+                    ? "📋 All"
+                    : cat === "Beginner"
+                      ? "📘 Beginner"
+                      : cat === "Muscle Gain"
+                        ? "💪 Muscle Gain"
+                        : "🔥 Fat Loss"}
+                </button>
+              ),
+            )}
+          </div>
+        </div>
+
         {/* Difficulty Legend */}
         <div className="flex items-center gap-4 mb-5 text-xs text-muted-foreground">
           <span className="font-medium">Difficulty:</span>
@@ -1605,6 +1704,16 @@ export default function WorkoutPage({ onBack }: WorkoutPageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {plan.exercises
                 .filter((ex) => {
+                  if (categoryFilter !== "All") {
+                    const detail = getExerciseDetail(ex.name);
+                    const catMap: Record<string, string> = {
+                      beginner: "Beginner",
+                      muscleGain: "Muscle Gain",
+                      fatLoss: "Fat Loss",
+                    };
+                    if (catMap[detail.category] !== categoryFilter)
+                      return false;
+                  }
                   if (bodyPartFilter === "All") return true;
                   const m = ex.muscle.toLowerCase();
                   if (bodyPartFilter === "Arms")
@@ -1641,7 +1750,12 @@ export default function WorkoutPage({ onBack }: WorkoutPageProps) {
                   return true;
                 })
                 .map((ex, i) => (
-                  <ExerciseCard key={ex.name} exercise={ex} index={i} />
+                  <ExerciseCard
+                    key={ex.name}
+                    exercise={ex}
+                    index={i}
+                    onClick={() => setSelectedExercise(ex)}
+                  />
                 ))}
             </div>
 
@@ -1677,6 +1791,12 @@ export default function WorkoutPage({ onBack }: WorkoutPageProps) {
         </footer>
       </div>
 
+      {/* Exercise Detail Modal */}
+      <ExerciseDetailModal
+        exercise={selectedExercise}
+        onClose={() => setSelectedExercise(null)}
+      />
+
       {/* Workout Timer Overlay */}
       <AnimatePresence>
         {showTimer && (
@@ -1700,6 +1820,15 @@ export default function WorkoutPage({ onBack }: WorkoutPageProps) {
           />
         )}
       </AnimatePresence>
+      <BottomNav
+        activePage="move"
+        onHome={onHome ?? onBack}
+        onEat={onEat ?? onBack}
+        onThink={onThink ?? onBack}
+        onMove={onMove ?? onBack}
+        onHistory={onHistory}
+        onLeaderboard={onLeaderboard}
+      />
     </div>
   );
 }

@@ -15,12 +15,19 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import type { FoodLogEntryLocal } from "../hooks/useFoodLog";
 import type { LocalUser } from "../hooks/useLocalAuth";
+import BottomNav from "./BottomNav";
 import DidYouKnowCard from "./DidYouKnowCard";
 import FoodMythBustersCard from "./FoodMythBustersCard";
 import HealthQuizCard from "./HealthQuizCard";
 
 interface ThinkEpicPageProps {
   onBack: () => void;
+  onHome?: () => void;
+  onEat?: () => void;
+  onThink?: () => void;
+  onMove?: () => void;
+  onHistory?: () => void;
+  onLeaderboard?: () => void;
 }
 
 function readTodayLog(): FoodLogEntryLocal[] {
@@ -241,7 +248,15 @@ function isCoconutTimer(name: string) {
   return COCONUT_KEYWORDS_TIMER.some((k) => n.includes(k));
 }
 
-export default function ThinkEpicPage({ onBack }: ThinkEpicPageProps) {
+export default function ThinkEpicPage({
+  onBack,
+  onHome,
+  onEat,
+  onThink,
+  onMove,
+  onHistory,
+  onLeaderboard,
+}: ThinkEpicPageProps) {
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodType>("");
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
@@ -464,7 +479,7 @@ export default function ThinkEpicPage({ onBack }: ThinkEpicPageProps) {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 flex-1">
+      <main className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6 flex-1 pb-20">
         {/* 1. Seasonal Alert Banner */}
         <AnimatePresence>
           {!bannerDismissed && (
@@ -1635,6 +1650,15 @@ export default function ThinkEpicPage({ onBack }: ThinkEpicPageProps) {
           </Button>
         </div>
       </main>
+      <BottomNav
+        activePage="think"
+        onHome={onHome ?? onBack}
+        onEat={onEat ?? onBack}
+        onThink={onThink ?? onBack}
+        onMove={onMove ?? onBack}
+        onHistory={onHistory}
+        onLeaderboard={onLeaderboard}
+      />
     </div>
   );
 }

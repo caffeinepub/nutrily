@@ -89,11 +89,23 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface Review {
-    text: string;
-    authorName: string;
-    reviewType: string;
-    timestamp: Time;
+export interface PublicFoodWish {
+    id: bigint;
+    submitterPhone: string;
+    submitterName: string;
+    submittedAt: bigint;
+    description: string;
+    category: string;
+    foodName: string;
+    reason: string;
+}
+export interface UserProfile {
+    heightCm: number;
+    goal?: ProfileGoal;
+    name: string;
+    weightKg: number;
+    gender?: string;
+    phone: string;
 }
 export interface UserReport {
     id: bigint;
@@ -104,11 +116,17 @@ export interface UserReport {
     reportType: string;
     reportedBy: Principal;
 }
+export type Time = bigint;
+export interface FoodLogEntry {
+    date: Time;
+    quantity: number;
+    mealType: MealType;
+    foodName: string;
+}
 export interface DailyWaterIntake {
     entries: Array<WaterIntakeEntry>;
     timestamp: Time;
 }
-export type Time = bigint;
 export interface Article {
     id: bigint;
     title: string;
@@ -123,9 +141,36 @@ export interface HealthMetrics {
     heartRate: number;
     timestamp: Time;
 }
+export interface PublicUserRecord {
+    age: bigint;
+    lastSeenAt: bigint;
+    heightCm: number;
+    goal: string;
+    name: string;
+    joinedAt: bigint;
+    weightKg: number;
+    gender: string;
+    phone: string;
+}
+export interface Announcement {
+    id: bigint;
+    title: string;
+    createdAt: Time;
+    isActive: boolean;
+    message: string;
+    targetGoal: AnnouncementTarget;
+}
 export interface WaterIntakeEntry {
     glasses: bigint;
     timestamp: Time;
+}
+export interface WeeklyMission {
+    id: bigint;
+    title: string;
+    missionType: string;
+    xpReward: bigint;
+    description: string;
+    targetCount: bigint;
 }
 export interface FoodSuggestion {
     status: FoodSuggestionStatus;
@@ -169,27 +214,17 @@ export interface DailyCheckIn {
     dietNotes: string;
     sleepHours: number;
 }
-export interface Announcement {
-    id: bigint;
-    title: string;
-    createdAt: Time;
-    isActive: boolean;
-    message: string;
-    targetGoal: AnnouncementTarget;
+export interface Review {
+    text: string;
+    authorName: string;
+    reviewType: string;
+    timestamp: Time;
 }
-export interface UserProfile {
-    heightCm: number;
-    goal?: ProfileGoal;
-    name: string;
-    weightKg: number;
-    gender?: string;
-    phone: string;
-}
-export interface FoodLogEntry {
-    date: Time;
-    quantity: number;
-    mealType: MealType;
-    foodName: string;
+export interface WeeklyMissionProgress {
+    weekKey: string;
+    completed: boolean;
+    currentCount: bigint;
+    missionId: bigint;
 }
 export enum AnnouncementTarget {
     all = "all",
@@ -231,6 +266,7 @@ export interface backendInterface {
     createAnnouncement(announcement: Announcement): Promise<bigint>;
     createArticle(article: Article): Promise<bigint>;
     createDietPlan(plan: DietPlan): Promise<bigint>;
+    createWeeklyMission(mission: WeeklyMission): Promise<bigint>;
     deleteAnnouncement(id: bigint): Promise<void>;
     deleteArticle(id: bigint): Promise<void>;
     deleteCallerUserProfile(): Promise<void>;
@@ -247,10 +283,13 @@ export interface backendInterface {
     getAllFoodItems(): Promise<Array<FoodItem>>;
     getAllFoodLogs(user: Principal): Promise<Array<DailyFoodLog>>;
     getAllHealthMetrics(user: Principal): Promise<Array<HealthMetrics>>;
+    getAllPublicFoodWishes(): Promise<Array<PublicFoodWish>>;
+    getAllPublicUsers(): Promise<Array<[string, PublicUserRecord]>>;
     getAllReports(): Promise<Array<UserReport>>;
     getAllUsers(): Promise<Array<[Principal, UserProfile]>>;
     getAllUsersCheckIns(): Promise<Array<[Principal, Array<DailyCheckIn>]>>;
     getAllWaterIntake(user: Principal): Promise<Array<DailyWaterIntake>>;
+    getAllWeeklyMissions(): Promise<Array<WeeklyMission>>;
     getArticlesByCategory(category: string): Promise<Array<Article>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -264,8 +303,12 @@ export interface backendInterface {
     getFoodLogsForDate(date: Time): Promise<Array<DailyFoodLog>>;
     getHealthMetricsForDate(date: Time): Promise<Array<HealthMetrics>>;
     getPendingFoodSuggestions(): Promise<Array<FoodSuggestion>>;
+    getPublicFoodWishCount(): Promise<bigint>;
     getPublicReviews(): Promise<Array<Review>>;
+    getPublicUser(deviceId: string): Promise<PublicUserRecord | null>;
+    getPublicUserCount(): Promise<bigint>;
     getUserJoinTimes(): Promise<Array<[Principal, Time]>>;
+    getUserMissionProgress(weekKey: string): Promise<Array<WeeklyMissionProgress>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWaterIntakeForDate(date: Time): Promise<Array<DailyWaterIntake>>;
     isCallerAdmin(): Promise<boolean>;
@@ -277,8 +320,10 @@ export interface backendInterface {
     resolveReport(id: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveDailyCheckIn(checkIn: DailyCheckIn): Promise<void>;
+    savePublicUser(deviceId: string, record: PublicUserRecord): Promise<void>;
     searchFoodByName(name: string): Promise<Array<FoodItem>>;
     submitFoodSuggestion(food: FoodItem): Promise<bigint>;
+    submitPublicFoodWish(submitterName: string, submitterPhone: string, foodName: string, category: string, description: string, reason: string): Promise<bigint>;
     submitReview(authorName: string, text: string, reviewType: string): Promise<void>;
     submitUserReport(reportType: string, description: string, targetFoodName: string | null): Promise<bigint>;
     toggleAnnouncement(id: bigint): Promise<void>;
@@ -287,8 +332,9 @@ export interface backendInterface {
     updateArticle(article: Article): Promise<void>;
     updateDietPlan(plan: DietPlan): Promise<void>;
     updateFoodItem(food: FoodItem): Promise<void>;
+    updateMissionProgress(missionId: bigint, weekKey: string, increment: bigint): Promise<void>;
 }
-import type { Announcement as _Announcement, AnnouncementTarget as _AnnouncementTarget, DailyFoodLog as _DailyFoodLog, DietPlan as _DietPlan, FoodItem as _FoodItem, FoodLogEntry as _FoodLogEntry, FoodSuggestion as _FoodSuggestion, FoodSuggestionStatus as _FoodSuggestionStatus, MealType as _MealType, ProfileGoal as _ProfileGoal, ReportStatus as _ReportStatus, Time as _Time, UserProfile as _UserProfile, UserReport as _UserReport, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { Announcement as _Announcement, AnnouncementTarget as _AnnouncementTarget, DailyFoodLog as _DailyFoodLog, DietPlan as _DietPlan, FoodItem as _FoodItem, FoodLogEntry as _FoodLogEntry, FoodSuggestion as _FoodSuggestion, FoodSuggestionStatus as _FoodSuggestionStatus, MealType as _MealType, ProfileGoal as _ProfileGoal, PublicUserRecord as _PublicUserRecord, ReportStatus as _ReportStatus, Time as _Time, UserProfile as _UserProfile, UserReport as _UserReport, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -386,6 +432,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.createDietPlan(to_candid_DietPlan_n7(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async createWeeklyMission(arg0: WeeklyMission): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createWeeklyMission(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createWeeklyMission(arg0);
             return result;
         }
     }
@@ -613,6 +673,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getAllPublicFoodWishes(): Promise<Array<PublicFoodWish>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllPublicFoodWishes();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllPublicFoodWishes();
+            return result;
+        }
+    }
+    async getAllPublicUsers(): Promise<Array<[string, PublicUserRecord]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllPublicUsers();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllPublicUsers();
+            return result;
+        }
+    }
     async getAllReports(): Promise<Array<UserReport>> {
         if (this.processError) {
             try {
@@ -666,6 +754,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getAllWaterIntake(arg0);
+            return result;
+        }
+    }
+    async getAllWeeklyMissions(): Promise<Array<WeeklyMission>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllWeeklyMissions();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllWeeklyMissions();
             return result;
         }
     }
@@ -851,6 +953,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n45(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getPublicFoodWishCount(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPublicFoodWishCount();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPublicFoodWishCount();
+            return result;
+        }
+    }
     async getPublicReviews(): Promise<Array<Review>> {
         if (this.processError) {
             try {
@@ -865,6 +981,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getPublicUser(arg0: string): Promise<PublicUserRecord | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPublicUser(arg0);
+                return from_candid_opt_n50(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPublicUser(arg0);
+            return from_candid_opt_n50(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getPublicUserCount(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPublicUserCount();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPublicUserCount();
+            return result;
+        }
+    }
     async getUserJoinTimes(): Promise<Array<[Principal, Time]>> {
         if (this.processError) {
             try {
@@ -876,6 +1020,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getUserJoinTimes();
+            return result;
+        }
+    }
+    async getUserMissionProgress(arg0: string): Promise<Array<WeeklyMissionProgress>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserMissionProgress(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserMissionProgress(arg0);
             return result;
         }
     }
@@ -924,14 +1082,14 @@ export class Backend implements backendInterface {
     async logFoodEntry(arg0: FoodLogEntry): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.logFoodEntry(to_candid_FoodLogEntry_n50(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.logFoodEntry(to_candid_FoodLogEntry_n51(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.logFoodEntry(to_candid_FoodLogEntry_n50(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.logFoodEntry(to_candid_FoodLogEntry_n51(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -1008,14 +1166,14 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n54(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n55(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n54(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n55(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -1030,6 +1188,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.saveDailyCheckIn(arg0);
+            return result;
+        }
+    }
+    async savePublicUser(arg0: string, arg1: PublicUserRecord): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.savePublicUser(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.savePublicUser(arg0, arg1);
             return result;
         }
     }
@@ -1061,6 +1233,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async submitPublicFoodWish(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.submitPublicFoodWish(arg0, arg1, arg2, arg3, arg4, arg5);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.submitPublicFoodWish(arg0, arg1, arg2, arg3, arg4, arg5);
+            return result;
+        }
+    }
     async submitReview(arg0: string, arg1: string, arg2: string): Promise<void> {
         if (this.processError) {
             try {
@@ -1078,14 +1264,14 @@ export class Backend implements backendInterface {
     async submitUserReport(arg0: string, arg1: string, arg2: string | null): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.submitUserReport(arg0, arg1, to_candid_opt_n56(this._uploadFile, this._downloadFile, arg2));
+                const result = await this.actor.submitUserReport(arg0, arg1, to_candid_opt_n57(this._uploadFile, this._downloadFile, arg2));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.submitUserReport(arg0, arg1, to_candid_opt_n56(this._uploadFile, this._downloadFile, arg2));
+            const result = await this.actor.submitUserReport(arg0, arg1, to_candid_opt_n57(this._uploadFile, this._downloadFile, arg2));
             return result;
         }
     }
@@ -1173,6 +1359,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateMissionProgress(arg0: bigint, arg1: string, arg2: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateMissionProgress(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateMissionProgress(arg0, arg1, arg2);
+            return result;
+        }
+    }
 }
 function from_candid_AnnouncementTarget_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AnnouncementTarget): AnnouncementTarget {
     return from_candid_variant_n16(_uploadFile, _downloadFile, value);
@@ -1223,6 +1423,9 @@ function from_candid_opt_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
     return value.length === 0 ? null : from_candid_UserProfile_n38(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n44(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_FoodItem]): FoodItem | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_PublicUserRecord]): PublicUserRecord | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -1478,17 +1681,17 @@ function to_candid_Announcement_n3(_uploadFile: (file: ExternalBlob) => Promise<
 function to_candid_DietPlan_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: DietPlan): _DietPlan {
     return to_candid_record_n8(_uploadFile, _downloadFile, value);
 }
-function to_candid_FoodLogEntry_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: FoodLogEntry): _FoodLogEntry {
-    return to_candid_record_n51(_uploadFile, _downloadFile, value);
+function to_candid_FoodLogEntry_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: FoodLogEntry): _FoodLogEntry {
+    return to_candid_record_n52(_uploadFile, _downloadFile, value);
 }
-function to_candid_MealType_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MealType): _MealType {
-    return to_candid_variant_n53(_uploadFile, _downloadFile, value);
+function to_candid_MealType_n53(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MealType): _MealType {
+    return to_candid_variant_n54(_uploadFile, _downloadFile, value);
 }
 function to_candid_ProfileGoal_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ProfileGoal): _ProfileGoal {
     return to_candid_variant_n10(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n54(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n55(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n55(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n56(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);
@@ -1496,7 +1699,7 @@ function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint
 function to_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ProfileGoal | null): [] | [_ProfileGoal] {
     return value === null ? candid_none() : candid_some(to_candid_ProfileGoal_n9(_uploadFile, _downloadFile, value));
 }
-function to_candid_opt_n56(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
+function to_candid_opt_n57(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
     return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -1523,7 +1726,7 @@ function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
         targetGoal: to_candid_AnnouncementTarget_n5(_uploadFile, _downloadFile, value.targetGoal)
     };
 }
-function to_candid_record_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     date: Time;
     quantity: number;
     mealType: MealType;
@@ -1537,11 +1740,11 @@ function to_candid_record_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     return {
         date: value.date,
         quantity: value.quantity,
-        mealType: to_candid_MealType_n52(_uploadFile, _downloadFile, value.mealType),
+        mealType: to_candid_MealType_n53(_uploadFile, _downloadFile, value.mealType),
         foodName: value.foodName
     };
 }
-function to_candid_record_n55(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n56(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     heightCm: number;
     goal?: ProfileGoal;
     name: string;
@@ -1631,7 +1834,7 @@ function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         guest: null
     } : value;
 }
-function to_candid_variant_n53(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MealType): {
+function to_candid_variant_n54(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MealType): {
     breakfast: null;
 } | {
     lunch: null;

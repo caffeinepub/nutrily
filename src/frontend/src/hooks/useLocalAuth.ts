@@ -3,7 +3,7 @@ import type { ProfileGoal } from "../backend";
 
 export interface LocalUser {
   name: string;
-  phone: string;
+  username: string; // user code e.g. EPIC-A3X9KZ
   age: number;
   weightKg: number;
   heightCm: number;
@@ -18,7 +18,13 @@ function readUser(): LocalUser | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as LocalUser;
+    const parsed = JSON.parse(raw) as any;
+    // Migrate old phone-based profiles
+    if (parsed.phone && !parsed.username) {
+      parsed.username = parsed.phone;
+      parsed.phone = undefined;
+    }
+    return parsed as LocalUser;
   } catch {
     return null;
   }
@@ -39,9 +45,7 @@ export function useLocalAuth() {
   const [user, setUser] = useState<LocalUser | null>(() => _user);
 
   useEffect(() => {
-    // Subscribe to module-level changes (same tab)
     _listeners.add(setUser);
-    // Also listen for cross-tab storage events
     const handler = () => {
       const u = readUser();
       _setUser(u);

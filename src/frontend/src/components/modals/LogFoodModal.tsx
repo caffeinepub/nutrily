@@ -166,6 +166,8 @@ export default function LogFoodModal({
     if (open) {
       setMealTime(getCurrentTime());
       setStep(1);
+      setSaving(false);
+      if (saveTimer.current) clearTimeout(saveTimer.current);
     }
     if (!open) {
       setFoodName("");
@@ -259,11 +261,11 @@ export default function LogFoodModal({
   const handleSave = () => {
     if (saving) return;
     setSaving(true);
-    saveTimer.current = setTimeout(() => setSaving(false), 1500);
 
     if (isDrinks) {
       onLogDrink({ foodName, quantity: actualGrams, calories: estimatedCals });
       toast.success(`${foodName} logged to drinks!`);
+      setSaving(false);
       onClose();
       return;
     }
@@ -278,6 +280,7 @@ export default function LogFoodModal({
       fat: estimatedFat,
     });
     toast.success(`${foodName} logged to ${mealType}!`);
+    setSaving(false);
     onClose();
   };
 

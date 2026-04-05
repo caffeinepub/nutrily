@@ -8,6 +8,7 @@ import { ArrowLeft, TrendingDown, Zap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { getAgeGroup, getUserAge } from "../utils/ageUtils";
+import BottomNav from "./BottomNav";
 import CalorieSwapCard from "./CalorieSwapCard";
 import SuccessHabitsChecklist from "./SuccessHabitsChecklist";
 
@@ -23,6 +24,12 @@ interface LossLog {
 interface Props {
   onBack: () => void;
   userProfile?: { weightKg: number; heightCm: number; name: string };
+  onHome?: () => void;
+  onEat?: () => void;
+  onThink?: () => void;
+  onMove?: () => void;
+  onHistory?: () => void;
+  onLeaderboard?: () => void;
 }
 
 const CARDIO_OPTIONS = [
@@ -229,7 +236,16 @@ function BodyTypeWorkoutAdvisor() {
   );
 }
 
-export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
+export default function WeightLossStatusPage({
+  onBack,
+  userProfile,
+  onHome,
+  onEat,
+  onThink,
+  onMove,
+  onHistory,
+  onLeaderboard,
+}: Props) {
   const [logs, setLogs] = useState<LossLog[]>(loadLogs);
   const [currentWeight, setCurrentWeight] = useState(
     String(userProfile?.weightKg ?? ""),
@@ -781,6 +797,15 @@ export default function WeightLossStatusPage({ onBack, userProfile }: Props) {
           </div>
         </div>
       </div>
+      <BottomNav
+        activePage="home"
+        onHome={onHome ?? onBack}
+        onEat={onEat ?? onBack}
+        onThink={onThink ?? onBack}
+        onMove={onMove ?? onBack}
+        onHistory={onHistory}
+        onLeaderboard={onLeaderboard}
+      />
     </div>
   );
 }

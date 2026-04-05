@@ -7,9 +7,16 @@ import {
 import { motion } from "motion/react";
 import { useState } from "react";
 import { getAllLogs } from "../hooks/useFoodLog";
+import BottomNav from "./BottomNav";
 
 interface Props {
   onBack: () => void;
+  onHome?: () => void;
+  onEat?: () => void;
+  onThink?: () => void;
+  onMove?: () => void;
+  onHistory?: () => void;
+  onLeaderboard?: () => void;
 }
 
 function formatDateLabel(dateStr: string): string {
@@ -35,7 +42,15 @@ const MEAL_EMOJIS: Record<string, string> = {
   drinks: "🥤",
 };
 
-export default function FoodLogHistory({ onBack }: Props) {
+export default function FoodLogHistory({
+  onBack,
+  onHome,
+  onEat,
+  onThink,
+  onMove,
+  onHistory,
+  onLeaderboard,
+}: Props) {
   const logs = getAllLogs().slice(0, 7);
   const [expanded, setExpanded] = useState<Set<string>>(
     new Set([logs[0]?.date]),
@@ -70,7 +85,7 @@ export default function FoodLogHistory({ onBack }: Props) {
         </div>
       </div>
 
-      <main className="max-w-2xl mx-auto w-full px-4 py-6 flex-1 space-y-3">
+      <main className="max-w-2xl mx-auto w-full px-4 py-6 flex-1 space-y-3 pb-20">
         {logs.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -185,6 +200,15 @@ export default function FoodLogHistory({ onBack }: Props) {
           })
         )}
       </main>
+      <BottomNav
+        activePage="eat"
+        onHome={onHome ?? onBack}
+        onEat={onEat ?? onBack}
+        onThink={onThink ?? onBack}
+        onMove={onMove ?? onBack}
+        onHistory={onHistory}
+        onLeaderboard={onLeaderboard}
+      />
     </div>
   );
 }

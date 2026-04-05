@@ -1,6 +1,7 @@
 import { ArrowLeft, Trophy } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
+import BottomNav from "./BottomNav";
 
 interface LeaderboardEntry {
   id: string;
@@ -14,6 +15,12 @@ interface LeaderboardEntry {
 interface LeaderboardProps {
   onBack: () => void;
   currentUserName: string;
+  onHome?: () => void;
+  onEat?: () => void;
+  onThink?: () => void;
+  onMove?: () => void;
+  onHistory?: () => void;
+  onLeaderboard?: () => void;
 }
 
 const MOCK_USERS: Omit<LeaderboardEntry, "isCurrentUser">[] = [
@@ -74,6 +81,12 @@ function getRankEmoji(rank: number): string {
 export default function Leaderboard({
   onBack,
   currentUserName,
+  onHome,
+  onEat,
+  onThink,
+  onMove,
+  onHistory,
+  onLeaderboard,
 }: LeaderboardProps) {
   const [activeTab, setActiveTab] = useState<"streaks" | "points" | "weekly">(
     "streaks",
@@ -202,7 +215,7 @@ export default function Leaderboard({
         </div>
       </div>
 
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
+      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6 pb-20">
         {/* Podium */}
         <motion.div
           key={activeTab}
@@ -350,6 +363,15 @@ export default function Leaderboard({
           ranks! 🚀
         </p>
       </main>
+      <BottomNav
+        activePage="more"
+        onHome={onHome ?? onBack}
+        onEat={onEat ?? onBack}
+        onThink={onThink ?? onBack}
+        onMove={onMove ?? onBack}
+        onHistory={onHistory}
+        onLeaderboard={onLeaderboard}
+      />
     </div>
   );
 }
