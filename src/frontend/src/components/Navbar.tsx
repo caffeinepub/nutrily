@@ -62,11 +62,16 @@ export default function Navbar({
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-4">
-          <img
-            src="/assets/uploads/file_0000000091b4720b8ab0302490c69f98-1.png"
-            alt="DoitEpic"
-            className="h-7 w-auto object-contain"
-          />
+          <div className="flex items-center gap-2">
+            <img
+              src="/assets/uploads/file_0000000091b4720b8ab0302490c69f98-1.png"
+              alt="DoitEpic"
+              className="h-7 w-auto object-contain"
+            />
+            <span className="text-base font-extrabold tracking-tight text-foreground select-none">
+              Do It <span className="text-primary italic">EPIC</span>
+            </span>
+          </div>
           {/* Desktop nav links */}
           <nav className="hidden md:flex items-center gap-1">
             <span

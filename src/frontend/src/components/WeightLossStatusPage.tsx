@@ -236,6 +236,368 @@ function BodyTypeWorkoutAdvisor() {
   );
 }
 
+// ─── Kerala Clean Cut Diet Plan ───────────────────────────────────────────────
+function KeralaCleanCutPlan() {
+  const meals = [
+    {
+      time: "🌅 Morning (6–8 AM)",
+      items: [
+        "2 steamed idli + small sambar (no oil)",
+        "1 boiled egg",
+        "Black tea or black coffee (no sugar)",
+      ],
+      note: "Low-calorie, high-satiety Kerala breakfast",
+    },
+    {
+      time: "🕙 Mid-Morning",
+      items: ["1 fruit (papaya/guava/watermelon)", "Cucumber sticks"],
+      note: "Fibre + hydration, zero guilt",
+    },
+    {
+      time: "🍛 Lunch (12–1 PM)",
+      items: [
+        "Matta rice (1 cup — measured)",
+        "Fish curry (light coconut milk)",
+        "Thoran (beans/cabbage — oil-free/minimal)",
+        "Rasam",
+        "Buttermilk (no sugar)",
+      ],
+      note: "Smaller rice portion, more fish and vegetables",
+    },
+    {
+      time: "☕ Evening Snack (4 PM)",
+      items: [
+        "Sprouted moong salad",
+        "OR boiled chana (100g) with lemon",
+        "Sambaram (spiced buttermilk — no sugar)",
+      ],
+      note: "Protein snack that keeps you full",
+    },
+    {
+      time: "🌙 Dinner (7–8 PM)",
+      items: [
+        "2 steamed idiyappam + light fish/chicken stew",
+        "OR 2 chapati + vegetable curry",
+        "Avoid rice at dinner",
+      ],
+      note: "Light dinner — digests fast, burns overnight",
+    },
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-green-800 mb-1">
+          🎯 Clean Cut Targets
+        </p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { label: "Calories", val: "1500–1800 kcal" },
+            { label: "Deficit", val: "300–500 kcal" },
+            { label: "Meals", val: "5/day" },
+          ].map((t) => (
+            <div
+              key={t.label}
+              className="bg-white rounded-lg p-2 border border-green-100"
+            >
+              <p className="text-xs font-extrabold text-green-700">{t.val}</p>
+              <p className="text-xs text-muted-foreground">{t.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      {meals.map((m) => (
+        <div
+          key={m.time}
+          className="bg-card rounded-xl border border-border p-3"
+        >
+          <p className="text-xs font-bold text-foreground mb-1">{m.time}</p>
+          <ul className="space-y-1 mb-2">
+            {m.items.map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-2 text-xs text-muted-foreground"
+              >
+                <span className="text-success mt-0.5">•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-green-700 bg-green-50 rounded px-2 py-1">
+            👉 {m.note}
+          </p>
+        </div>
+      ))}
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-amber-800 mb-2">🔁 Smart Swaps</p>
+        {[
+          { from: "Porotta", to: "2 chapati or 2 idiyappam" },
+          { from: "Banana chips", to: "Boiled chana or sprouts" },
+          { from: "White rice (2 cups)", to: "Matta rice (1 cup)" },
+          { from: "Soft drink", to: "Sambaram or tender coconut" },
+        ].map((s) => (
+          <div key={s.from} className="flex items-center gap-2 text-xs mb-1">
+            <span className="text-destructive font-semibold">{s.from}</span>
+            <span>→</span>
+            <span className="text-success font-semibold">{s.to}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Calorie Deficit Plan ─────────────────────────────────────────────────────
+function CalorieDeficitPlan() {
+  const rules = [
+    {
+      icon: "🔢",
+      title: "Calculate your deficit",
+      desc: "Your BMR × 1.3 (light activity) = maintenance. Eat 400–500 kcal below that.",
+    },
+    {
+      icon: "🍳",
+      title: "Protein first",
+      desc: "Every meal must have a protein source — eggs, fish, dal, or curd. Protein keeps you full and burns more to digest.",
+    },
+    {
+      icon: "🥗",
+      title: "Volume eating",
+      desc: "Fill half your plate with vegetables and salads. They have almost no calories but keep your stomach full.",
+    },
+    {
+      icon: "⏰",
+      title: "Meal timing matters",
+      desc: "Eat biggest meal at lunch. Keep dinner light. No food after 9 PM.",
+    },
+    {
+      icon: "💧",
+      title: "Water before meals",
+      desc: "Drink 1 glass water 20 mins before each meal — reduces hunger by up to 20%.",
+    },
+  ];
+
+  const dayPlan = [
+    { time: "7 AM", meal: "2 boiled eggs + 1 fruit + black coffee", cal: 180 },
+    { time: "10 AM", meal: "Cucumber sticks + buttermilk", cal: 60 },
+    {
+      time: "1 PM",
+      meal: "Rice (1 cup) + fish/dal + vegetables + rasam",
+      cal: 450,
+    },
+    { time: "4 PM", meal: "Sprouted chana + lemon water", cal: 120 },
+    { time: "7:30 PM", meal: "2 chapati + vegetable curry + curd", cal: 350 },
+    { time: "9 PM", meal: "Warm milk (if needed)", cal: 100 },
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-red-800 mb-1">
+          🎯 Deficit Plan Target
+        </p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { label: "Total", val: "1260 kcal" },
+            { label: "Protein", val: "80–100g" },
+            { label: "Loss/week", val: "0.5 kg" },
+          ].map((t) => (
+            <div
+              key={t.label}
+              className="bg-white rounded-lg p-2 border border-red-100"
+            >
+              <p className="text-xs font-extrabold text-red-700">{t.val}</p>
+              <p className="text-xs text-muted-foreground">{t.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="bg-card rounded-xl border border-border p-3">
+        <p className="text-xs font-bold text-foreground mb-2">📅 Sample Day</p>
+        <div className="space-y-2">
+          {dayPlan.map((d) => (
+            <div
+              key={d.time}
+              className="flex items-center justify-between text-xs"
+            >
+              <div>
+                <span className="font-semibold text-foreground">{d.time}</span>
+                <span className="text-muted-foreground ml-2">{d.meal}</span>
+              </div>
+              <span className="font-bold text-destructive ml-2 flex-shrink-0">
+                {d.cal} kcal
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="space-y-2">
+        {rules.map((r) => (
+          <div
+            key={r.title}
+            className="bg-card rounded-xl border border-border p-3 flex items-start gap-3"
+          >
+            <span className="text-xl flex-shrink-0">{r.icon}</span>
+            <div>
+              <p className="text-xs font-bold text-foreground">{r.title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{r.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── My Food Log Loss Plan ────────────────────────────────────────────────────
+function MyFoodLogLossPlan({ userName }: { userName?: string }) {
+  const allLogs: Record<
+    string,
+    {
+      foods: Array<{
+        name: string;
+        calories: number;
+        protein: number;
+        fat: number;
+      }>;
+    }
+  > = JSON.parse(localStorage.getItem("doitepic_food_logs") ?? "{}");
+  const recentFoods = Object.entries(allLogs)
+    .slice(-7)
+    .flatMap(([, v]) => v.foods ?? [])
+    .reduce(
+      (acc, f) => {
+        const key = f.name;
+        if (!acc[key])
+          acc[key] = {
+            name: f.name,
+            count: 0,
+            calories: f.calories ?? 0,
+            protein: f.protein ?? 0,
+            fat: f.fat ?? 0,
+          };
+        acc[key].count++;
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          name: string;
+          count: number;
+          calories: number;
+          protein: number;
+          fat: number;
+        }
+      >,
+    );
+  const topFoods = Object.values(recentFoods)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+  const highCalFoods = topFoods.filter((f) => f.calories > 300);
+  const goodFoods = topFoods.filter((f) => f.calories <= 300 && f.protein >= 5);
+  const hasLogs = topFoods.length > 0;
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-rose-800 mb-1">
+          📱 {userName ? `${userName}'s` : "Your"} Fat Loss Plan
+        </p>
+        <p className="text-xs text-rose-600">
+          We analyse your logged foods and tell you exactly what to cut and what
+          to keep.
+        </p>
+      </div>
+
+      {hasLogs ? (
+        <>
+          {highCalFoods.length > 0 && (
+            <div className="bg-card rounded-xl border border-destructive/30 p-3">
+              <p className="text-xs font-bold text-destructive mb-2">
+                ⚠️ High-Calorie Foods You Eat Often
+              </p>
+              <p className="text-xs text-muted-foreground mb-2">
+                Consider reducing or swapping these:
+              </p>
+              <div className="space-y-1">
+                {highCalFoods.map((f) => (
+                  <div
+                    key={f.name}
+                    className="flex items-center justify-between bg-red-50 rounded-lg px-3 py-2"
+                  >
+                    <span className="text-xs font-semibold text-foreground">
+                      {f.name}
+                    </span>
+                    <span className="text-xs font-bold text-destructive">
+                      {f.calories} kcal
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {goodFoods.length > 0 && (
+            <div className="bg-card rounded-xl border border-success/30 p-3">
+              <p className="text-xs font-bold text-success mb-2">
+                ✅ Great Choices — Keep These!
+              </p>
+              <div className="space-y-1">
+                {goodFoods.map((f) => (
+                  <div
+                    key={f.name}
+                    className="flex items-center justify-between bg-green-50 rounded-lg px-3 py-2"
+                  >
+                    <span className="text-xs font-semibold text-foreground">
+                      {f.name}
+                    </span>
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-success">
+                        {f.calories} kcal
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {f.protein}g protein
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <p className="text-xs font-bold text-amber-800 mb-2">
+              💡 Your Personalised Tip
+            </p>
+            {highCalFoods.length > 2 ? (
+              <p className="text-xs text-amber-700">
+                You're eating {highCalFoods.length} high-calorie foods
+                regularly. Swap 2–3 of them with boiled/steamed alternatives and
+                you could cut 400–600 kcal daily effortlessly.
+              </p>
+            ) : (
+              <p className="text-xs text-amber-700">
+                Your food choices look reasonable! Focus on portion control —
+                use the cup/plate measures in the food log to stay accurate.
+                Small reductions add up to big losses.
+              </p>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="bg-card rounded-xl border border-border p-6 text-center">
+          <p className="text-3xl mb-2">📝</p>
+          <p className="text-sm font-bold text-foreground mb-1">
+            No food logs yet
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Start logging in EatEpic and we'll show exactly which foods to cut
+            for weight loss.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 type LossTab = "overview" | "meal" | "tips";
 
 const LOSS_TABS: { id: LossTab; label: string }[] = [
@@ -255,6 +617,7 @@ export default function WeightLossStatusPage({
   onLeaderboard,
 }: Props) {
   const [activeTab, setActiveTab] = useState<LossTab>("overview");
+  const [activeLossPlan, setActiveLossPlan] = useState("kerala");
   const [logs, setLogs] = useState<LossLog[]>(loadLogs);
   const [currentWeight, setCurrentWeight] = useState(
     String(userProfile?.weightKg ?? ""),
@@ -763,58 +1126,116 @@ export default function WeightLossStatusPage({
 
         {/* TAB: Meal Plan */}
         {activeTab === "meal" && (
-          <div className="space-y-3">
-            {/* Foods to Eat */}
-            <div className="bg-card rounded-2xl border border-border shadow-card p-4">
-              <h2 className="font-bold text-foreground mb-3 flex items-center gap-2 text-base">
-                <span className="w-7 h-7 rounded-lg bg-status-healthy flex items-center justify-center text-success text-sm">
-                  ✅
-                </span>
-                Foods to Eat
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {FOODS_EAT.map((f) => (
-                  <div
-                    key={f.name}
-                    className="bg-status-healthy rounded-xl p-2 text-center border border-success/20"
-                  >
-                    <div className="text-xl mb-1">{f.emoji}</div>
-                    <p className="text-xs font-medium text-foreground leading-tight">
-                      {f.name}
-                    </p>
-                    <p className="text-xs font-bold text-success mt-0.5">
-                      {f.kcal} kcal
-                    </p>
-                  </div>
-                ))}
-              </div>
+          <div className="space-y-3" data-ocid="weight_loss.diet_plans.card">
+            {/* Plan selector */}
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {[
+                { id: "kerala", label: "🌴 Kerala Clean Cut" },
+                { id: "deficit", label: "📉 Calorie Deficit" },
+                { id: "foodlog", label: "📱 My Food Log" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveLossPlan(tab.id)}
+                  className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all ${activeLossPlan === tab.id ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-muted text-muted-foreground border-border hover:border-primary"}`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            {/* Foods to Avoid */}
-            <div className="bg-card rounded-2xl border border-border shadow-card p-4">
-              <h2 className="font-bold text-foreground mb-3 flex items-center gap-2 text-base">
-                <span className="w-7 h-7 rounded-lg bg-status-danger flex items-center justify-center text-destructive text-sm">
-                  🚫
-                </span>
-                Foods to Avoid
-              </h2>
-              <div className="grid grid-cols-2 gap-2">
-                {FOODS_AVOID.map((f) => (
-                  <div
-                    key={f.name}
-                    className="bg-status-danger rounded-xl p-2 text-center border border-destructive/20"
-                  >
-                    <div className="text-xl mb-1">{f.emoji}</div>
-                    <p className="text-xs font-medium text-foreground leading-tight">
-                      {f.name}
-                    </p>
-                    <p className="text-xs font-bold text-destructive mt-0.5">
-                      {f.kcal} kcal
-                    </p>
-                  </div>
-                ))}
+            {activeLossPlan === "kerala" && (
+              <div>
+                <div className="mb-3 bg-gradient-to-r from-green-600 to-teal-600 rounded-xl p-4 text-white">
+                  <h3 className="font-extrabold text-base mb-0.5">
+                    🌴 Kerala Clean Cut
+                  </h3>
+                  <p className="text-xs text-green-100">
+                    Local Kerala foods, smart portions, real fat loss
+                  </p>
+                </div>
+                <KeralaCleanCutPlan />
               </div>
-            </div>
+            )}
+            {activeLossPlan === "deficit" && (
+              <div>
+                <div className="mb-3 bg-gradient-to-r from-red-600 to-rose-600 rounded-xl p-4 text-white">
+                  <h3 className="font-extrabold text-base mb-0.5">
+                    📉 Calorie Deficit Plan
+                  </h3>
+                  <p className="text-xs text-red-100">
+                    Science-backed deficit eating to lose 0.5 kg/week
+                  </p>
+                </div>
+                <CalorieDeficitPlan />
+              </div>
+            )}
+            {activeLossPlan === "foodlog" && (
+              <div>
+                <div className="mb-3 bg-gradient-to-r from-rose-600 to-pink-600 rounded-xl p-4 text-white">
+                  <h3 className="font-extrabold text-base mb-0.5">
+                    📱 My Food Log Plan
+                  </h3>
+                  <p className="text-xs text-rose-100">
+                    Personalised from your daily food habits
+                  </p>
+                </div>
+                <MyFoodLogLossPlan userName={userProfile?.name} />
+              </div>
+            )}
+
+            {/* Foods Reference */}
+            <details className="bg-card rounded-2xl border border-border shadow-card">
+              <summary className="p-4 font-bold text-foreground text-sm cursor-pointer flex items-center gap-2">
+                <span className="text-base">📋</span> Quick Reference — Foods to
+                Eat & Avoid
+              </summary>
+              <div className="px-4 pb-4 space-y-3">
+                <div>
+                  <p className="text-xs font-bold text-success mb-2">
+                    ✅ Foods to Eat
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {FOODS_EAT.map((f) => (
+                      <div
+                        key={f.name}
+                        className="bg-status-healthy rounded-xl p-2 text-center border border-success/20"
+                      >
+                        <div className="text-xl mb-1">{f.emoji}</div>
+                        <p className="text-xs font-medium text-foreground leading-tight">
+                          {f.name}
+                        </p>
+                        <p className="text-xs font-bold text-success mt-0.5">
+                          {f.kcal} kcal
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-destructive mb-2">
+                    🚫 Foods to Avoid
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {FOODS_AVOID.map((f) => (
+                      <div
+                        key={f.name}
+                        className="bg-status-danger rounded-xl p-2 text-center border border-destructive/20"
+                      >
+                        <div className="text-xl mb-1">{f.emoji}</div>
+                        <p className="text-xs font-medium text-foreground leading-tight">
+                          {f.name}
+                        </p>
+                        <p className="text-xs font-bold text-destructive mt-0.5">
+                          {f.kcal} kcal
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </details>
           </div>
         )}
 

@@ -759,6 +759,388 @@ function VegetarianMuscleDietPlan() {
   );
 }
 
+// ─── Kerala Bulking Diet Plan ─────────────────────────────────────────────────
+function KeralaBulkingPlan() {
+  const meals = [
+    {
+      time: "🌅 Morning (6–8 AM)",
+      items: [
+        "Puttu (2 servings) + Kadala curry",
+        "2 boiled eggs",
+        "1 banana",
+        "Black tea (no sugar)",
+      ],
+      note: "Carbs + protein combo — classic Kerala muscle breakfast",
+    },
+    {
+      time: "🕙 Mid-Morning Snack",
+      items: [
+        "Boiled chana or black chana (100g)",
+        "1 banana or mango",
+        "Handful peanuts",
+      ],
+      note: "Cheap, protein-dense, local",
+    },
+    {
+      time: "🍛 Lunch (1–2 PM)",
+      items: [
+        "Matta rice (2 cups)",
+        "Fish curry (karimeen or any fish)",
+        "Thoran (beans/cabbage)",
+        "Moru curry (buttermilk curry)",
+        "1 tsp coconut oil",
+      ],
+      note: "Full Kerala sadya-style for maximum fuel",
+    },
+    {
+      time: "☕ Evening Snack (4–5 PM)",
+      items: [
+        "Steamed kappa (tapioca) + fish chutney",
+        "OR boiled sweet potato + peanuts",
+        "Sambaram (spiced buttermilk)",
+      ],
+      note: "Pre-workout local energy boost",
+    },
+    {
+      time: "🏋️ Post-Workout",
+      items: ["Boiled eggs (2–3)", "1 banana", "1 glass milk"],
+      note: "Fast recovery with Kerala-available foods",
+    },
+    {
+      time: "🌙 Dinner (8–9 PM)",
+      items: [
+        "Rice or appam",
+        "Chicken/beef/duck curry",
+        "Mixed vegetable thoran",
+      ],
+      note: "Protein-heavy dinner for overnight muscle repair",
+    },
+    {
+      time: "🌌 Before Bed",
+      items: ["1 glass warm milk", "5–6 cashews or almonds"],
+      note: "Slow protein release through the night",
+    },
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-amber-800 mb-1">
+          🎯 Kerala Bulking Targets
+        </p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { label: "Calories", val: "2800–3200 kcal" },
+            { label: "Protein", val: "100–130g/day" },
+            { label: "Meals", val: "6 per day" },
+          ].map((t) => (
+            <div
+              key={t.label}
+              className="bg-white rounded-lg p-2 border border-amber-100"
+            >
+              <p className="text-xs font-extrabold text-amber-700">{t.val}</p>
+              <p className="text-xs text-muted-foreground">{t.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      {meals.map((m) => (
+        <div
+          key={m.time}
+          className="bg-card rounded-xl border border-border p-3"
+        >
+          <p className="text-xs font-bold text-foreground mb-1">{m.time}</p>
+          <ul className="space-y-1 mb-2">
+            {m.items.map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-2 text-xs text-muted-foreground"
+              >
+                <span className="text-success mt-0.5">•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1">
+            👉 {m.note}
+          </p>
+        </div>
+      ))}
+      <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-red-700 mb-2">🚫 Avoid</p>
+        <div className="flex flex-wrap gap-2">
+          {[
+            "Banana chips (daily)",
+            "Porotta + beef (excess oil)",
+            "Soft drinks",
+            "Bakery items",
+          ].map((a) => (
+            <span
+              key={a}
+              className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full"
+            >
+              {a}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── High-Protein Mass Builder Plan ──────────────────────────────────────────
+function HighProteinMassPlan() {
+  const meals = [
+    {
+      time: "🌅 Morning (6–8 AM)",
+      items: [
+        "4 boiled eggs (whole)",
+        "100g oats with milk",
+        "1 banana",
+        "Black coffee (no sugar)",
+      ],
+      note: "40g protein start — powers muscle synthesis all morning",
+    },
+    {
+      time: "🕙 Mid-Morning",
+      items: ["250ml milk", "30g peanut butter", "Handful cashews"],
+      note: "Healthy fat + protein gap filler",
+    },
+    {
+      time: "🍛 Lunch",
+      items: [
+        "2 cups rice",
+        "Boiled soya chunks curry (150g)",
+        "Dal (toor/moong)",
+        "Vegetable thoran",
+        "Curd",
+      ],
+      note: "50g+ protein from soya + dal combo",
+    },
+    {
+      time: "☕ Pre-Workout (4–5 PM)",
+      items: ["Boiled sweet potato (2)", "3 boiled eggs", "Banana"],
+      note: "Fast carbs + protein for performance",
+    },
+    {
+      time: "🏋️ Post-Workout",
+      items: ["300ml milk", "1 banana", "4 boiled eggs OR 150g chicken"],
+      note: "Critical anabolic window — don't skip",
+    },
+    {
+      time: "🌙 Dinner",
+      items: [
+        "3 chapati",
+        "Grilled chicken breast / fish fry",
+        "Steamed vegetables",
+        "Curd rice (small)",
+      ],
+      note: "Lean protein focus at night",
+    },
+    {
+      time: "🌌 Before Bed",
+      items: ["1 glass warm milk", "6 almonds"],
+      note: "Casein-like slow protein through the night",
+    },
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-blue-800 mb-1">
+          🎯 Mass Builder Targets
+        </p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { label: "Calories", val: "3000–3500 kcal" },
+            { label: "Protein", val: "130–160g/day" },
+            { label: "Meals", val: "6–7/day" },
+          ].map((t) => (
+            <div
+              key={t.label}
+              className="bg-white rounded-lg p-2 border border-blue-100"
+            >
+              <p className="text-xs font-extrabold text-blue-700">{t.val}</p>
+              <p className="text-xs text-muted-foreground">{t.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      {meals.map((m) => (
+        <div
+          key={m.time}
+          className="bg-card rounded-xl border border-border p-3"
+        >
+          <p className="text-xs font-bold text-foreground mb-1">{m.time}</p>
+          <ul className="space-y-1 mb-2">
+            {m.items.map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-2 text-xs text-muted-foreground"
+              >
+                <span className="text-primary mt-0.5">•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-blue-700 bg-blue-50 rounded px-2 py-1">
+            💪 {m.note}
+          </p>
+        </div>
+      ))}
+      <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-green-700 mb-2">💡 Pro Tips</p>
+        <ul className="space-y-1">
+          {[
+            "Eat every 3 hours — muscle synthesis stays active",
+            "Eggs + milk are your cheapest complete proteins",
+            "Soya chunks beat chicken in protein per rupee",
+            "Progressive overload in gym = this diet actually works",
+          ].map((tip) => (
+            <li
+              key={tip}
+              className="text-xs text-green-800 flex items-start gap-1"
+            >
+              <span>✅</span>
+              {tip}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ─── My Food Log Diet Plan ────────────────────────────────────────────────────
+function MyFoodLogGainPlan({ userName }: { userName?: string }) {
+  const allLogs: Record<
+    string,
+    { foods: Array<{ name: string; calories: number; protein: number }> }
+  > = JSON.parse(localStorage.getItem("doitepic_food_logs") ?? "{}");
+  const recentFoods = Object.entries(allLogs)
+    .slice(-7)
+    .flatMap(([, v]) => v.foods ?? [])
+    .reduce(
+      (acc, f) => {
+        const key = f.name;
+        if (!acc[key])
+          acc[key] = {
+            name: f.name,
+            count: 0,
+            calories: f.calories ?? 0,
+            protein: f.protein ?? 0,
+          };
+        acc[key].count++;
+        return acc;
+      },
+      {} as Record<
+        string,
+        { name: string; count: number; calories: number; protein: number }
+      >,
+    );
+  const topFoods = Object.values(recentFoods)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+  const totalProtein = topFoods.reduce((s, f) => s + f.protein, 0);
+  const totalCals = topFoods.reduce((s, f) => s + f.calories, 0);
+  const hasLogs = topFoods.length > 0;
+
+  return (
+    <div className="space-y-3">
+      <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-xl p-3">
+        <p className="text-xs font-bold text-violet-800 mb-1">
+          📱 {userName ? `${userName}'s` : "Your"} Personalised Gain Plan
+        </p>
+        <p className="text-xs text-violet-600">
+          Built from your most logged foods — your habits, optimised for muscle
+          gain.
+        </p>
+      </div>
+
+      {hasLogs ? (
+        <>
+          <div className="bg-card rounded-xl border border-border p-3">
+            <p className="text-xs font-bold text-foreground mb-2">
+              🍽️ Your Top Foods This Week
+            </p>
+            <div className="space-y-2">
+              {topFoods.map((f) => (
+                <div
+                  key={f.name}
+                  className="flex items-center justify-between bg-muted/40 rounded-lg px-3 py-2"
+                >
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">
+                      {f.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Logged {f.count}x this week
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-primary">
+                      {f.calories} kcal
+                    </p>
+                    <p className="text-xs text-success">{f.protein}g protein</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-card rounded-xl border border-border p-3 text-center">
+              <p className="text-lg font-extrabold text-primary">
+                {Math.round(totalCals)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Avg daily kcal from your foods
+              </p>
+            </div>
+            <div className="bg-card rounded-xl border border-border p-3 text-center">
+              <p className="text-lg font-extrabold text-success">
+                {Math.round(totalProtein)}g
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Avg protein from your foods
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <p className="text-xs font-bold text-amber-800 mb-2">
+              🔥 Epic Coach Says
+            </p>
+            {totalProtein < 80 ? (
+              <p className="text-xs text-amber-700">
+                Your protein is on the lower side. Add boiled eggs, soya chunks,
+                or milk to your favourite meals to hit 100–130g/day for muscle
+                gain.
+              </p>
+            ) : (
+              <p className="text-xs text-amber-700">
+                Great protein base! Keep logging your foods — aim for a 300–500
+                kcal surplus over your daily burn to gain lean mass steadily.
+              </p>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="bg-card rounded-xl border border-border p-6 text-center">
+          <p className="text-3xl mb-2">📝</p>
+          <p className="text-sm font-bold text-foreground mb-1">
+            No food logs yet
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Start logging your meals in EatEpic and this plan will auto-build
+            from your favourite foods.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 type GainTab = "overview" | "diet" | "tips";
@@ -833,6 +1215,9 @@ export default function WeightGainStatusPage({
   const DIET_TABS = [
     { id: "muscle", label: "💪 Muscle Gain" },
     { id: "veg", label: "🥦 Vegetarian" },
+    { id: "kerala", label: "🌴 Kerala Bulking" },
+    { id: "mass", label: "🏋️ Mass Builder" },
+    { id: "mylog", label: "📱 My Food Log" },
   ];
 
   return (
@@ -1373,6 +1758,48 @@ export default function WeightGainStatusPage({
                   </p>
                 </div>
                 <VegetarianMuscleDietPlan />
+              </div>
+            )}
+
+            {activeDietPlan === "kerala" && (
+              <div>
+                <div className="mb-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white">
+                  <h3 className="font-extrabold text-base mb-0.5">
+                    🌴 Kerala Bulking Plan
+                  </h3>
+                  <p className="text-xs text-amber-100">
+                    Local foods, global gains — Kerala-style muscle building
+                  </p>
+                </div>
+                <KeralaBulkingPlan />
+              </div>
+            )}
+
+            {activeDietPlan === "mass" && (
+              <div>
+                <div className="mb-3 bg-gradient-to-r from-blue-700 to-indigo-700 rounded-xl p-4 text-white">
+                  <h3 className="font-extrabold text-base mb-0.5">
+                    🏋️ High-Protein Mass Builder
+                  </h3>
+                  <p className="text-xs text-blue-100">
+                    Maximum protein, maximum gains — for serious lifters
+                  </p>
+                </div>
+                <HighProteinMassPlan />
+              </div>
+            )}
+
+            {activeDietPlan === "mylog" && (
+              <div>
+                <div className="mb-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl p-4 text-white">
+                  <h3 className="font-extrabold text-base mb-0.5">
+                    📱 My Food Log Plan
+                  </h3>
+                  <p className="text-xs text-violet-100">
+                    Auto-built from your favourite & daily logged foods
+                  </p>
+                </div>
+                <MyFoodLogGainPlan userName={userProfile?.name} />
               </div>
             )}
           </div>

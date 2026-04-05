@@ -328,6 +328,7 @@ export default function GoalsSection({ onNavigateToStatus }: Props) {
     setActiveGoal((prev) => (prev === id ? null : id));
   };
 
+  const [activeMaintPlan, setActiveMaintPlan] = useState("balanced");
   const goal = activeGoal ? GOALS[activeGoal as GoalKey] : null;
 
   return (
@@ -534,54 +535,404 @@ export default function GoalsSection({ onNavigateToStatus }: Props) {
 
                 {/* Diet tab */}
                 <TabsContent value="diet">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="w-2 h-2 rounded-full bg-success shrink-0" />
-                        <h4 className="text-sm font-bold text-foreground">
-                          Foods to Eat
-                        </h4>
-                      </div>
-                      <ul className="space-y-2">
-                        {goal.dietEat.map((item, i) => (
-                          <motion.li
-                            key={item}
-                            initial={{ opacity: 0, x: -6 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.04 }}
-                            className="flex items-center gap-2 text-sm text-foreground"
-                            data-ocid={`goals.diet_eat.item.${i + 1}`}
+                  {/* Maintenance gets structured diet plans */}
+                  {activeGoal === "maintenance" && (
+                    <div className="space-y-3">
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {[
+                          { id: "balanced", label: "⚖️ Balanced Kerala" },
+                          { id: "mediterranean", label: "🫒 Mediterranean" },
+                          { id: "mylog", label: "📱 My Food Log" },
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setActiveMaintPlan(tab.id)}
+                            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition-all ${activeMaintPlan === tab.id ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-muted text-muted-foreground border-border hover:border-primary"}`}
                           >
-                            <span className="text-success">✓</span>
-                            {item}
-                          </motion.li>
+                            {tab.label}
+                          </button>
                         ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="w-2 h-2 rounded-full bg-destructive shrink-0" />
-                        <h4 className="text-sm font-bold text-foreground">
-                          Foods to Avoid
-                        </h4>
                       </div>
-                      <ul className="space-y-2">
-                        {goal.dietAvoid.map((item, i) => (
-                          <motion.li
-                            key={item}
-                            initial={{ opacity: 0, x: -6 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.04 }}
-                            className="flex items-center gap-2 text-sm text-foreground"
-                            data-ocid={`goals.diet_avoid.item.${i + 1}`}
-                          >
-                            <span className="text-destructive">✗</span>
-                            {item}
-                          </motion.li>
-                        ))}
-                      </ul>
+
+                      {activeMaintPlan === "balanced" && (
+                        <div className="space-y-3">
+                          <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl p-4 text-white">
+                            <h3 className="font-extrabold text-sm mb-0.5">
+                              ⚖️ Balanced Kerala Maintenance Plan
+                            </h3>
+                            <p className="text-xs text-orange-100">
+                              Eat your Kerala favourites, keep the balance
+                            </p>
+                          </div>
+                          <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+                            <p className="text-xs font-bold text-orange-800 mb-1">
+                              🎯 Maintenance Targets
+                            </p>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              {[
+                                { label: "Calories", val: "TDEE ±100" },
+                                { label: "Protein", val: "0.8g/kg" },
+                                { label: "Meals", val: "4–5/day" },
+                              ].map((t) => (
+                                <div
+                                  key={t.label}
+                                  className="bg-white rounded-lg p-2 border border-orange-100"
+                                >
+                                  <p className="text-xs font-extrabold text-orange-700">
+                                    {t.val}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {t.label}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          {[
+                            {
+                              time: "🌅 Morning",
+                              items: [
+                                "Puttu/idli + sambar",
+                                "1 boiled egg OR curd",
+                                "Black tea",
+                              ],
+                              note: "Light protein start",
+                            },
+                            {
+                              time: "🍛 Lunch",
+                              items: [
+                                "Matta rice (1.5 cups)",
+                                "Fish/chicken curry",
+                                "Thoran + rasam",
+                                "Buttermilk",
+                              ],
+                              note: "Full balanced meal — don't skip",
+                            },
+                            {
+                              time: "☕ Evening",
+                              items: ["Boiled chana or fruit", "1 glass milk"],
+                              note: "Steady energy, no crash",
+                            },
+                            {
+                              time: "🌙 Dinner",
+                              items: [
+                                "2 chapati or 1 cup rice",
+                                "Dal or egg curry",
+                                "Vegetables",
+                              ],
+                              note: "Slightly lighter than lunch",
+                            },
+                          ].map((m) => (
+                            <div
+                              key={m.time}
+                              className="bg-card rounded-xl border border-border p-3"
+                            >
+                              <p className="text-xs font-bold text-foreground mb-1">
+                                {m.time}
+                              </p>
+                              <ul className="space-y-1 mb-1">
+                                {m.items.map((i) => (
+                                  <li
+                                    key={i}
+                                    className="text-xs text-muted-foreground flex items-start gap-1"
+                                  >
+                                    <span className="text-primary">•</span>
+                                    {i}
+                                  </li>
+                                ))}
+                              </ul>
+                              <p className="text-xs text-orange-700 bg-orange-50 rounded px-2 py-0.5">
+                                👉 {m.note}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {activeMaintPlan === "mediterranean" && (
+                        <div className="space-y-3">
+                          <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl p-4 text-white">
+                            <h3 className="font-extrabold text-sm mb-0.5">
+                              🫒 Mediterranean-Style Maintenance
+                            </h3>
+                            <p className="text-xs text-blue-100">
+                              Globally proven — adapted for Indian pantry
+                            </p>
+                          </div>
+                          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                            <p className="text-xs font-bold text-blue-800 mb-2">
+                              🌟 Core Principles
+                            </p>
+                            {[
+                              {
+                                icon: "🫒",
+                                title: "Healthy fats",
+                                desc: "Coconut oil in moderation, nuts daily — your omega-3s",
+                              },
+                              {
+                                icon: "🐟",
+                                title: "Fish 4x/week",
+                                desc: "Kerala fish curry or steamed fish — excellent Mediterranean fit",
+                              },
+                              {
+                                icon: "🥗",
+                                title: "Vegetables first",
+                                desc: "Half your plate at every meal — Kerala thorans are perfect",
+                              },
+                              {
+                                icon: "🌾",
+                                title: "Whole grains",
+                                desc: "Matta rice, whole wheat chapati, oats — replace white rice",
+                              },
+                              {
+                                icon: "🥛",
+                                title: "Fermented dairy",
+                                desc: "Curd and buttermilk daily — gut health + protein",
+                              },
+                            ].map((r) => (
+                              <div
+                                key={r.title}
+                                className="flex items-start gap-2 mb-2"
+                              >
+                                <span className="text-lg flex-shrink-0">
+                                  {r.icon}
+                                </span>
+                                <div>
+                                  <p className="text-xs font-semibold text-blue-900">
+                                    {r.title}
+                                  </p>
+                                  <p className="text-xs text-blue-700">
+                                    {r.desc}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="bg-card rounded-xl border border-border p-3">
+                            <p className="text-xs font-bold text-foreground mb-2">
+                              📅 Sample Day
+                            </p>
+                            {[
+                              {
+                                time: "Morning",
+                                meal: "Oats + nuts + fruit + black coffee",
+                              },
+                              {
+                                time: "Lunch",
+                                meal: "Matta rice + fish curry + thoran + curd",
+                              },
+                              {
+                                time: "Snack",
+                                meal: "Handful mixed nuts + papaya",
+                              },
+                              {
+                                time: "Dinner",
+                                meal: "2 chapati + dal + sautéed vegetables",
+                              },
+                            ].map((d) => (
+                              <div
+                                key={d.time}
+                                className="flex items-baseline gap-2 text-xs mb-1"
+                              >
+                                <span className="font-semibold text-primary w-16 flex-shrink-0">
+                                  {d.time}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {d.meal}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeMaintPlan === "mylog" &&
+                        (() => {
+                          const allLogs: Record<
+                            string,
+                            {
+                              foods: Array<{
+                                name: string;
+                                calories: number;
+                                protein: number;
+                              }>;
+                            }
+                          > = JSON.parse(
+                            localStorage.getItem("doitepic_food_logs") ?? "{}",
+                          );
+                          const recentFoods = Object.entries(allLogs)
+                            .slice(-7)
+                            .flatMap(([, v]) => v.foods ?? [])
+                            .reduce(
+                              (acc, f) => {
+                                if (!acc[f.name])
+                                  acc[f.name] = {
+                                    name: f.name,
+                                    count: 0,
+                                    calories: f.calories ?? 0,
+                                    protein: f.protein ?? 0,
+                                  };
+                                acc[f.name].count++;
+                                return acc;
+                              },
+                              {} as Record<
+                                string,
+                                {
+                                  name: string;
+                                  count: number;
+                                  calories: number;
+                                  protein: number;
+                                }
+                              >,
+                            );
+                          const topFoods = Object.values(recentFoods)
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 8);
+                          const avgCals = topFoods.reduce(
+                            (s, f) => s + f.calories,
+                            0,
+                          );
+                          return (
+                            <div className="space-y-3">
+                              <div className="bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl p-4 text-white">
+                                <h3 className="font-extrabold text-sm mb-0.5">
+                                  📱 My Food Log Maintenance Plan
+                                </h3>
+                                <p className="text-xs text-violet-100">
+                                  Built from your real eating habits
+                                </p>
+                              </div>
+                              {topFoods.length > 0 ? (
+                                <>
+                                  <div className="bg-card rounded-xl border border-border p-3">
+                                    <p className="text-xs font-bold text-foreground mb-2">
+                                      🍽️ Your Weekly Favourites
+                                    </p>
+                                    <div className="space-y-2">
+                                      {topFoods.map((f) => (
+                                        <div
+                                          key={f.name}
+                                          className="flex items-center justify-between bg-muted/40 rounded-lg px-3 py-2"
+                                        >
+                                          <div>
+                                            <p className="text-xs font-semibold text-foreground">
+                                              {f.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {f.count}x this week
+                                            </p>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className="text-xs font-bold text-primary">
+                                              {f.calories} kcal
+                                            </p>
+                                            <p className="text-xs text-success">
+                                              {f.protein}g P
+                                            </p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                                    <p className="text-xs font-bold text-amber-800 mb-1">
+                                      📊 Maintenance Verdict
+                                    </p>
+                                    {Math.abs(avgCals - 2000) < 300 ? (
+                                      <p className="text-xs text-amber-700">
+                                        Your food log looks well-balanced! Keep
+                                        logging to maintain this pattern. Minor
+                                        tweaks: add more vegetables and reduce
+                                        oil where possible.
+                                      </p>
+                                    ) : avgCals > 2300 ? (
+                                      <p className="text-xs text-amber-700">
+                                        Your average intake is slightly high. To
+                                        maintain weight, try reducing portion
+                                        sizes by 10–15% on your most frequent
+                                        foods.
+                                      </p>
+                                    ) : (
+                                      <p className="text-xs text-amber-700">
+                                        Your intake looks slightly low for
+                                        maintenance. Add a protein-rich snack
+                                        (boiled eggs, peanuts, or milk) to meet
+                                        your TDEE.
+                                      </p>
+                                    )}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="bg-card rounded-xl border border-border p-6 text-center">
+                                  <p className="text-3xl mb-2">📝</p>
+                                  <p className="text-sm font-bold text-foreground mb-1">
+                                    No food logs yet
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Start logging in EatEpic and your
+                                    personalised maintenance plan will appear
+                                    here.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                     </div>
-                  </div>
+                  )}
+
+                  {/* Gain and Loss goals keep the original foods to eat/avoid view */}
+                  {activeGoal !== "maintenance" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                          <h4 className="text-sm font-bold text-foreground">
+                            Foods to Eat
+                          </h4>
+                        </div>
+                        <ul className="space-y-2">
+                          {goal.dietEat.map((item, i) => (
+                            <motion.li
+                              key={item}
+                              initial={{ opacity: 0, x: -6 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.04 }}
+                              className="flex items-center gap-2 text-sm text-foreground"
+                              data-ocid={`goals.diet_eat.item.${i + 1}`}
+                            >
+                              <span className="text-success">✓</span>
+                              {item}
+                            </motion.li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="w-2 h-2 rounded-full bg-destructive shrink-0" />
+                          <h4 className="text-sm font-bold text-foreground">
+                            Foods to Avoid
+                          </h4>
+                        </div>
+                        <ul className="space-y-2">
+                          {goal.dietAvoid.map((item, i) => (
+                            <motion.li
+                              key={item}
+                              initial={{ opacity: 0, x: -6 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.04 }}
+                              className="flex items-center gap-2 text-sm text-foreground"
+                              data-ocid={`goals.diet_avoid.item.${i + 1}`}
+                            >
+                              <span className="text-destructive">✗</span>
+                              {item}
+                            </motion.li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </TabsContent>
 
                 {/* Sleep tab */}

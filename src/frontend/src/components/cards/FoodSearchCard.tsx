@@ -12,6 +12,9 @@ interface Props {
 }
 
 const FEATURED = [
+  "Boiled Eggs",
+  "Eggs",
+  "Egg Bhurji",
   "Idli Plain",
   "Chicken Biryani",
   "Puttu Rice",

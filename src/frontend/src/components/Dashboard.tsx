@@ -22,6 +22,7 @@ import BottomNav from "./BottomNav";
 import CollapsibleSection from "./CollapsibleSection";
 import DailyCheckInCard from "./DailyCheckInCard";
 import DailyHealthScore from "./DailyHealthScore";
+import EggSpotlightCard from "./EggSpotlightCard";
 import EpicChallengeCard from "./EpicChallengeCard";
 import FoodLogHistory from "./FoodLogHistory";
 import Footer from "./Footer";
@@ -450,6 +451,15 @@ export default function Dashboard({ userName }: DashboardProps) {
             fat={totals.fat}
           />
         </div>
+
+        {/* Egg Spotlight */}
+        <EggSpotlightCard
+          allFoods={allFoods}
+          onAddToLog={(food) => {
+            setPreselectedMeal(food.name);
+            setLogFoodOpen(true);
+          }}
+        />
 
         {/* Always visible: Food Log */}
         <div className="mb-3">
