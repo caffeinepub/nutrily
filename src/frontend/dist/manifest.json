@@ -1,17 +1,1 @@
-{
-  "name": "DOITEPIC",
-  "short_name": "DOITEPIC",
-  "description": "Your daily health and nutrition tracker",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0f1117",
-  "theme_color": "#6d28d9",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon"
-    }
-  ]
-}
+{"background_color":"#0f1117","description":"Your daily health and nutrition tracker","display":"standalone","icons":[{"sizes":"192x192","src":"/assets/uploads/file_0000000091b4720b8ab0302490c69f98-1.png","type":"image/png"},{"sizes":"512x512","src":"/assets/uploads/file_0000000091b4720b8ab0302490c69f98-1.png","type":"image/png"},{"sizes":"64x64","src":"/favicon.ico","type":"image/x-icon"}],"name":"DOITEPIC","orientation":"portrait","short_name":"DOITEPIC","start_url":"/","theme_color":"#1E3A8A"}

@@ -25,7 +25,7 @@ import { generateUsername } from "../utils/generateUsername";
 import HealthFactBanner from "./HealthFactBanner";
 
 interface LoginPageProps {
-  onAdminAccess?: () => void;
+  onAdminAccess?: (role?: string) => void;
   onLogin?: (profile: LocalUser) => void;
 }
 
@@ -125,7 +125,7 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
       setAdminName("");
       setAdminCode("");
       setAdminError("");
-      onAdminAccess?.();
+      onAdminAccess?.("superAdmin");
     } else {
       setAdminError("Invalid credentials. Access denied.");
     }

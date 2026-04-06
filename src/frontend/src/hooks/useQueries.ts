@@ -941,3 +941,65 @@ export function useSubmitPublicFoodWish() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["publicFoodWishes"] }),
   });
 }
+
+export function useActiveUsersLastDays(days: bigint) {
+  const { actor, isFetching } = useActor();
+  return useQuery<bigint>({
+    queryKey: ["activeUsersLastDays", days.toString()],
+    queryFn: async () => {
+      if (!actor) return 0n;
+      try {
+        return await actor.getActiveUsersLastDays(days);
+      } catch {
+        return 0n;
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useUsersByStatus(status: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["usersByStatus", status],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getUsersByStatus(status);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useUpdatePublicUserRole() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      deviceId,
+      role,
+    }: { deviceId: string; role: string }) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.updatePublicUserRole(deviceId, role);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allPublicUsers"] }),
+  });
+}
+
+export function useUpdatePublicUserStatus() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      deviceId,
+      status,
+    }: { deviceId: string; status: string }) => {
+      if (!actor) throw new Error("Not authenticated");
+      return actor.updatePublicUserStatus(deviceId, status);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allPublicUsers"] }),
+  });
+}

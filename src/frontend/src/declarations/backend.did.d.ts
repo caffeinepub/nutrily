@@ -57,6 +57,20 @@ export interface DietPlan {
   'dailyCalorieTarget' : number,
   'carbsTarget' : number,
 }
+export interface ExtendedPublicUserRecord {
+  'age' : bigint,
+  'status' : string,
+  'lastSeenAt' : bigint,
+  'heightCm' : number,
+  'goal' : string,
+  'name' : string,
+  'joinedAt' : bigint,
+  'role' : string,
+  'loginCount' : bigint,
+  'weightKg' : number,
+  'gender' : string,
+  'phone' : string,
+}
 export interface FoodItem {
   'fat' : number,
   'region' : string,
@@ -107,17 +121,6 @@ export interface PublicFoodWish {
   'category' : string,
   'foodName' : string,
   'reason' : string,
-}
-export interface PublicUserRecord {
-  'age' : bigint,
-  'lastSeenAt' : bigint,
-  'heightCm' : number,
-  'goal' : string,
-  'name' : string,
-  'joinedAt' : bigint,
-  'weightKg' : number,
-  'gender' : string,
-  'phone' : string,
 }
 export type ReportStatus = { 'resolved' : null } |
   { 'pending' : null } |
@@ -185,6 +188,7 @@ export interface _SERVICE {
     [[] | [ProfileGoal]],
     Array<Announcement>
   >,
+  'getActiveUsersLastDays' : ActorMethod<[bigint], bigint>,
   'getAllAnnouncements' : ActorMethod<[], Array<Announcement>>,
   'getAllArticles' : ActorMethod<[], Array<Article>>,
   'getAllCheckIns' : ActorMethod<[Principal], Array<DailyCheckIn>>,
@@ -193,7 +197,10 @@ export interface _SERVICE {
   'getAllFoodLogs' : ActorMethod<[Principal], Array<DailyFoodLog>>,
   'getAllHealthMetrics' : ActorMethod<[Principal], Array<HealthMetrics>>,
   'getAllPublicFoodWishes' : ActorMethod<[], Array<PublicFoodWish>>,
-  'getAllPublicUsers' : ActorMethod<[], Array<[string, PublicUserRecord]>>,
+  'getAllPublicUsers' : ActorMethod<
+    [],
+    Array<[string, ExtendedPublicUserRecord]>
+  >,
   'getAllReports' : ActorMethod<[], Array<UserReport>>,
   'getAllUsers' : ActorMethod<[], Array<[Principal, UserProfile]>>,
   'getAllUsersCheckIns' : ActorMethod<
@@ -220,7 +227,7 @@ export interface _SERVICE {
   'getPendingFoodSuggestions' : ActorMethod<[], Array<FoodSuggestion>>,
   'getPublicFoodWishCount' : ActorMethod<[], bigint>,
   'getPublicReviews' : ActorMethod<[], Array<Review>>,
-  'getPublicUser' : ActorMethod<[string], [] | [PublicUserRecord]>,
+  'getPublicUser' : ActorMethod<[string], [] | [ExtendedPublicUserRecord]>,
   'getPublicUserCount' : ActorMethod<[], bigint>,
   'getUserJoinTimes' : ActorMethod<[], Array<[Principal, Time]>>,
   'getUserMissionProgress' : ActorMethod<
@@ -228,7 +235,9 @@ export interface _SERVICE {
     Array<WeeklyMissionProgress>
   >,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getUsersByStatus' : ActorMethod<[string], Array<ExtendedPublicUserRecord>>,
   'getWaterIntakeForDate' : ActorMethod<[Time], Array<DailyWaterIntake>>,
+  'incrementUserLoginCount' : ActorMethod<[string], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'logFoodEntry' : ActorMethod<[FoodLogEntry], undefined>,
   'logHealthMetrics' : ActorMethod<[HealthMetrics], undefined>,
@@ -238,7 +247,7 @@ export interface _SERVICE {
   'resolveReport' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveDailyCheckIn' : ActorMethod<[DailyCheckIn], undefined>,
-  'savePublicUser' : ActorMethod<[string, PublicUserRecord], undefined>,
+  'savePublicUser' : ActorMethod<[string, ExtendedPublicUserRecord], undefined>,
   'searchFoodByName' : ActorMethod<[string], Array<FoodItem>>,
   'submitFoodSuggestion' : ActorMethod<[FoodItem], bigint>,
   'submitPublicFoodWish' : ActorMethod<
@@ -254,6 +263,8 @@ export interface _SERVICE {
   'updateDietPlan' : ActorMethod<[DietPlan], undefined>,
   'updateFoodItem' : ActorMethod<[FoodItem], undefined>,
   'updateMissionProgress' : ActorMethod<[bigint, string, bigint], undefined>,
+  'updatePublicUserRole' : ActorMethod<[string, string], undefined>,
+  'updatePublicUserStatus' : ActorMethod<[string, string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

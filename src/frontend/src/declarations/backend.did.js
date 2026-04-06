@@ -113,13 +113,16 @@ export const PublicFoodWish = IDL.Record({
   'foodName' : IDL.Text,
   'reason' : IDL.Text,
 });
-export const PublicUserRecord = IDL.Record({
+export const ExtendedPublicUserRecord = IDL.Record({
   'age' : IDL.Nat,
+  'status' : IDL.Text,
   'lastSeenAt' : IDL.Int,
   'heightCm' : IDL.Float64,
   'goal' : IDL.Text,
   'name' : IDL.Text,
   'joinedAt' : IDL.Int,
+  'role' : IDL.Text,
+  'loginCount' : IDL.Nat,
   'weightKg' : IDL.Float64,
   'gender' : IDL.Text,
   'phone' : IDL.Text,
@@ -200,6 +203,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(Announcement)],
       ['query'],
     ),
+  'getActiveUsersLastDays' : IDL.Func([IDL.Nat], [IDL.Nat], ['query']),
   'getAllAnnouncements' : IDL.Func([], [IDL.Vec(Announcement)], ['query']),
   'getAllArticles' : IDL.Func([], [IDL.Vec(Article)], ['query']),
   'getAllCheckIns' : IDL.Func(
@@ -222,7 +226,7 @@ export const idlService = IDL.Service({
   'getAllPublicFoodWishes' : IDL.Func([], [IDL.Vec(PublicFoodWish)], ['query']),
   'getAllPublicUsers' : IDL.Func(
       [],
-      [IDL.Vec(IDL.Tuple(IDL.Text, PublicUserRecord))],
+      [IDL.Vec(IDL.Tuple(IDL.Text, ExtendedPublicUserRecord))],
       ['query'],
     ),
   'getAllReports' : IDL.Func([], [IDL.Vec(UserReport)], ['query']),
@@ -283,7 +287,7 @@ export const idlService = IDL.Service({
   'getPublicReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
   'getPublicUser' : IDL.Func(
       [IDL.Text],
-      [IDL.Opt(PublicUserRecord)],
+      [IDL.Opt(ExtendedPublicUserRecord)],
       ['query'],
     ),
   'getPublicUserCount' : IDL.Func([], [IDL.Nat], ['query']),
@@ -302,11 +306,17 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getUsersByStatus' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(ExtendedPublicUserRecord)],
+      ['query'],
+    ),
   'getWaterIntakeForDate' : IDL.Func(
       [Time],
       [IDL.Vec(DailyWaterIntake)],
       ['query'],
     ),
+  'incrementUserLoginCount' : IDL.Func([IDL.Text], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'logFoodEntry' : IDL.Func([FoodLogEntry], [], []),
   'logHealthMetrics' : IDL.Func([HealthMetrics], [], []),
@@ -316,7 +326,7 @@ export const idlService = IDL.Service({
   'resolveReport' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'saveDailyCheckIn' : IDL.Func([DailyCheckIn], [], []),
-  'savePublicUser' : IDL.Func([IDL.Text, PublicUserRecord], [], []),
+  'savePublicUser' : IDL.Func([IDL.Text, ExtendedPublicUserRecord], [], []),
   'searchFoodByName' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
   'submitFoodSuggestion' : IDL.Func([FoodItem], [IDL.Nat], []),
   'submitPublicFoodWish' : IDL.Func(
@@ -337,6 +347,8 @@ export const idlService = IDL.Service({
   'updateDietPlan' : IDL.Func([DietPlan], [], []),
   'updateFoodItem' : IDL.Func([FoodItem], [], []),
   'updateMissionProgress' : IDL.Func([IDL.Nat, IDL.Text, IDL.Nat], [], []),
+  'updatePublicUserRole' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'updatePublicUserStatus' : IDL.Func([IDL.Text, IDL.Text], [], []),
 });
 
 export const idlInitArgs = [];
@@ -447,13 +459,16 @@ export const idlFactory = ({ IDL }) => {
     'foodName' : IDL.Text,
     'reason' : IDL.Text,
   });
-  const PublicUserRecord = IDL.Record({
+  const ExtendedPublicUserRecord = IDL.Record({
     'age' : IDL.Nat,
+    'status' : IDL.Text,
     'lastSeenAt' : IDL.Int,
     'heightCm' : IDL.Float64,
     'goal' : IDL.Text,
     'name' : IDL.Text,
     'joinedAt' : IDL.Int,
+    'role' : IDL.Text,
+    'loginCount' : IDL.Nat,
     'weightKg' : IDL.Float64,
     'gender' : IDL.Text,
     'phone' : IDL.Text,
@@ -534,6 +549,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Announcement)],
         ['query'],
       ),
+    'getActiveUsersLastDays' : IDL.Func([IDL.Nat], [IDL.Nat], ['query']),
     'getAllAnnouncements' : IDL.Func([], [IDL.Vec(Announcement)], ['query']),
     'getAllArticles' : IDL.Func([], [IDL.Vec(Article)], ['query']),
     'getAllCheckIns' : IDL.Func(
@@ -560,7 +576,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getAllPublicUsers' : IDL.Func(
         [],
-        [IDL.Vec(IDL.Tuple(IDL.Text, PublicUserRecord))],
+        [IDL.Vec(IDL.Tuple(IDL.Text, ExtendedPublicUserRecord))],
         ['query'],
       ),
     'getAllReports' : IDL.Func([], [IDL.Vec(UserReport)], ['query']),
@@ -625,7 +641,7 @@ export const idlFactory = ({ IDL }) => {
     'getPublicReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
     'getPublicUser' : IDL.Func(
         [IDL.Text],
-        [IDL.Opt(PublicUserRecord)],
+        [IDL.Opt(ExtendedPublicUserRecord)],
         ['query'],
       ),
     'getPublicUserCount' : IDL.Func([], [IDL.Nat], ['query']),
@@ -644,11 +660,17 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getUsersByStatus' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(ExtendedPublicUserRecord)],
+        ['query'],
+      ),
     'getWaterIntakeForDate' : IDL.Func(
         [Time],
         [IDL.Vec(DailyWaterIntake)],
         ['query'],
       ),
+    'incrementUserLoginCount' : IDL.Func([IDL.Text], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'logFoodEntry' : IDL.Func([FoodLogEntry], [], []),
     'logHealthMetrics' : IDL.Func([HealthMetrics], [], []),
@@ -658,7 +680,7 @@ export const idlFactory = ({ IDL }) => {
     'resolveReport' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'saveDailyCheckIn' : IDL.Func([DailyCheckIn], [], []),
-    'savePublicUser' : IDL.Func([IDL.Text, PublicUserRecord], [], []),
+    'savePublicUser' : IDL.Func([IDL.Text, ExtendedPublicUserRecord], [], []),
     'searchFoodByName' : IDL.Func([IDL.Text], [IDL.Vec(FoodItem)], ['query']),
     'submitFoodSuggestion' : IDL.Func([FoodItem], [IDL.Nat], []),
     'submitPublicFoodWish' : IDL.Func(
@@ -679,6 +701,8 @@ export const idlFactory = ({ IDL }) => {
     'updateDietPlan' : IDL.Func([DietPlan], [], []),
     'updateFoodItem' : IDL.Func([FoodItem], [], []),
     'updateMissionProgress' : IDL.Func([IDL.Nat, IDL.Text, IDL.Nat], [], []),
+    'updatePublicUserRole' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'updatePublicUserStatus' : IDL.Func([IDL.Text, IDL.Text], [], []),
   });
 };
 

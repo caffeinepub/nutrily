@@ -141,16 +141,23 @@ export interface HealthMetrics {
     heartRate: number;
     timestamp: Time;
 }
-export interface PublicUserRecord {
+export interface ExtendedPublicUserRecord {
     age: bigint;
+    status: string;
     lastSeenAt: bigint;
     heightCm: number;
     goal: string;
     name: string;
     joinedAt: bigint;
+    role: string;
+    loginCount: bigint;
     weightKg: number;
     gender: string;
     phone: string;
+}
+export interface WaterIntakeEntry {
+    glasses: bigint;
+    timestamp: Time;
 }
 export interface Announcement {
     id: bigint;
@@ -159,10 +166,6 @@ export interface Announcement {
     isActive: boolean;
     message: string;
     targetGoal: AnnouncementTarget;
-}
-export interface WaterIntakeEntry {
-    glasses: bigint;
-    timestamp: Time;
 }
 export interface WeeklyMission {
     id: bigint;
@@ -276,6 +279,7 @@ export interface backendInterface {
     dismissReport(id: bigint): Promise<void>;
     flagUser(user: Principal, reason: string): Promise<void>;
     getActiveAnnouncementsForGoal(goal: ProfileGoal | null): Promise<Array<Announcement>>;
+    getActiveUsersLastDays(days: bigint): Promise<bigint>;
     getAllAnnouncements(): Promise<Array<Announcement>>;
     getAllArticles(): Promise<Array<Article>>;
     getAllCheckIns(user: Principal): Promise<Array<DailyCheckIn>>;
@@ -284,7 +288,7 @@ export interface backendInterface {
     getAllFoodLogs(user: Principal): Promise<Array<DailyFoodLog>>;
     getAllHealthMetrics(user: Principal): Promise<Array<HealthMetrics>>;
     getAllPublicFoodWishes(): Promise<Array<PublicFoodWish>>;
-    getAllPublicUsers(): Promise<Array<[string, PublicUserRecord]>>;
+    getAllPublicUsers(): Promise<Array<[string, ExtendedPublicUserRecord]>>;
     getAllReports(): Promise<Array<UserReport>>;
     getAllUsers(): Promise<Array<[Principal, UserProfile]>>;
     getAllUsersCheckIns(): Promise<Array<[Principal, Array<DailyCheckIn>]>>;
@@ -305,12 +309,14 @@ export interface backendInterface {
     getPendingFoodSuggestions(): Promise<Array<FoodSuggestion>>;
     getPublicFoodWishCount(): Promise<bigint>;
     getPublicReviews(): Promise<Array<Review>>;
-    getPublicUser(deviceId: string): Promise<PublicUserRecord | null>;
+    getPublicUser(deviceId: string): Promise<ExtendedPublicUserRecord | null>;
     getPublicUserCount(): Promise<bigint>;
     getUserJoinTimes(): Promise<Array<[Principal, Time]>>;
     getUserMissionProgress(weekKey: string): Promise<Array<WeeklyMissionProgress>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    getUsersByStatus(status: string): Promise<Array<ExtendedPublicUserRecord>>;
     getWaterIntakeForDate(date: Time): Promise<Array<DailyWaterIntake>>;
+    incrementUserLoginCount(deviceId: string): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     logFoodEntry(entry: FoodLogEntry): Promise<void>;
     logHealthMetrics(metrics: HealthMetrics): Promise<void>;
@@ -320,7 +326,7 @@ export interface backendInterface {
     resolveReport(id: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveDailyCheckIn(checkIn: DailyCheckIn): Promise<void>;
-    savePublicUser(deviceId: string, record: PublicUserRecord): Promise<void>;
+    savePublicUser(deviceId: string, record: ExtendedPublicUserRecord): Promise<void>;
     searchFoodByName(name: string): Promise<Array<FoodItem>>;
     submitFoodSuggestion(food: FoodItem): Promise<bigint>;
     submitPublicFoodWish(submitterName: string, submitterPhone: string, foodName: string, category: string, description: string, reason: string): Promise<bigint>;
@@ -333,8 +339,10 @@ export interface backendInterface {
     updateDietPlan(plan: DietPlan): Promise<void>;
     updateFoodItem(food: FoodItem): Promise<void>;
     updateMissionProgress(missionId: bigint, weekKey: string, increment: bigint): Promise<void>;
+    updatePublicUserRole(deviceId: string, role: string): Promise<void>;
+    updatePublicUserStatus(deviceId: string, status: string): Promise<void>;
 }
-import type { Announcement as _Announcement, AnnouncementTarget as _AnnouncementTarget, DailyFoodLog as _DailyFoodLog, DietPlan as _DietPlan, FoodItem as _FoodItem, FoodLogEntry as _FoodLogEntry, FoodSuggestion as _FoodSuggestion, FoodSuggestionStatus as _FoodSuggestionStatus, MealType as _MealType, ProfileGoal as _ProfileGoal, PublicUserRecord as _PublicUserRecord, ReportStatus as _ReportStatus, Time as _Time, UserProfile as _UserProfile, UserReport as _UserReport, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { Announcement as _Announcement, AnnouncementTarget as _AnnouncementTarget, DailyFoodLog as _DailyFoodLog, DietPlan as _DietPlan, ExtendedPublicUserRecord as _ExtendedPublicUserRecord, FoodItem as _FoodItem, FoodLogEntry as _FoodLogEntry, FoodSuggestion as _FoodSuggestion, FoodSuggestionStatus as _FoodSuggestionStatus, MealType as _MealType, ProfileGoal as _ProfileGoal, ReportStatus as _ReportStatus, Time as _Time, UserProfile as _UserProfile, UserReport as _UserReport, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -575,6 +583,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getActiveUsersLastDays(arg0: bigint): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getActiveUsersLastDays(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getActiveUsersLastDays(arg0);
+            return result;
+        }
+    }
     async getAllAnnouncements(): Promise<Array<Announcement>> {
         if (this.processError) {
             try {
@@ -687,7 +709,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getAllPublicUsers(): Promise<Array<[string, PublicUserRecord]>> {
+    async getAllPublicUsers(): Promise<Array<[string, ExtendedPublicUserRecord]>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllPublicUsers();
@@ -981,7 +1003,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getPublicUser(arg0: string): Promise<PublicUserRecord | null> {
+    async getPublicUser(arg0: string): Promise<ExtendedPublicUserRecord | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPublicUser(arg0);
@@ -1051,6 +1073,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n41(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getUsersByStatus(arg0: string): Promise<Array<ExtendedPublicUserRecord>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUsersByStatus(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUsersByStatus(arg0);
+            return result;
+        }
+    }
     async getWaterIntakeForDate(arg0: Time): Promise<Array<DailyWaterIntake>> {
         if (this.processError) {
             try {
@@ -1062,6 +1098,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getWaterIntakeForDate(arg0);
+            return result;
+        }
+    }
+    async incrementUserLoginCount(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.incrementUserLoginCount(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.incrementUserLoginCount(arg0);
             return result;
         }
     }
@@ -1191,7 +1241,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async savePublicUser(arg0: string, arg1: PublicUserRecord): Promise<void> {
+    async savePublicUser(arg0: string, arg1: ExtendedPublicUserRecord): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.savePublicUser(arg0, arg1);
@@ -1373,6 +1423,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updatePublicUserRole(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updatePublicUserRole(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updatePublicUserRole(arg0, arg1);
+            return result;
+        }
+    }
+    async updatePublicUserStatus(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updatePublicUserStatus(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updatePublicUserStatus(arg0, arg1);
+            return result;
+        }
+    }
 }
 function from_candid_AnnouncementTarget_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AnnouncementTarget): AnnouncementTarget {
     return from_candid_variant_n16(_uploadFile, _downloadFile, value);
@@ -1425,7 +1503,7 @@ function from_candid_opt_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 function from_candid_opt_n44(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_FoodItem]): FoodItem | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_PublicUserRecord]): PublicUserRecord | null {
+function from_candid_opt_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_ExtendedPublicUserRecord]): ExtendedPublicUserRecord | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {

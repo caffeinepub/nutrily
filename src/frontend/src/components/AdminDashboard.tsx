@@ -8,8 +8,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -17,7 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -30,7 +44,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { Principal } from "@icp-sdk/core/principal";
 import {
+  Activity,
   AlertTriangle,
+  Ban,
   BarChart3,
   Bell,
   BookOpen,
@@ -38,28 +54,40 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  Crown,
   Database,
   Droplets,
   Dumbbell,
+  Eye,
+  FileText as FileIcon,
   FileText,
   Flag,
   Globe,
+  History,
+  Lock,
   Megaphone,
   Moon,
   Pencil,
   Phone,
+  RefreshCw,
   Ruler,
   Salad,
   Scale,
+  Settings,
+  Shield,
   ShieldAlert,
   ShieldCheck,
   Target,
   Trash2,
   TrendingUp,
   Upload,
+  UserCheck,
+  UserCog,
+  UserMinus,
   UserX,
   Users,
   XCircle,
+  Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
@@ -108,8 +136,22 @@ import {
   useUpdateFoodItem,
   useUserJoinTimes,
 } from "../hooks/useQueries";
+import {
+  useActiveUsersLastDays,
+  useUpdatePublicUserRole,
+  useUpdatePublicUserStatus,
+  useUsersByStatus,
+} from "../hooks/useQueries";
 import type { Announcement, Article, DietPlan, UserReport } from "../types";
 import { AnnouncementTarget, ReportStatus } from "../types";
+import {
+  clearAuditLogs,
+  getAuditLogs,
+  logAuditAction,
+} from "../utils/auditLog";
+import type { AuditLogEntry } from "../utils/auditLog";
+import { ROLE_COLORS, ROLE_LABELS, hasPermission } from "../utils/rbac";
+import type { AdminRole } from "../utils/rbac";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -427,6 +469,7 @@ function CheckInRow({
 
 // ─── User Card ────────────────────────────────────────────────────────────────
 
+// biome-ignore lint/correctness/noUnusedVariables: kept for compatibility
 function UserCard({
   principal,
   profile,
@@ -1253,8 +1296,9 @@ function ApprovalsTab() {
   );
 }
 
-// ─── Analytics Tab ────────────────────────────────────────────────────────────
+// ─── Analytics Tab (kept for reference, superseded by EnhancedAnalyticsTab) ────
 
+// biome-ignore lint/correctness/noUnusedVariables: superseded by EnhancedAnalyticsTab
 function AnalyticsTab({
   usersData,
   checkInsData,
@@ -2909,9 +2953,1129 @@ function ModerationTab({
   );
 }
 
+// ─── Enhanced User Management Tab ─────────────────────────────────────────────
+
+function EnhancedUsersTab({ adminRole }: { adminRole: string }) {
+  const { data: publicUsers = [], isLoading } = useAllPublicUsers();
+  const { mutateAsync: updateRole, isPending: isUpdatingRole } =
+    useUpdatePublicUserRole();
+  const { mutateAsync: updateStatus, isPending: isUpdatingStatus } =
+    useUpdatePublicUserStatus();
+  const [selectedUser, setSelectedUser] = useState<{
+    deviceId: string;
+    user: any;
+  } | null>(null);
+  const [showActivitySheet, setShowActivitySheet] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredUsers = publicUsers.filter(([, user]: [string, any]) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      user.name?.toLowerCase().includes(q) ||
+      user.phone?.toLowerCase().includes(q) ||
+      user.goal?.toLowerCase().includes(q)
+    );
+  });
+
+  const handleRoleChange = async (
+    deviceId: string,
+    userName: string,
+    newRole: string,
+  ) => {
+    try {
+      await updateRole({ deviceId, role: newRole });
+      logAuditAction(
+        "ROLE_CHANGED",
+        userName,
+        adminRole,
+        `Role set to ${newRole}`,
+      );
+      toast.success(`Role updated to ${ROLE_LABELS[newRole] ?? newRole}`);
+    } catch {
+      toast.error("Failed to update role.");
+    }
+  };
+
+  const handleStatusChange = async (
+    deviceId: string,
+    userName: string,
+    newStatus: string,
+  ) => {
+    try {
+      await updateStatus({ deviceId, status: newStatus });
+      const action =
+        newStatus === "banned"
+          ? "USER_BANNED"
+          : newStatus === "suspended"
+            ? "USER_SUSPENDED"
+            : "USER_ACTIVATED";
+      logAuditAction(action, userName, adminRole, `Status set to ${newStatus}`);
+      toast.success(`User ${newStatus}`);
+    } catch {
+      toast.error("Failed to update status.");
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    if (status === "banned")
+      return "bg-red-900/40 text-red-300 border-red-700/50";
+    if (status === "suspended")
+      return "bg-amber-900/40 text-amber-300 border-amber-700/50";
+    return "bg-green-900/40 text-green-300 border-green-700/50";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3" data-ocid="admin.loading_state">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-xl bg-gray-800" />
+        ))}
+      </div>
+    );
+  }
+
+  if (publicUsers.length === 0) {
+    return (
+      <div
+        className="text-center py-16 text-muted-foreground"
+        data-ocid="admin.empty_state"
+      >
+        <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
+        <p className="text-sm">No users registered yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Search */}
+      <div className="relative">
+        <Input
+          data-ocid="admin.search_input"
+          placeholder="Search users by name, phone, or goal..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="bg-gray-900 border-gray-700 text-white pl-9"
+        />
+        <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      </div>
+
+      {/* Stats summary */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+          <p className="text-xl font-bold text-white">{publicUsers.length}</p>
+          <p className="text-xs text-muted-foreground">Total</p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+          <p className="text-xl font-bold text-green-400">
+            {
+              publicUsers.filter(
+                ([, u]: [string, any]) => !u.status || u.status === "active",
+              ).length
+            }
+          </p>
+          <p className="text-xs text-muted-foreground">Active</p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+          <p className="text-xl font-bold text-red-400">
+            {
+              publicUsers.filter(
+                ([, u]: [string, any]) =>
+                  u.status === "banned" || u.status === "suspended",
+              ).length
+            }
+          </p>
+          <p className="text-xs text-muted-foreground">Restricted</p>
+        </div>
+      </div>
+
+      {/* User table */}
+      <div className="overflow-x-auto rounded-xl border border-gray-800">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-gray-800 hover:bg-transparent">
+              <TableHead className="text-muted-foreground text-xs">
+                User
+              </TableHead>
+              <TableHead className="text-muted-foreground text-xs">
+                Goal / Age
+              </TableHead>
+              <TableHead className="text-muted-foreground text-xs">
+                Role
+              </TableHead>
+              <TableHead className="text-muted-foreground text-xs">
+                Status
+              </TableHead>
+              <TableHead className="text-muted-foreground text-xs">
+                Last Seen
+              </TableHead>
+              <TableHead className="text-muted-foreground text-xs text-right">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.map(([deviceId, user]: [string, any], i: number) => {
+              const lastSeen = user.lastSeenAt
+                ? new Date(Number(user.lastSeenAt)).toLocaleDateString(
+                    "en-IN",
+                    {
+                      day: "numeric",
+                      month: "short",
+                    },
+                  )
+                : "—";
+              const userRole = user.role ?? "user";
+              const userStatus = user.status ?? "active";
+
+              return (
+                <TableRow
+                  key={deviceId}
+                  data-ocid={`admin.users.item.${i + 1}`}
+                  className="border-gray-800 hover:bg-gray-900/50"
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-600/40 flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-400 font-bold text-xs">
+                          {user.name?.charAt(0)?.toUpperCase() ?? "?"}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-white text-sm font-medium truncate max-w-[100px]">
+                          {user.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {user.phone || "—"}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-white text-xs">{user.goal ?? "—"}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {String(user.age ?? "—")} yrs
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`text-xs border ${ROLE_COLORS[userRole] ?? ROLE_COLORS.user} border-transparent`}
+                    >
+                      {ROLE_LABELS[userRole] ?? userRole}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`text-xs border ${getStatusBadge(userStatus)}`}
+                    >
+                      {userStatus}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground text-xs">
+                      {lastSeen}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          data-ocid={`admin.users.edit_button.${i + 1}`}
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-white hover:bg-gray-800"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="bg-gray-900 border-gray-700 text-white min-w-[180px]"
+                        data-ocid={`admin.users.dropdown_menu.${i + 1}`}
+                      >
+                        <DropdownMenuItem
+                          className="text-muted-foreground hover:text-white hover:bg-gray-800 cursor-pointer text-xs gap-2"
+                          onClick={() => {
+                            setSelectedUser({ deviceId, user });
+                            setShowActivitySheet(true);
+                          }}
+                        >
+                          <Eye className="w-3.5 h-3.5" /> View Activity
+                        </DropdownMenuItem>
+                        {hasPermission(
+                          adminRole as AdminRole,
+                          "manage_users",
+                        ) && (
+                          <>
+                            {adminRole === "superAdmin" && (
+                              <>
+                                <DropdownMenuItem
+                                  className="text-purple-400 hover:text-purple-300 hover:bg-gray-800 cursor-pointer text-xs gap-2"
+                                  onClick={() =>
+                                    handleRoleChange(
+                                      deviceId,
+                                      user.name,
+                                      "superAdmin",
+                                    )
+                                  }
+                                  disabled={isUpdatingRole}
+                                >
+                                  <Crown className="w-3.5 h-3.5" /> Set Super
+                                  Admin
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-blue-400 hover:text-blue-300 hover:bg-gray-800 cursor-pointer text-xs gap-2"
+                                  onClick={() =>
+                                    handleRoleChange(
+                                      deviceId,
+                                      user.name,
+                                      "admin",
+                                    )
+                                  }
+                                  disabled={isUpdatingRole}
+                                >
+                                  <Shield className="w-3.5 h-3.5" /> Set Admin
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-amber-400 hover:text-amber-300 hover:bg-gray-800 cursor-pointer text-xs gap-2"
+                                  onClick={() =>
+                                    handleRoleChange(
+                                      deviceId,
+                                      user.name,
+                                      "moderator",
+                                    )
+                                  }
+                                  disabled={isUpdatingRole}
+                                >
+                                  <UserCog className="w-3.5 h-3.5" /> Set
+                                  Moderator
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-gray-400 hover:text-gray-300 hover:bg-gray-800 cursor-pointer text-xs gap-2"
+                                  onClick={() =>
+                                    handleRoleChange(
+                                      deviceId,
+                                      user.name,
+                                      "user",
+                                    )
+                                  }
+                                  disabled={isUpdatingRole}
+                                >
+                                  <UserCheck className="w-3.5 h-3.5" /> Set User
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {userStatus !== "active" ? (
+                              <DropdownMenuItem
+                                className="text-green-400 hover:text-green-300 hover:bg-gray-800 cursor-pointer text-xs gap-2"
+                                onClick={() =>
+                                  handleStatusChange(
+                                    deviceId,
+                                    user.name,
+                                    "active",
+                                  )
+                                }
+                                disabled={isUpdatingStatus}
+                              >
+                                <UserCheck className="w-3.5 h-3.5" /> Activate
+                              </DropdownMenuItem>
+                            ) : null}
+                            {userStatus !== "suspended" ? (
+                              <DropdownMenuItem
+                                className="text-amber-400 hover:text-amber-300 hover:bg-gray-800 cursor-pointer text-xs gap-2"
+                                onClick={() =>
+                                  handleStatusChange(
+                                    deviceId,
+                                    user.name,
+                                    "suspended",
+                                  )
+                                }
+                                disabled={isUpdatingStatus}
+                              >
+                                <UserMinus className="w-3.5 h-3.5" /> Suspend
+                              </DropdownMenuItem>
+                            ) : null}
+                            {userStatus !== "banned" ? (
+                              <DropdownMenuItem
+                                className="text-red-400 hover:text-red-300 hover:bg-gray-800 cursor-pointer text-xs gap-2"
+                                onClick={() =>
+                                  handleStatusChange(
+                                    deviceId,
+                                    user.name,
+                                    "banned",
+                                  )
+                                }
+                                disabled={isUpdatingStatus}
+                              >
+                                <Ban className="w-3.5 h-3.5" /> Ban User
+                              </DropdownMenuItem>
+                            ) : null}
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Activity Sheet */}
+      <Sheet open={showActivitySheet} onOpenChange={setShowActivitySheet}>
+        <SheetContent
+          className="bg-gray-900 border-gray-700 text-white"
+          data-ocid="admin.user.sheet"
+        >
+          <SheetHeader>
+            <SheetTitle className="text-white flex items-center gap-2">
+              <Activity className="w-4 h-4 text-blue-400" />
+              User Activity
+            </SheetTitle>
+          </SheetHeader>
+          {selectedUser && (
+            <div className="mt-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-600/40 flex items-center justify-center">
+                  <span className="text-blue-400 font-bold">
+                    {selectedUser.user.name?.charAt(0)?.toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-white font-bold">
+                    {selectedUser.user.name}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {selectedUser.user.phone || selectedUser.deviceId}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {[
+                  {
+                    label: "Login Count",
+                    value: String(selectedUser.user.loginCount ?? 0),
+                    icon: RefreshCw,
+                    color: "text-blue-400",
+                  },
+                  {
+                    label: "Joined",
+                    value: selectedUser.user.joinedAt
+                      ? new Date(
+                          Number(selectedUser.user.joinedAt),
+                        ).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "—",
+                    icon: Zap,
+                    color: "text-green-400",
+                  },
+                  {
+                    label: "Last Seen",
+                    value: selectedUser.user.lastSeenAt
+                      ? new Date(
+                          Number(selectedUser.user.lastSeenAt),
+                        ).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "—",
+                    icon: Clock,
+                    color: "text-amber-400",
+                  },
+                  {
+                    label: "Role",
+                    value:
+                      ROLE_LABELS[selectedUser.user.role ?? "user"] ??
+                      selectedUser.user.role ??
+                      "user",
+                    icon: Shield,
+                    color: "text-purple-400",
+                  },
+                  {
+                    label: "Status",
+                    value: selectedUser.user.status ?? "active",
+                    icon: Activity,
+                    color: "text-gray-400",
+                  },
+                  {
+                    label: "Goal",
+                    value: selectedUser.user.goal ?? "—",
+                    icon: Target,
+                    color: "text-red-400",
+                  },
+                  {
+                    label: "BMI",
+                    value:
+                      selectedUser.user.weightKg && selectedUser.user.heightCm
+                        ? (
+                            selectedUser.user.weightKg /
+                            (selectedUser.user.heightCm / 100) ** 2
+                          ).toFixed(1)
+                        : "—",
+                    icon: Scale,
+                    color: "text-yellow-400",
+                  },
+                ].map(({ label, value, icon: Icon, color }) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between py-2 border-b border-gray-800"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className={`w-4 h-4 ${color}`} />
+                      <span className="text-muted-foreground text-sm">
+                        {label}
+                      </span>
+                    </div>
+                    <span className="text-white text-sm font-medium">
+                      {value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
+// ─── Enhanced Analytics Tab ────────────────────────────────────────────────────
+
+function EnhancedAnalyticsTab({
+  publicUsers,
+}: {
+  usersData?: Array<[Principal, UserProfile]>;
+  checkInsData?: Array<[Principal, DailyCheckIn[]]>;
+  joinTimes?: Array<[Principal, bigint]>;
+  publicUsers: Array<[string, any]>;
+}) {
+  const { data: activeUsers7d = 0n } = useActiveUsersLastDays(7n);
+  const { data: bannedUsers = [] } = useUsersByStatus("banned");
+  const { data: suspendedUsers = [] } = useUsersByStatus("suspended");
+
+  const totalUsers = publicUsers.length;
+
+  // Retention: users who logged in more than once
+  const retainedCount = publicUsers.filter(
+    ([, u]: [string, any]) => Number(u.loginCount ?? 0) > 1,
+  ).length;
+  const retentionRate =
+    totalUsers > 0 ? Math.round((retainedCount / totalUsers) * 100) : 0;
+
+  // Goal breakdown from public users
+  const goalCounts = { weightLoss: 0, muscleGain: 0, maintenance: 0, other: 0 };
+  for (const [, u] of publicUsers) {
+    const g = (u as any).goal as string;
+    if (g === "Weight Loss" || g === "weightLoss") goalCounts.weightLoss++;
+    else if (g === "Muscle Gain" || g === "muscleGain") goalCounts.muscleGain++;
+    else if (g === "Maintenance" || g === "maintenance")
+      goalCounts.maintenance++;
+    else goalCounts.other++;
+  }
+
+  // Growth chart: new users per week for past 6 weeks
+  const now = Date.now();
+  const weeklyGrowth: { label: string; count: number }[] = [];
+  for (let w = 5; w >= 0; w--) {
+    const weekStart = now - (w + 1) * 7 * 86400000;
+    const weekEnd = now - w * 7 * 86400000;
+    let count = 0;
+    for (const [, u] of publicUsers) {
+      const ts = Number((u as any).joinedAt ?? 0);
+      if (ts >= weekStart && ts < weekEnd) count++;
+    }
+    const date = new Date(weekEnd);
+    weeklyGrowth.push({
+      label: `${date.toLocaleDateString("en-IN", { month: "short", day: "numeric" })}`,
+      count,
+    });
+  }
+
+  const maxWeekly = Math.max(...weeklyGrowth.map((w) => w.count), 1);
+
+  const restrictedCount = bannedUsers.length + suspendedUsers.length;
+
+  return (
+    <div className="space-y-6">
+      {/* 4 metric cards */}
+      <motion.div
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        {[
+          {
+            label: "Total Users",
+            value: totalUsers,
+            icon: Users,
+            color: "text-blue-400",
+            bg: "bg-blue-900/20",
+          },
+          {
+            label: "Active (7 days)",
+            value: Number(activeUsers7d),
+            icon: Activity,
+            color: "text-green-400",
+            bg: "bg-green-900/20",
+          },
+          {
+            label: "Retention Rate",
+            value: `${retentionRate}%`,
+            icon: TrendingUp,
+            color: "text-purple-400",
+            bg: "bg-purple-900/20",
+          },
+          {
+            label: "Restricted",
+            value: restrictedCount,
+            icon: Ban,
+            color: "text-red-400",
+            bg: "bg-red-900/20",
+          },
+        ].map(({ label, value, icon: Icon, color, bg }) => (
+          <Card key={label} className="bg-gray-900 border-gray-800">
+            <CardContent className="pt-4 pb-4 text-center">
+              <div
+                className={`w-9 h-9 ${bg} rounded-full flex items-center justify-center mx-auto mb-2`}
+              >
+                <Icon className={`w-4 h-4 ${color}`} />
+              </div>
+              <p className="text-2xl font-extrabold text-white">{value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Weekly Growth Bar Chart */}
+        <Card className="bg-gray-900 border-gray-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white text-sm flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-blue-400" />
+              User Growth (6 Weeks)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-2 h-32">
+              {weeklyGrowth.map((week) => (
+                <div
+                  key={week.label}
+                  className="flex-1 flex flex-col items-center gap-1"
+                >
+                  <span className="text-white text-xs font-bold">
+                    {week.count}
+                  </span>
+                  <div
+                    className="w-full rounded-t-md bg-gradient-to-t from-blue-700 to-blue-400 transition-all duration-500"
+                    style={{
+                      height: `${Math.max((week.count / maxWeekly) * 100, 4)}%`,
+                    }}
+                  />
+                  <span className="text-muted-foreground text-[9px] text-center leading-tight">
+                    {week.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Goal Distribution */}
+        <Card className="bg-gray-900 border-gray-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white text-sm flex items-center gap-2">
+              <Target className="w-4 h-4 text-red-400" />
+              Goal Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              {
+                label: "Weight Loss 🔥",
+                count: goalCounts.weightLoss,
+                color: "bg-red-500",
+              },
+              {
+                label: "Muscle Gain 💪",
+                count: goalCounts.muscleGain,
+                color: "bg-blue-500",
+              },
+              {
+                label: "Maintenance ⚖️",
+                count: goalCounts.maintenance,
+                color: "bg-green-500",
+              },
+              { label: "Other", count: goalCounts.other, color: "bg-gray-500" },
+            ].map(({ label, count, color }) => {
+              const pct =
+                totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
+              return (
+                <div key={label}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-muted-foreground">{label}</span>
+                    <span className="text-white font-medium">
+                      {count} ({pct}%)
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${color} rounded-full transition-all duration-700`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ─── Audit Log Tab ─────────────────────────────────────────────────────────────
+
+function AuditLogTab({ adminRole }: { adminRole: string }) {
+  const [logs, setLogs] = useState<AuditLogEntry[]>(() => getAuditLogs());
+  const [search, setSearch] = useState("");
+  const [filterAction, setFilterAction] = useState("all");
+
+  const refresh = () => setLogs(getAuditLogs());
+
+  const handleClear = () => {
+    clearAuditLogs();
+    setLogs([]);
+    toast.success("Audit logs cleared.");
+  };
+
+  const getActionColor = (action: string) => {
+    if (action.includes("BAN") || action.includes("REMOVE"))
+      return "text-red-400 bg-red-900/20";
+    if (action.includes("SUSPEND")) return "text-amber-400 bg-amber-900/20";
+    if (action.includes("ROLE")) return "text-purple-400 bg-purple-900/20";
+    if (action.includes("APPROVE")) return "text-green-400 bg-green-900/20";
+    if (action.includes("REJECT")) return "text-amber-400 bg-amber-900/20";
+    if (action.includes("ACTIVATE")) return "text-green-400 bg-green-900/20";
+    return "text-blue-400 bg-blue-900/20";
+  };
+
+  const filteredLogs = logs.filter((log) => {
+    const matchSearch =
+      log.action.toLowerCase().includes(search.toLowerCase()) ||
+      log.target.toLowerCase().includes(search.toLowerCase()) ||
+      log.performedBy.toLowerCase().includes(search.toLowerCase());
+    const matchFilter =
+      filterAction === "all" || log.action.includes(filterAction);
+    return matchSearch && matchFilter;
+  });
+
+  const actionTypes = [
+    "all",
+    "ROLE",
+    "BAN",
+    "SUSPEND",
+    "ACTIVATE",
+    "APPROVE",
+    "REJECT",
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <History className="w-4 h-4 text-blue-400" />
+          <h3 className="text-white font-semibold text-sm">Audit Trail</h3>
+          <Badge className="bg-gray-800 text-gray-300 border-gray-700 text-xs">
+            {logs.length} entries
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            data-ocid="admin.audit.secondary_button"
+            variant="outline"
+            size="sm"
+            onClick={refresh}
+            className="border-gray-700 text-gray-300 bg-gray-800 hover:bg-gray-700 h-7 text-xs gap-1"
+          >
+            <RefreshCw className="w-3 h-3" /> Refresh
+          </Button>
+          {adminRole === "superAdmin" && (
+            <Button
+              data-ocid="admin.audit.delete_button"
+              variant="outline"
+              size="sm"
+              onClick={handleClear}
+              className="border-red-800 text-red-400 bg-red-900/20 hover:bg-red-900/40 h-7 text-xs gap-1"
+            >
+              <Trash2 className="w-3 h-3" /> Clear All
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Input
+            data-ocid="admin.audit.search_input"
+            placeholder="Search logs..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-gray-900 border-gray-700 text-white pl-8 h-8 text-xs"
+          />
+          <FileIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+        </div>
+        <div className="flex gap-1.5 flex-wrap">
+          {actionTypes.map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setFilterAction(type)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                filterAction === type
+                  ? "bg-red-600 text-white"
+                  : "bg-gray-800 text-muted-foreground hover:bg-gray-700 hover:text-white"
+              }`}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filteredLogs.length === 0 ? (
+        <div
+          className="text-center py-16 text-muted-foreground"
+          data-ocid="admin.audit.empty_state"
+        >
+          <History className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">No audit log entries yet.</p>
+          <p className="text-xs mt-1 opacity-60">
+            Admin actions will appear here.
+          </p>
+        </div>
+      ) : (
+        <ScrollArea className="h-[500px] pr-2">
+          <div className="space-y-2">
+            {filteredLogs.map((log, i) => {
+              const actionColorClass = getActionColor(log.action);
+              return (
+                <motion.div
+                  key={log.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: Math.min(i * 0.02, 0.3) }}
+                  data-ocid={`admin.audit.item.${i + 1}`}
+                  className="bg-gray-900 border border-gray-800 rounded-xl p-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <Badge
+                        className={`text-xs border-0 flex-shrink-0 font-mono ${actionColorClass}`}
+                      >
+                        {log.action}
+                      </Badge>
+                      <div className="min-w-0">
+                        <p className="text-white text-xs font-medium">
+                          {log.target}
+                        </p>
+                        {log.details && (
+                          <p className="text-muted-foreground text-xs mt-0.5">
+                            {log.details}
+                          </p>
+                        )}
+                        <p className="text-muted-foreground text-xs mt-0.5">
+                          by{" "}
+                          <span className="text-gray-300">
+                            {log.performedBy}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <time className="text-muted-foreground text-[10px] font-mono flex-shrink-0 mt-0.5">
+                      {new Date(log.timestamp).toLocaleString("en-IN", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      )}
+    </div>
+  );
+}
+
+// ─── System Settings Tab ───────────────────────────────────────────────────────
+
+const FEATURE_FLAGS_KEY = "doitepic_feature_flags";
+const NOTIFICATION_PREFS_KEY = "doitepic_notification_prefs";
+
+function loadFeatureFlags() {
+  try {
+    const raw = localStorage.getItem(FEATURE_FLAGS_KEY);
+    return raw
+      ? JSON.parse(raw)
+      : {
+          sugarDetoxMode: true,
+          foodSafetyTimer: true,
+          leaderboard: true,
+          weeklyMissions: true,
+        };
+  } catch {
+    return {
+      sugarDetoxMode: true,
+      foodSafetyTimer: true,
+      leaderboard: true,
+      weeklyMissions: true,
+    };
+  }
+}
+
+function loadNotificationPrefs() {
+  try {
+    const raw = localStorage.getItem(NOTIFICATION_PREFS_KEY);
+    return raw
+      ? JSON.parse(raw)
+      : { newUserAlerts: true, foodSuggestionAlerts: true };
+  } catch {
+    return { newUserAlerts: true, foodSuggestionAlerts: true };
+  }
+}
+
+function SystemSettingsTab({ totalUsers }: { totalUsers: number }) {
+  const [features, setFeatures] = useState(loadFeatureFlags);
+  const [notifs, setNotifs] = useState(loadNotificationPrefs);
+
+  const updateFeature = (key: string, val: boolean) => {
+    const updated = { ...features, [key]: val };
+    setFeatures(updated);
+    localStorage.setItem(FEATURE_FLAGS_KEY, JSON.stringify(updated));
+    toast.success(`Feature ${val ? "enabled" : "disabled"}: ${key}`);
+    logAuditAction("FEATURE_TOGGLE", key, "superAdmin", `Set to ${val}`);
+  };
+
+  const updateNotif = (key: string, val: boolean) => {
+    const updated = { ...notifs, [key]: val };
+    setNotifs(updated);
+    localStorage.setItem(NOTIFICATION_PREFS_KEY, JSON.stringify(updated));
+    toast.success(`Notification ${val ? "enabled" : "disabled"}`);
+  };
+
+  const featureList = [
+    {
+      key: "sugarDetoxMode",
+      label: "Sugar Detox Mode",
+      description: "Enable sugar tracking & detox challenges",
+      icon: Zap,
+    },
+    {
+      key: "foodSafetyTimer",
+      label: "Food Safety Timer",
+      description: "Alert when food has been sitting too long",
+      icon: Clock,
+    },
+    {
+      key: "leaderboard",
+      label: "Leaderboard",
+      description: "Show competitive leaderboard rankings",
+      icon: TrendingUp,
+    },
+    {
+      key: "weeklyMissions",
+      label: "Weekly Missions",
+      description: "Gamified weekly health challenges",
+      icon: Target,
+    },
+  ];
+
+  const notifList = [
+    {
+      key: "newUserAlerts",
+      label: "New User Alerts",
+      description: "Alert when new users register",
+    },
+    {
+      key: "foodSuggestionAlerts",
+      label: "Food Suggestion Alerts",
+      description: "Alert on new food suggestion requests",
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* App Info */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <Shield className="w-4 h-4 text-blue-400" />
+            App Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[
+            { label: "App Version", value: "v60" },
+            { label: "Platform", value: "Internet Computer (ICP)" },
+            { label: "Total Users", value: String(totalUsers) },
+            { label: "Canister Network", value: "ICP Mainnet" },
+            { label: "Build Type", value: "PWA (Progressive Web App)" },
+          ].map(({ label, value }) => (
+            <div
+              key={label}
+              className="flex items-center justify-between py-1.5 border-b border-gray-800 last:border-0"
+            >
+              <span className="text-muted-foreground text-xs">{label}</span>
+              <span className="text-white text-xs font-medium font-mono">
+                {value}
+              </span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Feature Toggles */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <Lock className="w-4 h-4 text-purple-400" />
+            Feature Toggles
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {featureList.map(({ key, label, description, icon: Icon }) => (
+            <div key={key} className="flex items-center justify-between gap-3">
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Icon className="w-4 h-4 text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-white text-sm font-medium">{label}</p>
+                  <p className="text-muted-foreground text-xs">{description}</p>
+                </div>
+              </div>
+              <Switch
+                data-ocid={`admin.settings.${key.toLowerCase()}.switch`}
+                checked={features[key] ?? true}
+                onCheckedChange={(val) => updateFeature(key, val)}
+                className="data-[state=checked]:bg-blue-600"
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Notification Controls */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <Bell className="w-4 h-4 text-amber-400" />
+            Notification Controls
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {notifList.map(({ key, label, description }) => (
+            <div key={key} className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-white text-sm font-medium">{label}</p>
+                <p className="text-muted-foreground text-xs">{description}</p>
+              </div>
+              <Switch
+                data-ocid={`admin.settings.${key.toLowerCase()}.switch`}
+                checked={notifs[key] ?? true}
+                onCheckedChange={(val) => updateNotif(key, val)}
+                className="data-[state=checked]:bg-amber-600"
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* RBAC Info */}
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            <UserCog className="w-4 h-4 text-green-400" />
+            Role Permissions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {(
+              [
+                {
+                  role: "superAdmin",
+                  label: "Super Admin",
+                  perms: [
+                    "manage_users",
+                    "view_analytics",
+                    "edit_content",
+                    "system_settings",
+                  ],
+                },
+                {
+                  role: "admin",
+                  label: "Admin",
+                  perms: ["manage_users", "view_analytics", "edit_content"],
+                },
+                {
+                  role: "moderator",
+                  label: "Moderator",
+                  perms: ["edit_content"],
+                },
+                { role: "user", label: "User", perms: [] },
+              ] as const
+            ).map(({ role, label, perms }) => (
+              <div
+                key={role}
+                className="p-3 rounded-lg bg-gray-800 border border-gray-700"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className={`text-xs border-0 ${ROLE_COLORS[role]}`}>
+                    {label}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {perms.length > 0 ? (
+                    perms.map((p) => (
+                      <span
+                        key={p}
+                        className="text-xs bg-green-900/30 text-green-300 border border-green-700/40 rounded-full px-2 py-0.5"
+                      >
+                        ✓ {p}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground text-xs">
+                      No admin permissions
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Main Admin Dashboard ─────────────────────────────────────────────────────
 
-export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
+export default function AdminDashboard({
+  onExit,
+  adminRole = "superAdmin",
+}: { onExit?: () => void; adminRole?: string }) {
   const { data: usersData = [], isLoading: usersLoading } = useAllUsers();
   const { data: checkInsData = [], isLoading: checkInsLoading } =
     useAllUsersCheckIns();
@@ -2929,7 +4093,7 @@ export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
   >();
   for (const [p, s] of allUserStreaks) streakMap.set(p.toString(), s);
 
-  const isLoading = usersLoading || checkInsLoading || publicUsersLoading;
+  const _isLoading = usersLoading || checkInsLoading || publicUsersLoading;
 
   const profileMap = new Map<string, UserProfile>();
   for (const [principal, profile] of usersData)
@@ -3073,8 +4237,11 @@ export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
           </Card>
         </motion.div>
 
-        {/* Main Tabs — scrollable for 8 tabs */}
-        <Tabs defaultValue="users" data-ocid="admin.tab">
+        {/* Main Tabs — scrollable for 10 tabs */}
+        <Tabs
+          defaultValue={adminRole === "moderator" ? "approvals" : "users"}
+          data-ocid="admin.tab"
+        >
           <div className="overflow-x-auto mb-6">
             <TabsList className="bg-gray-900 border border-gray-700 w-max min-w-full sm:w-auto inline-flex">
               <TabsTrigger
@@ -3131,159 +4298,30 @@ export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
                 <ShieldAlert className="w-3.5 h-3.5" />
                 Moderation
               </TabsTrigger>
+              {adminRole === "superAdmin" && (
+                <TabsTrigger
+                  value="audit"
+                  className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <History className="w-3.5 h-3.5" />
+                  Audit Log
+                </TabsTrigger>
+              )}
+              {adminRole === "superAdmin" && (
+                <TabsTrigger
+                  value="settings"
+                  className="data-[state=active]:bg-red-600 data-[state=active]:text-white text-muted-foreground flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  System
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
           {/* Users Tab */}
           <TabsContent value="users">
-            {isLoading ? (
-              <div className="space-y-4" data-ocid="admin.loading_state">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-32 w-full rounded-xl bg-gray-800"
-                  />
-                ))}
-              </div>
-            ) : publicUsers.length === 0 && entries.length === 0 ? (
-              <div
-                className="text-center py-16 text-muted-foreground"
-                data-ocid="admin.empty_state"
-              >
-                <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No users registered yet.</p>
-                <p className="text-xs mt-1 opacity-60">
-                  Users will appear here after they log in to the app.
-                </p>
-              </div>
-            ) : publicUsers.length > 0 ? (
-              <div className="space-y-4">
-                {publicUsers.map(
-                  ([deviceId, user]: [string, PublicUserRecord], i: number) => {
-                    const bmi =
-                      user.weightKg /
-                      ((user.heightCm / 100) * (user.heightCm / 100));
-                    const joinedDate = new Date(
-                      Number(user.joinedAt),
-                    ).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    });
-                    const lastSeen = new Date(
-                      Number(user.lastSeenAt),
-                    ).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                    });
-                    return (
-                      <motion.div
-                        key={deviceId}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        data-ocid={`admin.users.item.${i + 1}`}
-                      >
-                        <Card className="bg-gray-900 border-gray-800">
-                          <CardContent className="pt-4 pb-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-600/40 flex items-center justify-center flex-shrink-0">
-                                  <span className="text-blue-400 font-bold text-sm">
-                                    {user.name.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="font-semibold text-white truncate">
-                                    {user.name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {(user as any).username ??
-                                      (user as any).phone}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                <Badge className="bg-blue-600/20 text-blue-300 border-blue-600/40 text-xs">
-                                  {user.goal}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {user.gender}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t border-gray-800">
-                              <div className="text-center">
-                                <p className="text-xs text-muted-foreground">
-                                  Age
-                                </p>
-                                <p className="text-sm font-bold text-white">
-                                  {String(user.age)} y
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-xs text-muted-foreground">
-                                  Weight
-                                </p>
-                                <p className="text-sm font-bold text-white">
-                                  {user.weightKg} kg
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-xs text-muted-foreground">
-                                  Height
-                                </p>
-                                <p className="text-sm font-bold text-white">
-                                  {user.heightCm} cm
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-xs text-muted-foreground">
-                                  BMI
-                                </p>
-                                <p
-                                  className={`text-sm font-bold ${bmi < 18.5 ? "text-yellow-400" : bmi < 25 ? "text-green-400" : bmi < 30 ? "text-orange-400" : "text-red-400"}`}
-                                >
-                                  {bmi.toFixed(1)}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex justify-between mt-2 pt-2 border-t border-gray-800 text-xs text-muted-foreground">
-                              <span>Joined: {joinedDate}</span>
-                              <span>Last seen: {lastSeen}</span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    );
-                  },
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {entries.map(([pid, principal], i) => (
-                  <motion.div
-                    key={pid}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                  >
-                    <UserCard
-                      principal={principal}
-                      profile={profileMap.get(pid)}
-                      checkIns={checkInsMap.get(pid) ?? []}
-                      index={i}
-                      joinTime={joinTimeMap.get(pid)}
-                      streak={streakMap.get(pid)}
-                      onFlag={(p, name) => {
-                        setFlagDialogFromUser({ principal: p, name });
-                        setFlagReasonFromUser("");
-                      }}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            )}
+            <EnhancedUsersTab adminRole={adminRole} />
           </TabsContent>
 
           {/* Food Database Tab */}
@@ -3298,10 +4336,11 @@ export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
-            <AnalyticsTab
+            <EnhancedAnalyticsTab
               usersData={usersData as Array<[Principal, UserProfile]>}
               checkInsData={checkInsData as Array<[Principal, DailyCheckIn[]]>}
               joinTimes={joinTimes as Array<[Principal, bigint]>}
+              publicUsers={publicUsers}
             />
           </TabsContent>
 
@@ -3319,6 +4358,18 @@ export default function AdminDashboard({ onExit }: { onExit?: () => void }) {
           <TabsContent value="moderation">
             <ModerationTab
               allUsers={usersData as Array<[Principal, UserProfile]>}
+            />
+          </TabsContent>
+
+          {/* Audit Log Tab */}
+          <TabsContent value="audit">
+            <AuditLogTab adminRole={adminRole} />
+          </TabsContent>
+
+          {/* System Settings Tab */}
+          <TabsContent value="settings">
+            <SystemSettingsTab
+              totalUsers={publicUsers.length || entries.length}
             />
           </TabsContent>
         </Tabs>

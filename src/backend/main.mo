@@ -11,9 +11,9 @@ import Int "mo:core/Int";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
-
-
 import MixinAuthorization "authorization/MixinAuthorization";
+
+
 
 // Add migration module and entry
 
@@ -84,7 +84,7 @@ actor {
   // ======================== Public User Registry (no auth, phone-based) ========================
   // Stores user profiles keyed by a device UUID so admin can see all registered users.
 
-  public type PublicUserRecord = {
+  public type ExtendedPublicUserRecord = {
     name : Text;
     phone : Text;
     age : Nat;
@@ -94,25 +94,119 @@ actor {
     goal : Text;
     joinedAt : Int;
     lastSeenAt : Int;
+    role : Text; // "superAdmin" | "admin" | "moderator" | "user"
+    status : Text; // "active" | "banned" | "suspended"
+    loginCount : Nat;
   };
 
-  let publicUserRegistry = Map.empty<Text, PublicUserRecord>();
+  let publicUserRegistry = Map.empty<Text, ExtendedPublicUserRecord>();
 
   // Called from frontend on register/login — no auth required
-  public func savePublicUser(deviceId : Text, record : PublicUserRecord) : async () {
-    publicUserRegistry.add(deviceId, record);
+  public shared func savePublicUser(deviceId : Text, record : ExtendedPublicUserRecord) : async () {
+    let newRecord : ExtendedPublicUserRecord = {
+      record with
+      joinedAt = Time.now();
+      lastSeenAt = Time.now();
+    };
+    publicUserRegistry.add(deviceId, newRecord);
   };
 
-  public query func getPublicUser(deviceId : Text) : async ?PublicUserRecord {
+  public query func getPublicUser(deviceId : Text) : async ?ExtendedPublicUserRecord {
     publicUserRegistry.get(deviceId);
   };
 
-  public query func getAllPublicUsers() : async [(Text, PublicUserRecord)] {
+  public query func getAllPublicUsers() : async [(Text, ExtendedPublicUserRecord)] {
     publicUserRegistry.toArray();
   };
 
   public query func getPublicUserCount() : async Nat {
     publicUserRegistry.size();
+  };
+
+  // ======================== New Public User Registry Methods ========================
+  // Extended fields: role, status, loginCount
+
+  public type PublicUserRole = {
+    #superAdmin;
+    #admin;
+    #moderator;
+    #user;
+  };
+
+  public type PublicUserStatus = {
+    #active;
+    #banned;
+    #suspended;
+  };
+
+  public shared ({ caller }) func updatePublicUserRole(deviceId : Text, role : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update user roles");
+    };
+    switch (publicUserRegistry.get(deviceId)) {
+      case (null) { Runtime.trap("User not found") };
+      case (?record) {
+        let updatedRecord = {
+          record with
+          role = role;
+        };
+        publicUserRegistry.add(deviceId, updatedRecord);
+      };
+    };
+  };
+
+  public shared ({ caller }) func updatePublicUserStatus(deviceId : Text, status : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update user status");
+    };
+    switch (publicUserRegistry.get(deviceId)) {
+      case (null) { Runtime.trap("User not found") };
+      case (?record) {
+        let updatedRecord = {
+          record with
+          status = status;
+        };
+        publicUserRegistry.add(deviceId, updatedRecord);
+      };
+    };
+  };
+
+  public shared func incrementUserLoginCount(deviceId : Text) : async () {
+    switch (publicUserRegistry.get(deviceId)) {
+      case (null) { Runtime.trap("User not found") };
+      case (?record) {
+        let updatedRecord = {
+          record with
+          loginCount = record.loginCount + 1;
+          lastSeenAt = Time.now();
+        };
+        publicUserRegistry.add(deviceId, updatedRecord);
+      };
+    };
+  };
+
+  public query ({ caller }) func getActiveUsersLastDays(days : Nat) : async Nat {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can fetch user activity stats");
+    };
+    let now = Time.now();
+    let dayNanos = days * 24 * 60 * 60 * 1000000000;
+    publicUserRegistry.values().toArray().filter(
+      func(user) {
+        let lastSeen = Int.abs(user.lastSeenAt);
+        let currentTime = Int.abs(now);
+        currentTime - lastSeen <= dayNanos;
+      }
+    ).size();
+  };
+
+  public query ({ caller }) func getUsersByStatus(status : Text) : async [ExtendedPublicUserRecord] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can fetch users by status");
+    };
+    publicUserRegistry.values().toArray().filter(
+      func(u) { u.status == status }
+    );
   };
 
   // ======================== Daily Check-In ========================
@@ -161,7 +255,7 @@ actor {
 
   public query ({ caller }) func getAllCheckIns(user : Principal) : async [DailyCheckIn] {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own check-ins");
+      Runtime.trap("Unauthorized: Only users can view check-ins");
     };
     switch (userCheckIns.get(user)) {
       case (null) { [] };
@@ -469,7 +563,7 @@ actor {
   let userHealthMetrics = Map.empty<Principal, Set.Set<HealthMetrics>>();
 
   public shared ({ caller }) func logHealthMetrics(metrics : HealthMetrics) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can log health metrics");
     };
     let currentMetrics = switch (userHealthMetrics.get(caller)) {
@@ -481,7 +575,7 @@ actor {
   };
 
   public query ({ caller }) func getHealthMetricsForDate(date : Time.Time) : async [HealthMetrics] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can fetch health metrics");
     };
     switch (userHealthMetrics.get(caller)) {
@@ -958,7 +1052,7 @@ actor {
 
   public query ({ caller }) func getAllFoodLogs(user : Principal) : async [DailyFoodLog] {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own food logs");
+      Runtime.trap("Unauthorized: Only users can view food logs");
     };
     switch (userFoodLogs.get(user)) {
       case (null) { [] };
@@ -968,7 +1062,7 @@ actor {
 
   public query ({ caller }) func getAllWaterIntake(user : Principal) : async [DailyWaterIntake] {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own water intake logs");
+      Runtime.trap("Unauthorized: Only users can view water intake");
     };
     switch (userWaterIntake.get(user)) {
       case (null) { [] };
@@ -978,7 +1072,7 @@ actor {
 
   public query ({ caller }) func getAllHealthMetrics(user : Principal) : async [HealthMetrics] {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own health metrics");
+      Runtime.trap("Unauthorized: Only users can view health metrics");
     };
     switch (userHealthMetrics.get(user)) {
       case (null) { [] };
@@ -1004,7 +1098,7 @@ actor {
   let publicFoodWishes = Map.empty<Nat, PublicFoodWish>();
   var nextFoodWishId = 1;
 
-  public func submitPublicFoodWish(
+  public shared func submitPublicFoodWish(
     submitterName : Text,
     submitterPhone : Text,
     foodName : Text,
