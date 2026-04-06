@@ -15,7 +15,12 @@ import { useState } from "react";
 import { ProfileGoal } from "../backend";
 import { useActor } from "../hooks/useActor";
 import type { LocalUser } from "../hooks/useLocalAuth";
-import { useLocalAuth } from "../hooks/useLocalAuth";
+import {
+  lookupByCode,
+  lookupByPhone,
+  saveToRegistry,
+  useLocalAuth,
+} from "../hooks/useLocalAuth";
 import { generateUsername } from "../utils/generateUsername";
 import HealthFactBanner from "./HealthFactBanner";
 
@@ -136,34 +141,63 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
     }
 
     if (!userCode.trim()) {
+      // No code entered → new user registration
       setShowStep2(true);
       return;
     }
 
-    const stored = localStorage.getItem("doitepic_user");
-    if (stored) {
-      const profile: LocalUser = JSON.parse(stored);
-      const storedUsername =
-        (profile as any).username ?? (profile as any).phone ?? "";
-      const nameMatch =
-        profile.name.trim().toLowerCase() === name.trim().toLowerCase();
-      const codeMatch =
-        storedUsername.trim().toUpperCase() === userCode.trim().toUpperCase();
+    const trimmedCode = userCode.trim();
+    const trimmedName = name.trim().toLowerCase();
 
-      if (nameMatch && codeMatch) {
-        login({ ...profile, username: storedUsername });
-        syncUserToBackend({ ...profile, username: storedUsername });
+    // --- Try registry lookup first (works after logout) ---
+    const byCode = lookupByCode(trimmedCode);
+    if (byCode && byCode.name.trim().toLowerCase() === trimmedName) {
+      login(byCode);
+      syncUserToBackend(byCode);
+      return;
+    }
+
+    // --- Try phone lookup ---
+    const normalized = normalizePhone(trimmedCode);
+    if (normalized.length >= 10) {
+      const byPhone = lookupByPhone(normalized);
+      if (byPhone && byPhone.name.trim().toLowerCase() === trimmedName) {
+        login(byPhone);
+        syncUserToBackend(byPhone);
         return;
       }
+    }
 
-      if (profile.phone) {
-        const phoneMatch =
-          normalizePhone(profile.phone) === normalizePhone(userCode);
-        if (nameMatch && phoneMatch) {
-          login(profile);
-          syncUserToBackend(profile);
+    // --- Fallback: check active session (legacy path) ---
+    const stored = localStorage.getItem("doitepic_user");
+    if (stored) {
+      try {
+        const profile: LocalUser = JSON.parse(stored);
+        const storedUsername =
+          (profile as any).username ?? (profile as any).phone ?? "";
+        const nameMatch = profile.name.trim().toLowerCase() === trimmedName;
+        const codeMatch =
+          storedUsername.trim().toUpperCase() === trimmedCode.toUpperCase();
+
+        if (nameMatch && codeMatch) {
+          // Migrate this profile into the registry now
+          saveToRegistry({ ...profile, username: storedUsername });
+          login({ ...profile, username: storedUsername });
+          syncUserToBackend({ ...profile, username: storedUsername });
           return;
         }
+
+        if (profile.phone) {
+          const phoneMatch = normalizePhone(profile.phone) === normalized;
+          if (nameMatch && phoneMatch) {
+            saveToRegistry(profile);
+            login(profile);
+            syncUserToBackend(profile);
+            return;
+          }
+        }
+      } catch {
+        // ignore parse errors
       }
     }
 
@@ -220,6 +254,9 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
       goal: goal as ProfileGoal,
       joinedAt: new Date().toISOString(),
     };
+
+    // Save to registry immediately so the code works after logout
+    saveToRegistry(profile);
 
     setGeneratedCode(username);
     setPendingProfile(profile);
@@ -331,7 +368,7 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
 
               <div className="bg-amber-50 border border-amber-300 rounded-lg p-2.5 mb-4 text-left">
                 <p className="text-amber-800 text-xs font-semibold">
-                  ⚠️ Save this code to log in next time!
+                  ⚠️ Save this code — you'll need it to log in after logout!
                 </p>
               </div>
 

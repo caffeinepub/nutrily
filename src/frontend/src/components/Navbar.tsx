@@ -68,9 +68,20 @@ export default function Navbar({
               alt="DoitEpic"
               className="h-7 w-auto object-contain"
             />
-            <span className="text-base font-extrabold tracking-tight text-foreground select-none">
-              Do It <span className="text-primary italic">EPIC</span>
-            </span>
+            <div className="flex items-baseline gap-1">
+              <span
+                style={{ fontFamily: "'Cinzel', serif" }}
+                className="text-sm font-medium tracking-wide text-muted-foreground select-none"
+              >
+                Do it the{" "}
+              </span>
+              <span
+                style={{ fontFamily: "'Cinzel', serif" }}
+                className="epic-text text-lg select-none"
+              >
+                Epic
+              </span>
+            </div>
           </div>
           {/* Desktop nav links */}
           <nav className="hidden md:flex items-center gap-1">
