@@ -61,14 +61,18 @@ export default function LoginPage({ onAdminAccess, onLogin }: LoginPageProps) {
       (actor as any)
         .savePublicUser(deviceId, {
           name: profile.name,
-          phone: profile.phone ?? profile.username,
-          age: BigInt(profile.age),
-          weightKg: profile.weightKg,
-          heightCm: profile.heightCm,
-          gender: profile.gender,
+          phone: profile.phone ?? profile.username ?? "",
+          age: BigInt(profile.age ?? 0),
+          weightKg: profile.weightKg ?? 0,
+          heightCm: profile.heightCm ?? 0,
+          gender: profile.gender ?? "",
           goal: goalToString(profile.goal as ProfileGoal),
           joinedAt: BigInt(Date.now()),
           lastSeenAt: BigInt(Date.now()),
+          // These will be preserved by backend if user already exists
+          role: "user",
+          status: "active",
+          loginCount: BigInt(1),
         })
         .catch(() => {});
     } catch {

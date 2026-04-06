@@ -103,29 +103,10 @@ actor {
 
   // Called from frontend on register/login — no auth required
   public shared func savePublicUser(deviceId : Text, record : ExtendedPublicUserRecord) : async () {
-    let newRecord : ExtendedPublicUserRecord = switch (publicUserRegistry.get(deviceId)) {
-      case (?existing) {
-        // Preserve admin-managed fields; only update profile data
-        {
-          record with
-          lastSeenAt = Time.now();
-          joinedAt = existing.joinedAt;
-          role = existing.role;
-          status = existing.status;
-          loginCount = existing.loginCount + 1;
-        }
-      };
-      case (null) {
-        // New user — use defaults
-        {
-          record with
-          joinedAt = Time.now();
-          lastSeenAt = Time.now();
-          role = "user";
-          status = "active";
-          loginCount = 1;
-        }
-      };
+    let newRecord : ExtendedPublicUserRecord = {
+      record with
+      joinedAt = Time.now();
+      lastSeenAt = Time.now();
     };
     publicUserRegistry.add(deviceId, newRecord);
   };
@@ -158,7 +139,10 @@ actor {
     #suspended;
   };
 
-  public shared func updatePublicUserRole(deviceId : Text, role : Text) : async () {
+  public shared ({ caller }) func updatePublicUserRole(deviceId : Text, role : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update user roles");
+    };
     switch (publicUserRegistry.get(deviceId)) {
       case (null) { Runtime.trap("User not found") };
       case (?record) {
@@ -171,7 +155,10 @@ actor {
     };
   };
 
-  public shared func updatePublicUserStatus(deviceId : Text, status : Text) : async () {
+  public shared ({ caller }) func updatePublicUserStatus(deviceId : Text, status : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update user status");
+    };
     switch (publicUserRegistry.get(deviceId)) {
       case (null) { Runtime.trap("User not found") };
       case (?record) {
